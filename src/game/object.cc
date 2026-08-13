@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <algorithm>
+#include <vector>
 
 #include "game/anim.h"
 #include "game/art.h"
@@ -95,9 +96,6 @@ static int* offsetModTable = NULL;
 
 // 0x505B98
 static ObjectListNode** renderTable = NULL;
-
-// 0x505B9C
-static int outlineCount = 0;
 
 // Contains objects that are not bounded to tiles.
 //
@@ -231,7 +229,7 @@ static int light_blocked[6][36];
 static int light_offsets[2][6][36];
 
 // 0x638150
-static Object* outlinedObjects[100];
+static std::vector<Object*> outlinedObjects;
 
 // 0x6382E0
 static Rect buf_rect;
@@ -783,11 +781,11 @@ void obj_render_pre_roof(Rect* rect, int elevation)
     if (tile_inside_bound(&updatedRect) != 0) {
         // Mouse hex cursor is a special case - should be shown as outline when
         // out of bounds (see `obj_render_outline`).
-        outlineCount = 0;
+        outlinedObjects.clear();
         if ((obj_mouse_flat->flags & OBJECT_HIDDEN) == 0
             && (obj_mouse_flat->outline & OUTLINE_TYPE_MASK) != 0
             && (obj_mouse_flat->outline & OUTLINE_DISABLED) == 0) {
-            outlinedObjects[outlineCount++] = obj_mouse_flat;
+            outlinedObjects.push_back(obj_mouse_flat);
         }
         return;
     }
@@ -805,7 +803,7 @@ void obj_render_pre_roof(Rect* rect, int elevation)
     int* orders = orderTable[parity];
     int* offsets = offsetTable[parity];
 
-    outlineCount = 0;
+    outlinedObjects.clear();
 
     int renderCount = 0;
     for (int i = 0; i < updateHexArea; i++) {
@@ -835,8 +833,8 @@ void obj_render_pre_roof(Rect* rect, int elevation)
                         obj_render_object(objectListNode->obj, &updatedRect, lightIntensity);
 
                         if ((objectListNode->obj->outline & OUTLINE_TYPE_MASK) != 0) {
-                            if ((objectListNode->obj->outline & OUTLINE_DISABLED) == 0 && outlineCount < 100) {
-                                outlinedObjects[outlineCount++] = objectListNode->obj;
+                            if ((objectListNode->obj->outline & OUTLINE_DISABLED) == 0) {
+                                outlinedObjects.push_back(objectListNode->obj);
                             }
                         }
                     }
@@ -870,8 +868,8 @@ void obj_render_pre_roof(Rect* rect, int elevation)
                     obj_render_object(object, &updatedRect, lightIntensity);
 
                     if ((objectListNode->obj->outline & OUTLINE_TYPE_MASK) != 0) {
-                        if ((objectListNode->obj->outline & OUTLINE_DISABLED) == 0 && outlineCount < 100) {
-                            outlinedObjects[outlineCount++] = objectListNode->obj;
+                        if ((objectListNode->obj->outline & OUTLINE_DISABLED) == 0) {
+                            outlinedObjects.push_back(objectListNode->obj);
                         }
                     }
                 }
@@ -903,13 +901,13 @@ void obj_render_post_roof(Rect* rect, int elevation)
         constrainedRect.lry = 0;
     }
 
-    for (int index = 0; index < outlineCount; index++) {
+    for (Object* object : outlinedObjects) {
         // Mouse hex cursor is a special case - should be shown without
         // constraining otherwise its hidden.
         if (outlinedObjects[index] == obj_mouse_flat) {
-            obj_render_outline(outlinedObjects[index], &updatedRect);
+            obj_render_outline(object, &updatedRect);
         } else {
-            obj_render_outline(outlinedObjects[index], &constrainedRect);
+            obj_render_outline(object, &constrainedRect);
         }
     }
 
