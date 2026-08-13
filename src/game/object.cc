@@ -904,7 +904,7 @@ void obj_render_post_roof(Rect* rect, int elevation)
     for (Object* object : outlinedObjects) {
         // Mouse hex cursor is a special case - should be shown without
         // constraining otherwise its hidden.
-        if (outlinedObjects[index] == obj_mouse_flat) {
+        if (object == obj_mouse_flat) {
             obj_render_outline(object, &updatedRect);
         } else {
             obj_render_outline(object, &constrainedRect);
