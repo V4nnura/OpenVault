@@ -99,7 +99,7 @@ static Rect winRect;
 static Rect movieRect;
 
 // 0x637390
-static void(*movieCallback)();
+static void (*movieCallback)();
 
 // 0x637394
 static MovieUpdateCallbackProc* updateCallbackFunc;
