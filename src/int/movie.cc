@@ -23,8 +23,6 @@
 
 namespace fallout {
 
-typedef void(MovieCallback)();
-
 typedef struct MovieSubtitleListNode {
     int num;
     char* text;
@@ -101,7 +99,7 @@ static Rect winRect;
 static Rect movieRect;
 
 // 0x637390
-static MovieCallback* movieCallback;
+static void(*movieCallback)();
 
 // 0x637394
 static MovieUpdateCallbackProc* updateCallbackFunc;
