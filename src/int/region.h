@@ -27,7 +27,7 @@ typedef struct Region {
     int procs[4];
     int rightProcs[4];
     int field_68;
-    int field_6C;
+    int mouseInside;
     int field_70;
     int flags;
     RegionMouseEventCallback* mouseEventCallback;
