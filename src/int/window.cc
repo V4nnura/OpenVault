@@ -258,8 +258,8 @@ bool windowCheckRegion(int windowIndex, int mouseX, int mouseY, int mouseEvent)
     for (int index = 0; index < managedWindow->regionsLength; index++) {
         Region* region = managedWindow->regions[index];
         if (region != NULL) {
-            if (region->field_6C != 0) {
-                region->field_6C = 0;
+            if (region->mouseInside != 0) {
+                region->mouseInside = 0;
                 rc = true;
 
                 if (region->mouseEventCallback != NULL) {
