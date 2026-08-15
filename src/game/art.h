@@ -128,9 +128,9 @@ unsigned char* art_lock(int fid, CacheEntry** out_cache_entry, int* widthPtr, in
 int art_ptr_unlock(CacheEntry* cache_entry);
 int art_discard(int fid);
 int art_flush();
-int art_get_base_name(int objectType, int a2, char* a3);
-int art_get_code(int a1, int a2, char* a3, char* a4);
-char* art_get_name(int a1);
+int art_get_base_name(int objectType, int id, char* dest);
+int art_get_code(int animation, int weaponType, char* weaponCodePtr, char* animCodePtr);
+char* art_get_name(int fid);
 int art_read_lst(const char* path, char** artListPtr, int* artListSizePtr);
 int art_frame_fps(Art* art);
 int art_frame_action_frame(Art* art);
