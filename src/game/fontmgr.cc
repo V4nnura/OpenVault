@@ -303,14 +303,14 @@ int FMtext_max()
         return 0;
     }
 
-    int v1;
+    int spacing;
     if (gCurrentFont->wordSpacing <= gCurrentFont->field_8) {
-        v1 = gCurrentFont->lineSpacing;
+        spacing = gCurrentFont->lineSpacing;
     } else {
-        v1 = gCurrentFont->letterSpacing;
+        spacing = gCurrentFont->letterSpacing;
     }
 
-    return v1 + gCurrentFont->maxHeight;
+    return spacing + gCurrentFont->maxHeight;
 }
 
 // 0x43ADB0
