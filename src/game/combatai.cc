@@ -350,21 +350,19 @@ static int ai_magic_hands(Object* critter, Object* item, int num)
 // 0x424C00
 static int ai_check_drugs(Object* critter)
 {
-    int bloodied;
     int index = -1;
-    Object* drug;
 
     if (critter_body_type(critter) != BODY_TYPE_BIPED) {
         return 0;
     }
 
-    bloodied = stat_level(critter, STAT_MAXIMUM_HIT_POINTS) / 2;
+    int bloodied = stat_level(critter, STAT_MAXIMUM_HIT_POINTS) / 2;
     while (stat_level(critter, STAT_CURRENT_HIT_POINTS) < bloodied) {
         if (critter->data.critter.combat.ap < 2) {
             break;
         }
 
-        drug = inven_find_type(critter, ITEM_TYPE_DRUG, &index);
+        Object* drug = inven_find_type(critter, ITEM_TYPE_DRUG, &index);
         if (drug == NULL) {
             break;
         }
