@@ -1764,7 +1764,7 @@ static int finished_explosion(Object* a1, Object* a2)
 // 0x413044
 static int compute_explosion_damage(int min, int max, Object* def, int* knockback_distance)
 {
-    int damage = roll_random(min, max) - stat_level(knockback_distance, STAT_DAMAGE_THRESHOLD_EXPLOSION);
+    int damage = roll_random(min, max) - stat_level(def, STAT_DAMAGE_THRESHOLD_EXPLOSION);
     if (damage > 0) {
         damage -= stat_level(def, STAT_DAMAGE_RESISTANCE_EXPLOSION) * damage / 100;
     }
