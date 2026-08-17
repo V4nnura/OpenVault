@@ -46,11 +46,11 @@ static int is_next_to(Object* a1, Object* a2);
 static int action_climb_ladder(Object* a1, Object* a2);
 static int report_explosion(Attack* attack, Object* a2);
 static int finished_explosion(Object* a1, Object* a2);
-static int compute_explosion_damage(int min, int max, Object* a3, int* a4);
+static int compute_explosion_damage(int min, int max, Object* def, int* knockback_distance);
 static int can_talk_to(Object* a1, Object* a2);
 static int talk_to(Object* a1, Object* a2);
 static int report_dmg(Attack* attack, Object* a2);
-static int compute_dmg_damage(int min, int max, Object* obj, int* a4, int damage_type);
+static int compute_dmg_damage(int min, int max, Object* obj, int* knockback_distance, int damage_type);
 
 // 0x4FEA50
 static bool action_in_explode = false;
@@ -455,24 +455,16 @@ int show_damage_target(Attack* attack)
 // 0x410F18
 int show_damage_extras(Attack* attack)
 {
-    int v6;
-    int v8;
-    int v9;
-
     for (int index = 0; index < attack->extrasLength; index++) {
         Object* obj = attack->extras[index];
         if (FID_TYPE(obj->fid) == OBJ_TYPE_CRITTER) {
-            int delta = attack->attacker->rotation - obj->rotation;
-            if (delta < 0) {
-                delta = -delta;
-            }
-
-            v6 = delta != 0 && delta != 1 && delta != 5;
+            // NOTE: Uninline.
+            bool hit_from_front = is_hit_from_front(attack->attacker, obj);
             register_begin(ANIMATION_REQUEST_RESERVED);
             register_priority(1);
-            v8 = item_w_anim(attack->attacker, attack->hitMode);
-            v9 = tile_dir(attack->attacker->tile, obj->tile);
-            show_damage_to_object(obj, attack->extrasDamage[index], attack->extrasFlags[index], attack->weapon, v6, attack->extrasKnockback[index], v9, v8, attack->attacker, 0);
+            int attackerAnimation = item_w_anim(attack->attacker, attack->hitMode);
+            int knockbackRotation = tile_dir(attack->attacker->tile, obj->tile);
+            show_damage_to_object(obj, attack->extrasDamage[index], attack->extrasFlags[index], attack->weapon, hit_from_front, attack->extrasKnockback[index], knockbackRotation, attackerAnimation, attack->attacker, 0);
             register_end();
         }
     }
@@ -483,12 +475,10 @@ int show_damage_extras(Attack* attack)
 // 0x410FD8
 void show_damage(Attack* attack, int a2, int delay)
 {
-    bool hit_from_front;
-
     for (int index = 0; index < attack->extrasLength; index++) {
         Object* object = attack->extras[index];
         if (FID_TYPE(object->fid) == OBJ_TYPE_CRITTER) {
-            register_ping(2, delay);
+            register_ping(ANIMATION_REQUEST_RESERVED, delay);
             delay = 0;
         }
     }
@@ -501,10 +491,11 @@ void show_damage(Attack* attack, int a2, int delay)
         }
     } else {
         if (attack->defender != NULL) {
-            hit_from_front = is_hit_from_front(attack->attacker, attack->defender);
+            // NOTE: Uninline.
+            bool hit_from_front = is_hit_from_front(attack->attacker, attack->defender);
 
             if (FID_TYPE(attack->defender->fid) == OBJ_TYPE_CRITTER) {
-                if (attack->attacker->fid == 33554933) {
+                if (attack->attacker->fid == FID_0x20001F5) {
                     show_damage_to_object(attack->defender,
                         attack->defenderDamage,
                         attack->defenderFlags,
@@ -566,10 +557,7 @@ static int action_melee(Attack* attack, int anim)
     int fid;
     Art* art;
     CacheEntry* cache_entry;
-    int v17;
-    int v18;
-    int delta;
-    int flag;
+    int delay;
     const char* sfx_name;
     char sfx_name_temp[16];
 
@@ -579,20 +567,14 @@ static int action_melee(Attack* attack, int anim)
     fid = art_id(OBJ_TYPE_CRITTER, attack->attacker->fid & 0xFFF, anim, (attack->attacker->fid & 0xF000) >> 12, attack->attacker->rotation + 1);
     art = art_ptr_lock(fid, &cache_entry);
     if (art != NULL) {
-        v17 = art_frame_action_frame(art);
+        delay = art_frame_action_frame(art);
     } else {
-        v17 = 0;
+        delay = 0;
     }
     art_ptr_unlock(cache_entry);
 
     tile_num_in_direction(attack->attacker->tile, attack->attacker->rotation, 1);
     register_object_turn_towards(attack->attacker, attack->defender->tile);
-
-    delta = attack->attacker->rotation - attack->defender->rotation;
-    if (delta < 0) {
-        delta = -delta;
-    }
-    flag = delta != 0 && delta != 1 && delta != 5;
 
     if (anim != ANIM_THROW_PUNCH && anim != ANIM_KICK_LEG) {
         sfx_name = gsnd_build_weapon_sfx_name(WEAPON_SOUND_EFFECT_ATTACK, attack->weapon, attack->hitMode, attack->defender);
@@ -615,7 +597,7 @@ static int action_melee(Attack* attack, int anim)
         strcpy(sfx_name_temp, sfx_name);
 
         register_object_animate(attack->attacker, anim, 0);
-        register_object_play_sfx(attack->attacker, sfx_name_temp, v17);
+        register_object_play_sfx(attack->attacker, sfx_name_temp, delay);
         show_damage(attack, anim, 0);
     } else {
         if (attack->defender->data.critter.combat.results & 0x03) {
@@ -625,21 +607,21 @@ static int action_melee(Attack* attack, int anim)
             fid = art_id(OBJ_TYPE_CRITTER, attack->defender->fid & 0xFFF, ANIM_DODGE_ANIM, (attack->defender->fid & 0xF000) >> 12, attack->defender->rotation + 1);
             art = art_ptr_lock(fid, &cache_entry);
             if (art != NULL) {
-                v18 = art_frame_action_frame(art);
+                int dodgeDelay = art_frame_action_frame(art);
                 art_ptr_unlock(cache_entry);
 
-                if (v18 <= v17) {
+                if (dodgeDelay <= delay) {
                     register_object_play_sfx(attack->attacker, sfx_name_temp, -1);
                     register_object_animate(attack->attacker, anim, 0);
 
                     sfx_name = gsnd_build_character_sfx_name(attack->defender, ANIM_DODGE_ANIM, CHARACTER_SOUND_EFFECT_UNUSED);
-                    register_object_play_sfx(attack->defender, sfx_name, v17 - v18);
+                    register_object_play_sfx(attack->defender, sfx_name, delay - dodgeDelay);
                     register_object_animate(attack->defender, ANIM_DODGE_ANIM, 0);
                 } else {
                     sfx_name = gsnd_build_character_sfx_name(attack->defender, ANIM_DODGE_ANIM, CHARACTER_SOUND_EFFECT_UNUSED);
                     register_object_play_sfx(attack->defender, sfx_name, -1);
                     register_object_animate(attack->defender, ANIM_DODGE_ANIM, 0);
-                    register_object_play_sfx(attack->attacker, sfx_name_temp, v18 - v17);
+                    register_object_play_sfx(attack->attacker, sfx_name_temp, dodgeDelay - delay);
                     register_object_animate(attack->attacker, anim, 0);
                 }
             }
@@ -666,14 +648,16 @@ static int action_melee(Attack* attack, int anim)
 // 0x4114DC
 static int action_ranged(Attack* attack, int anim)
 {
-    Object* neighboors[6];
-    memset(neighboors, 0, sizeof(neighboors));
+    Object* adjacentObjects[ROTATION_COUNT];
+    for (int rotation = 0; rotation < ROTATION_COUNT; rotation++) {
+        adjacentObjects[rotation] = NULL;
+    }
 
     register_begin(ANIMATION_REQUEST_RESERVED);
     register_priority(1);
 
     Object* projectile = NULL;
-    Object* v50 = NULL;
+    Object* replacedWeapon = NULL;
     int weaponFid = -1;
 
     Proto* weaponProto;
@@ -683,7 +667,7 @@ static int action_ranged(Attack* attack, int anim)
     int fid = art_id(OBJ_TYPE_CRITTER, attack->attacker->fid & 0xFFF, anim, (attack->attacker->fid & 0xF000) >> 12, attack->attacker->rotation + 1);
     CacheEntry* artHandle;
     Art* art = art_ptr_lock(fid, &artHandle);
-    int actionFrame = (art != NULL) ? art_frame_action_frame(art) : 0;
+    int delay = (art != NULL) ? art_frame_action_frame(art) : 0;
     art_ptr_unlock(artHandle);
 
     item_w_range(attack->attacker, attack->hitMode);
@@ -728,7 +712,7 @@ static int action_ranged(Attack* attack, int anim)
                     int weaponFlags = weapon->flags;
 
                     item_remove_mult(attack->attacker, weapon, 1);
-                    v50 = item_replace(attack->attacker, weapon, weaponFlags & OBJECT_IN_ANY_HAND);
+                    replacedWeapon = item_replace(attack->attacker, weapon, weaponFlags & OBJECT_IN_ANY_HAND);
                     obj_change_fid(projectile, projectileProto->fid, NULL);
 
                     if (attack->attacker == obj_dude) {
@@ -750,20 +734,20 @@ static int action_ranged(Attack* attack, int anim)
                 int projectileRotation = tile_dir(attack->attacker->tile, attack->defender->tile);
                 obj_set_rotation(projectile, projectileRotation, NULL);
 
-                register_object_funset(projectile, OBJECT_HIDDEN, actionFrame);
+                register_object_funset(projectile, OBJECT_HIDDEN, delay);
 
                 const char* sfx = gsnd_build_weapon_sfx_name(WEAPON_SOUND_EFFECT_AMMO_FLYING, weapon, attack->hitMode, attack->defender);
                 register_object_play_sfx(projectile, sfx, 0);
 
-                int v24;
+                int explosionCenterTile;
                 if ((attack->attackerFlags & DAM_HIT) != 0) {
                     register_object_move_straight_to_tile(projectile, attack->defender->tile, attack->defender->elevation, ANIM_WALK, 0);
-                    actionFrame = make_straight_path(projectile, projectileOrigin, attack->defender->tile, NULL, NULL, 32) - 1;
-                    v24 = attack->defender->tile;
+                    delay = make_straight_path(projectile, projectileOrigin, attack->defender->tile, NULL, NULL, 32) - 1;
+                    explosionCenterTile = attack->defender->tile;
                 } else {
                     register_object_move_straight_to_tile(projectile, attack->tile, attack->defender->elevation, ANIM_WALK, 0);
-                    actionFrame = 0;
-                    v24 = attack->tile;
+                    delay = 0;
+                    explosionCenterTile = attack->tile;
                 }
 
                 if (isGrenade || damageType == DAMAGE_TYPE_EXPLOSION) {
@@ -798,11 +782,11 @@ static int action_ranged(Attack* attack, int anim)
                         register_object_animate_and_hide(projectile, ANIM_STAND, 0);
 
                         for (int rotation = 0; rotation < ROTATION_COUNT; rotation++) {
-                            if (obj_new(&(neighboors[rotation]), explosionFid, -1) != -1) {
-                                obj_turn_off(neighboors[rotation], NULL);
+                            if (obj_new(&(adjacentObjects[rotation]), explosionFid, -1) != -1) {
+                                obj_turn_off(adjacentObjects[rotation], NULL);
 
-                                int v31 = tile_num_in_direction(v24, rotation, 1);
-                                obj_move_to_tile(neighboors[rotation], v31, projectile->elevation, NULL);
+                                int adjacentTile = tile_num_in_direction(explosionCenterTile, rotation, 1);
+                                obj_move_to_tile(adjacentObjects[rotation], adjacentTile, projectile->elevation, NULL);
 
                                 int delay;
                                 if (rotation != ROTATION_NE) {
@@ -815,8 +799,8 @@ static int action_ranged(Attack* attack, int anim)
                                     }
                                 }
 
-                                register_object_funset(neighboors[rotation], OBJECT_HIDDEN, delay);
-                                register_object_animate_and_hide(neighboors[rotation], ANIM_STAND, 0);
+                                register_object_funset(adjacentObjects[rotation], OBJECT_HIDDEN, delay);
+                                register_object_animate_and_hide(adjacentObjects[rotation], ANIM_STAND, 0);
                             }
                         }
 
@@ -830,15 +814,15 @@ static int action_ranged(Attack* attack, int anim)
 
                 if (!l56) {
                     const char* sfx = gsnd_build_weapon_sfx_name(WEAPON_SOUND_EFFECT_HIT, weapon, attack->hitMode, attack->defender);
-                    register_object_play_sfx(weapon, sfx, actionFrame);
+                    register_object_play_sfx(weapon, sfx, delay);
                 }
 
-                actionFrame = 0;
+                delay = 0;
             } else {
                 if ((attack->attackerFlags & DAM_HIT) == 0) {
                     Object* defender = attack->defender;
                     if ((defender->data.critter.combat.results & (DAM_KNOCKED_OUT | DAM_KNOCKED_DOWN)) == 0) {
-                        register_object_animate(defender, ANIM_DODGE_ANIM, actionFrame);
+                        register_object_animate(defender, ANIM_DODGE_ANIM, delay);
                         l56 = true;
                     }
                 }
@@ -846,7 +830,7 @@ static int action_ranged(Attack* attack, int anim)
         }
     }
 
-    show_damage(attack, anim, actionFrame);
+    show_damage(attack, anim, delay);
 
     if ((attack->attackerFlags & DAM_HIT) == 0) {
         combatai_msg(attack->defender, attack, AI_MESSAGE_TYPE_MISS, -1);
@@ -863,23 +847,23 @@ static int action_ranged(Attack* attack, int anim)
     }
 
     for (int rotation = 0; rotation < ROTATION_COUNT; rotation++) {
-        if (neighboors[rotation] != NULL) {
-            register_object_must_erase(neighboors[rotation]);
+        if (adjacentObjects[rotation] != NULL) {
+            register_object_must_erase(adjacentObjects[rotation]);
         }
     }
 
     if ((attack->attackerFlags & (DAM_KNOCKED_OUT | DAM_KNOCKED_DOWN | DAM_DEAD)) == 0) {
         if (anim == ANIM_THROW_ANIM) {
-            bool l9 = false;
-            if (v50 != NULL) {
-                int v38 = item_w_anim_code(v50);
-                if (v38 != 0) {
-                    register_object_take_out(attack->attacker, v38, -1);
-                    l9 = true;
+            bool takeOutAnimationRegistered = false;
+            if (replacedWeapon != NULL) {
+                int weaponAnimationCode = item_w_anim_code(replacedWeapon);
+                if (weaponAnimationCode != 0) {
+                    register_object_take_out(attack->attacker, weaponAnimationCode, -1);
+                    takeOutAnimationRegistered = true;
                 }
             }
 
-            if (!l9) {
+            if (!takeOutAnimationRegistered) {
                 int fid = art_id(OBJ_TYPE_CRITTER, attack->attacker->fid & 0xFFF, ANIM_STAND, 0, attack->attacker->rotation + 1);
                 register_object_change_fid(attack->attacker, fid, -1);
             }
@@ -895,8 +879,8 @@ static int action_ranged(Attack* attack, int anim)
         }
 
         for (int rotation = 0; rotation < ROTATION_COUNT; rotation++) {
-            if (neighboors[rotation] != NULL) {
-                obj_erase_object(neighboors[rotation], NULL);
+            if (adjacentObjects[rotation] != NULL) {
+                obj_erase_object(adjacentObjects[rotation], NULL);
             }
         }
 
@@ -1778,25 +1762,24 @@ static int finished_explosion(Object* a1, Object* a2)
 }
 
 // 0x413044
-static int compute_explosion_damage(int min, int max, Object* a3, int* a4)
+static int compute_explosion_damage(int min, int max, Object* def, int* knockback_distance)
 {
-    int v5 = roll_random(min, max);
-    int v7 = v5 - stat_level(a3, STAT_DAMAGE_THRESHOLD_EXPLOSION);
-    if (v7 > 0) {
-        v7 -= stat_level(a3, STAT_DAMAGE_RESISTANCE_EXPLOSION) * v7 / 100;
+    int damage = roll_random(min, max) - stat_level(knockback_distance, STAT_DAMAGE_THRESHOLD_EXPLOSION);
+    if (damage > 0) {
+        damage -= stat_level(a3, STAT_DAMAGE_RESISTANCE_EXPLOSION) * damage / 100;
     }
 
-    if (v7 < 0) {
-        v7 = 0;
+    if (damage < 0) {
+        damage = 0;
     }
 
-    if (a4 != NULL) {
-        if ((a3->flags & OBJECT_MULTIHEX) == 0) {
-            *a4 = v7 / 10;
+    if (knockback_distance != NULL) {
+        if ((def->flags & OBJECT_MULTIHEX) == 0) {
+            *knockback_distance = damage / 10;
         }
     }
 
-    return v7;
+    return damage;
 }
 
 // 0x4130A8
@@ -1942,9 +1925,7 @@ static int report_dmg(Attack* attack, Object* a2)
 // 0x4133D8
 static int compute_dmg_damage(int min_damage, int max_damage, Object* obj, int* knockback_distance, int damage_type)
 {
-    int damage;
-
-    damage = roll_random(min_damage, max_damage) - stat_level(obj, STAT_DAMAGE_THRESHOLD + damage_type);
+    int damage = roll_random(min_damage, max_damage) - stat_level(obj, STAT_DAMAGE_THRESHOLD + damage_type);
     if (damage > 0) {
         damage -= stat_level(obj, STAT_DAMAGE_RESISTANCE + damage_type) * damage / 100;
     }
