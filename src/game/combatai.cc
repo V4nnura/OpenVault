@@ -712,7 +712,6 @@ static bool ai_can_use_weapon(Object* critter, Object* weapon, int hitMode)
 Object* ai_search_inven(Object* critter, int check_action_points)
 {
     int inventory_item_index = -1;
-    Object* candidate;
 
     int body_type = critter_body_type(critter);
     if (body_type != BODY_TYPE_BIPED
@@ -723,7 +722,7 @@ Object* ai_search_inven(Object* critter, int check_action_points)
     Object* best_weapon = NULL;
     Object* current_item = inven_right_hand(critter);
     while (true) {
-        candidate = inven_find_type(critter, ITEM_TYPE_WEAPON, &inventory_item_index);
+        Object* candidate = inven_find_type(critter, ITEM_TYPE_WEAPON, &inventory_item_index);
         if (candidate == NULL) {
             break;
         }
@@ -885,20 +884,17 @@ static int ai_move_closer(Object* critter, Object* target, int a3)
 // 0x425590
 static int ai_switch_weapons(Object* critter, int* hit_mode, Object** weapon)
 {
-    Object* best_weapon;
-    Object* retrieved_best_weapon;
-
     *weapon = NULL;
     *hit_mode = HIT_MODE_PUNCH;
 
-    best_weapon = ai_search_inven(critter, 1);
+    Object* best_weapon = ai_search_inven(critter, 1);
     if (best_weapon != NULL) {
         *weapon = best_weapon;
         *hit_mode = ai_pick_hit_mode(critter, best_weapon);
     } else {
         best_weapon = ai_search_environ(critter, ITEM_TYPE_WEAPON);
         if (best_weapon != NULL) {
-            retrieved_best_weapon = ai_retrieve_object(critter, best_weapon);
+            Object* retrieved_best_weapon = ai_retrieve_object(critter, best_weapon);
             if (retrieved_best_weapon != NULL) {
                 *weapon = retrieved_best_weapon;
                 *hit_mode = ai_pick_hit_mode(critter, retrieved_best_weapon);
