@@ -1485,9 +1485,7 @@ bool is_hit_from_front(Object* a1, Object* a2)
 // 0x412974
 bool can_see(Object* a1, Object* a2)
 {
-    int diff;
-
-    diff = a1->rotation - tile_dir(a1->tile, a2->tile);
+    int diff = a1->rotation - tile_dir(a1->tile, a2->tile);
     if (diff < 0) {
         diff = -diff;
     }
