@@ -348,26 +348,26 @@ int skill_result(Object* critter, int skill, int modifier, int* how_much)
 // 0x498640
 int skill_contest(Object* attacker, Object* defender, int skill, int atk_modifier, int def_modifier, int* how_much)
 {
-    int attackerRoll;
-    int attackerHowMuch;
-    int defenderRoll;
-    int defenderHowMuch;
+    int atk_roll;
+    int atk_how_much;
+    int def_roll;
+    int def_how_much;
 
-    attackerRoll = skill_result(attacker, skill, attackerModifier, &attackerHowMuch);
-    if (attackerRoll > ROLL_FAILURE) {
-        defenderRoll = skill_result(defender, skill, defenderModifier, &defenderHowMuch);
-        if (defenderRoll > ROLL_FAILURE) {
-            attackerHowMuch -= defenderHowMuch;
+    atk_roll = skill_result(attacker, skill, atk_modifier, &atk_how_much);
+    if (atk_roll > ROLL_FAILURE) {
+        def_roll = skill_result(defender, skill, def_modifier, &def_how_much);
+        if (def_roll > ROLL_FAILURE) {
+            atk_how_much -= def_how_much;
         }
 
-        attackerRoll = roll_check_critical(attackerHowMuch, 0);
+        atk_roll = roll_check_critical(atk_how_much, 0);
     }
 
-    if (howMuch != NULL) {
-        *howMuch = attackerHowMuch;
+    if (how_much != NULL) {
+        *how_much = atk_how_much;
     }
 
-    return attackerRoll;
+    return atk_roll;
 }
 
 // 0x4986A8
