@@ -346,7 +346,7 @@ int skill_result(Object* critter, int skill, int modifier, int* how_much)
 }
 
 // 0x498640
-int skill_contest(Object* attacker, Object* defender, int skill, int attackerModifier, int defenderModifier, int* howMuch)
+int skill_contest(Object* attacker, Object* defender, int skill, int atk_modifier, int def_modifier, int* how_much)
 {
     int attackerRoll;
     int attackerHowMuch;
