@@ -26,7 +26,7 @@ int skill_points(Object* critter, int skill);
 int skill_inc_point(Object* critter, int skill);
 int skill_dec_point(Object* critter, int skill);
 int skill_result(Object* critter, int skill, int modifier, int* how_much);
-int skill_contest(Object* attacker, Object* defender, int skill, int att_modifier, int def_modifier, int* how_much);
+int skill_contest(Object* attacker, Object* defender, int skill, int atk_modifier, int def_modifier, int* how_much);
 char* skill_name(int skill);
 char* skill_description(int skill);
 char* skill_attribute(int skill);
