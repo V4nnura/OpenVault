@@ -1332,7 +1332,7 @@ static int proto_read_scenery_data(SceneryProtoData* scenery_data, int type, DB_
 
         return 0;
     case SCENERY_TYPE_GENERIC:
-        if (db_freadInt32(stream, &(scenery_data->generic.field_0)) == -1) return -1;
+        if (db_freadInt32(stream, &(scenery_data->generic.genericFlags)) == -1) return -1;
 
         return 0;
     }
@@ -1518,7 +1518,7 @@ static int proto_write_scenery_data(SceneryProtoData* scenery_data, int type, DB
 
         return 0;
     case SCENERY_TYPE_GENERIC:
-        if (db_fwriteInt32(stream, scenery_data->generic.field_0) == -1) return -1;
+        if (db_fwriteInt32(stream, scenery_data->generic.genericFlags) == -1) return -1;
 
         return 0;
     }
