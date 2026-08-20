@@ -650,8 +650,8 @@ int proto_update_gen(Object* obj)
             data->scenery.door.openFlags = proto->scenery.data.door.openFlags;
             break;
         case SCENERY_TYPE_STAIRS:
-            data->scenery.stairs.destinationMap = proto->scenery.data.stairs.field_0;
-            data->scenery.stairs.destinationBuiltTile = proto->scenery.data.stairs.field_4;
+            data->scenery.stairs.destinationMap = proto->scenery.data.stairs.destinationMap;
+            data->scenery.stairs.destinationBuiltTile = proto->scenery.data.stairs.destinationBuiltTile;
             break;
         case SCENERY_TYPE_ELEVATOR:
             data->scenery.elevator.type = proto->scenery.data.elevator.type;
@@ -659,7 +659,7 @@ int proto_update_gen(Object* obj)
             break;
         case SCENERY_TYPE_LADDER_UP:
         case SCENERY_TYPE_LADDER_DOWN:
-            data->scenery.ladder.destinationBuiltTile = proto->scenery.data.ladder.field_0;
+            data->scenery.ladder.destinationBuiltTile = proto->scenery.data.ladder.destinationBuiltTile;
             break;
         }
         break;
@@ -1317,8 +1317,8 @@ static int proto_read_scenery_data(SceneryProtoData* scenery_data, int type, DB_
 
         return 0;
     case SCENERY_TYPE_STAIRS:
-        if (db_freadInt32(stream, &(scenery_data->stairs.field_0)) == -1) return -1;
-        if (db_freadInt32(stream, &(scenery_data->stairs.field_4)) == -1) return -1;
+        if (db_freadInt32(stream, &(scenery_data->stairs.destinationMap)) == -1) return -1;
+        if (db_freadInt32(stream, &(scenery_data->stairs.destinationBuiltTile)) == -1) return -1;
 
         return 0;
     case SCENERY_TYPE_ELEVATOR:
@@ -1328,7 +1328,7 @@ static int proto_read_scenery_data(SceneryProtoData* scenery_data, int type, DB_
         return 0;
     case SCENERY_TYPE_LADDER_UP:
     case SCENERY_TYPE_LADDER_DOWN:
-        if (db_freadInt32(stream, &(scenery_data->ladder.field_0)) == -1) return -1;
+        if (db_freadInt32(stream, &(scenery_data->ladder.destinationBuiltTile)) == -1) return -1;
 
         return 0;
     case SCENERY_TYPE_GENERIC:
@@ -1503,8 +1503,8 @@ static int proto_write_scenery_data(SceneryProtoData* scenery_data, int type, DB
 
         return 0;
     case SCENERY_TYPE_STAIRS:
-        if (db_fwriteInt32(stream, scenery_data->stairs.field_0) == -1) return -1;
-        if (db_fwriteInt32(stream, scenery_data->stairs.field_4) == -1) return -1;
+        if (db_fwriteInt32(stream, scenery_data->stairs.destinationMap) == -1) return -1;
+        if (db_fwriteInt32(stream, scenery_data->stairs.destinationBuiltTile) == -1) return -1;
 
         return 0;
     case SCENERY_TYPE_ELEVATOR:
@@ -1514,7 +1514,7 @@ static int proto_write_scenery_data(SceneryProtoData* scenery_data, int type, DB
         return 0;
     case SCENERY_TYPE_LADDER_UP:
     case SCENERY_TYPE_LADDER_DOWN:
-        if (db_fwriteInt32(stream, scenery_data->ladder.field_0) == -1) return -1;
+        if (db_fwriteInt32(stream, scenery_data->ladder.destinationBuiltTile) == -1) return -1;
 
         return 0;
     case SCENERY_TYPE_GENERIC:
