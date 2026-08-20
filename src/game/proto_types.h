@@ -326,8 +326,8 @@ typedef struct {
 } SceneryProtoDoorData;
 
 typedef struct {
-    int destinationMap; // d.lower_tile
-    int destinationBuiltTile; // d.upper_tile
+    int destinationBuiltTile; // d.lower_tile
+    int destinationMap; // d.upper_tile
 } SceneryProtoStairsData;
 
 typedef struct {
