@@ -326,8 +326,8 @@ typedef struct {
 } SceneryProtoDoorData;
 
 typedef struct {
-    int field_0; // d.lower_tile
-    int field_4; // d.upper_tile
+    int destinationMap; // d.lower_tile
+    int destinationBuiltTile; // d.upper_tile
 } SceneryProtoStairsData;
 
 typedef struct {
@@ -336,11 +336,11 @@ typedef struct {
 } SceneryProtoElevatorData;
 
 typedef struct {
-    int field_0;
+    int destinationBuiltTile; // destination map
 } SceneryProtoLadderData;
 
 typedef struct {
-    int field_0;
+    int genericFlags;
 } SceneryProtoGenericData;
 
 typedef struct SceneryProtoData {
