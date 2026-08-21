@@ -171,7 +171,7 @@ long audioSeek(int fileHandle, long offset, int origin)
 {
     int pos;
     unsigned char* buf;
-    int v10;
+    int remainingBytesToSkip;
 
     Audio* audioFile = &(audio[fileHandle - 1]);
 
@@ -234,14 +234,14 @@ long audioSeek(int fileHandle, long offset, int origin)
             }
         } else {
             buf = (unsigned char*)mymalloc(1024, __FILE__, __LINE__); // "..\int\audio.c", 321
-            v10 = pos - audioFile->position;
-            while (v10 > 1024) {
-                v10 -= 1024;
+            remainingBytesToSkip = pos - audioFile->position;
+            while (remainingBytesToSkip > 1024) {
+                remainingBytesToSkip -= 1024;
                 audioRead(fileHandle, buf, 1024);
             }
 
-            if (v10 != 0) {
-                audioRead(fileHandle, buf, v10);
+            if (remainingBytesToSkip != 0) {
+                audioRead(fileHandle, buf, remainingBytesToSkip);
             }
 
             myfree(buf, __FILE__, __LINE__);
