@@ -235,7 +235,7 @@ static void op_scr_return(Program* program)
 
     Script* script;
     if (scr_ptr(sid, &script) != -1) {
-        script->field_28 = data;
+        script->returnValue = data;
     }
 }
 
