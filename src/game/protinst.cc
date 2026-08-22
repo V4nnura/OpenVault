@@ -970,7 +970,7 @@ static int protinst_default_use_item(Object* a1, Object* a2, Object* item)
 }
 
 // 0x48B394
-int protinst_use_item_on(Object* a1, Object* a2, Object* item)
+int protinst_use_item_on(Object* critter, Object* targetObj, Object* item)
 {
     int messageId = -1;
     int criticalChanceModifier = 0;
@@ -996,11 +996,11 @@ int protinst_use_item_on(Object* a1, Object* a2, Object* item)
         int sid = -1;
 
         if (obj_sid(item, &sid) == -1) {
-            if (obj_sid(a2, &sid) == -1) {
-                return protinst_default_use_item(a1, a2, item);
+            if (obj_sid(targetObj, &sid) == -1) {
+                return protinst_default_use_item(critter, targetObj, item);
             }
 
-            scr_set_objs(sid, a1, item);
+            scr_set_objs(sid, critter, item);
             exec_script_proc(sid, SCRIPT_PROC_USE_OBJ_ON);
 
             if (scr_ptr(sid, &script) == -1) {
@@ -1008,22 +1008,22 @@ int protinst_use_item_on(Object* a1, Object* a2, Object* item)
             }
 
             if (!script->scriptOverrides) {
-                return protinst_default_use_item(a1, a2, item);
+                return protinst_default_use_item(critter, targetObj, item);
             }
         } else {
-            scr_set_objs(sid, a1, a2);
+            scr_set_objs(sid, critter, targetObj);
             exec_script_proc(sid, SCRIPT_PROC_USE_OBJ_ON);
 
             if (scr_ptr(sid, &script) == -1) {
                 return -1;
             }
 
-            if (script->field_28 == 0) {
-                if (obj_sid(a2, &sid) == -1) {
-                    return protinst_default_use_item(a1, a2, item);
+            if (script->returnValue == 0) {
+                if (obj_sid(targetObj, &sid) == -1) {
+                    return protinst_default_use_item(critter, targetObj, item);
                 }
 
-                scr_set_objs(sid, a1, item);
+                scr_set_objs(sid, critter, item);
                 exec_script_proc(sid, SCRIPT_PROC_USE_OBJ_ON);
 
                 Script* script;
@@ -1032,12 +1032,12 @@ int protinst_use_item_on(Object* a1, Object* a2, Object* item)
                 }
 
                 if (!script->scriptOverrides) {
-                    return protinst_default_use_item(a1, a2, item);
+                    return protinst_default_use_item(critter, targetObj, item);
                 }
             }
         }
 
-        return script->field_28;
+        return script->returnValue;
     }
 
     if (isInCombat()) {
@@ -1052,7 +1052,7 @@ int protinst_use_item_on(Object* a1, Object* a2, Object* item)
         return -1;
     }
 
-    if (skill_use(a1, a2, skill, criticalChanceModifier) != 0) {
+    if (skill_use(critter, targetObj, skill, criticalChanceModifier) != 0) {
         return 0;
     }
 
