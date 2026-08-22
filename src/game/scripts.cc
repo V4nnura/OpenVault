@@ -1653,7 +1653,7 @@ static int scr_write_ScriptSubNode(Script* scr, DB_FILE* stream)
     if (db_fwriteInt(stream, scr->scr_oid) == -1) return -1;
     if (db_fwriteInt(stream, scr->scr_local_var_offset) == -1) return -1;
     if (db_fwriteInt(stream, scr->scr_num_local_vars) == -1) return -1;
-    if (db_fwriteInt(stream, scr->field_28) == -1) return -1;
+    if (db_fwriteInt(stream, scr->returnValue) == -1) return -1;
     if (db_fwriteInt(stream, scr->action) == -1) return -1;
     if (db_fwriteInt(stream, scr->fixedParam) == -1) return -1;
     if (db_fwriteInt(stream, scr->actionBeingUsed) == -1) return -1;
@@ -1807,7 +1807,7 @@ static int scr_read_ScriptSubNode(Script* scr, DB_FILE* stream)
     if (db_freadInt(stream, &(scr->scr_oid)) == -1) return -1;
     if (db_freadInt(stream, &(scr->scr_local_var_offset)) == -1) return -1;
     if (db_freadInt(stream, &(scr->scr_num_local_vars)) == -1) return -1;
-    if (db_freadInt(stream, &(scr->field_28)) == -1) return -1;
+    if (db_freadInt(stream, &(scr->returnValue)) == -1) return -1;
     if (db_freadInt(stream, &(scr->action)) == -1) return -1;
     if (db_freadInt(stream, &(scr->fixedParam)) == -1) return -1;
     if (db_freadInt(stream, &(scr->actionBeingUsed)) == -1) return -1;
@@ -2028,7 +2028,7 @@ int scr_new(int* sidPtr, int scriptType)
     scr->program = 0;
     scr->scr_local_var_offset = -1;
     scr->scr_num_local_vars = 0;
-    scr->field_28 = 0;
+    scr->returnValue = 0;
     scr->action = 0;
     scr->fixedParam = 0;
     scr->owner = 0;
