@@ -1044,7 +1044,7 @@ int protinst_use_item_on(Object* critter, Object* targetObj, Object* item)
         MessageListItem messageListItem;
         // You cannot do that in combat.
         messageListItem.num = 902;
-        if (a1 == obj_dude) {
+        if (critter == obj_dude) {
             if (message_search(&proto_main_msg_file, &messageListItem)) {
                 display_print(messageListItem.text);
             }
@@ -1062,7 +1062,7 @@ int protinst_use_item_on(Object* critter, Object* targetObj, Object* item)
 
     MessageListItem messageListItem;
     messageListItem.num = messageId;
-    if (a1 == obj_dude) {
+    if (critter == obj_dude) {
         if (message_search(&proto_main_msg_file, &messageListItem)) {
             display_print(messageListItem.text);
         }
