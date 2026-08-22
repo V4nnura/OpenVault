@@ -19,7 +19,7 @@ int obj_destroy(Object* obj);
 int obj_use_radio(Object* item_obj);
 int protinst_use_item(Object* a1, Object* a2);
 int obj_use_item(Object* a1, Object* a2);
-int protinst_use_item_on(Object* a1, Object* a2, Object* item);
+int protinst_use_item_on(Object* critter, Object* targetObj, Object* item);
 int obj_use_item_on(Object* a1, Object* a2, Object* a3);
 int check_scenery_ap_cost(Object* obj, Object* a2);
 int obj_use(Object* a1, Object* a2);
