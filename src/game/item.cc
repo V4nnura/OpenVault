@@ -2175,9 +2175,7 @@ static void perform_drug_effect(Object* critter, int* stats, int* mods, bool isI
 
         oldStatBonus = stat_get_bonus(critter, stat);
 
-        int before = (critter == obj_dude)
-            ? stat_level(obj_dude, stat)
-            : 0;
+        int before = (critter == obj_dude) ? stat_level(obj_dude, stat) : 0;
 
         if (firstStatIsMinimum) {
             statBonus = roll_random(mods[index - 1], mods[index]) + oldStatBonus;
