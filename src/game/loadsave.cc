@@ -1969,8 +1969,7 @@ static void DrawInfoBox(int slot)
             LoadSaveSlotData* ptr = &(LSData[slot]);
             text_to_buf(lsgbuf + LS_WINDOW_WIDTH * 254 + 396, ptr->characterName, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
 
-            snprintf(str, 
-                    sizeof(str),
+            snprintf(str, sizeof(str),
                     "%.2d %s %.4d   %.4d",
                     ptr->gameDay,
                     getmsg(&lsgame_msgfl, &lsgmesg, 116 + ptr->gameMonth),
