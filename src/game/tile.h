@@ -31,7 +31,7 @@ void tile_toggle_roof(int a1);
 int tile_roof_visible();
 int tile_coord(int tile, int* x, int* y, int elevation);
 int tile_num(int x, int y, int elevation, bool ignoreBounds = false);
-int tile_dist(int a1, int a2);
+int tile_dist(int tile1, int tile2);
 bool tile_in_front_of(int tile1, int tile2);
 bool tile_to_right_of(int tile1, int tile2);
 int tile_num_in_direction(int tile, int rotation, int distance);
