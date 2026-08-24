@@ -2163,8 +2163,8 @@ static int GetComment(int slot)
     int rc;
 
     if (get_input_str2(window, 507, 508, description, LOAD_SAVE_DESCRIPTION_LENGTH - 1, 24, 35, colorTable[992], lsbmp[LOAD_SAVE_FRM_BOX][ginfo[1].width * 35 + 24], 0) == 0) {
-        strncpy(LSData[a1].description, description, LOAD_SAVE_DESCRIPTION_LENGTH);
-        LSData[a1].description[LOAD_SAVE_DESCRIPTION_LENGTH - 1] = '\0';
+        strncpy(LSData[slot].description, description, LOAD_SAVE_DESCRIPTION_LENGTH);
+        LSData[slot].description[LOAD_SAVE_DESCRIPTION_LENGTH - 1] = '\0';
         rc = 1;
     } else {
         rc = 0;
