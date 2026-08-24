@@ -137,8 +137,8 @@ static int SaveHeader(int slot);
 static int LoadHeader(int slot);
 static int GetSlotList();
 static void ShowSlotList(int a1);
-static void DrawInfoBox(int a1);
-static int LoadTumbSlot(int a1);
+static void DrawInfoBox(int slot);
+static int LoadTumbSlot(int slot);
 static int GetComment(int a1);
 static int get_input_str2(int win, int doneKeyCode, int cancelKeyCode, char* description, int maxLength, int x, int y, int textColor, int backgroundColor, int flags);
 static int DummyFunc(DB_FILE* stream);
@@ -253,7 +253,7 @@ static LoadGameHandler* master_load_list[LOAD_SAVE_HANDLER_COUNT] = {
 };
 
 // 0x505A68
-static int loadingGame = 0;
+static bool loadingGame = false;
 
 // 0x612260
 static Size ginfo[LOAD_SAVE_FRM_COUNT];
@@ -1588,7 +1588,7 @@ static int SaveSlot()
 }
 
 // 0x46FCC4
-int isLoadingGame()
+bool isLoadingGame()
 {
     return loadingGame;
 }
@@ -1606,7 +1606,7 @@ static int LoadSlot(int slot)
         gmouse_set_cursor(MOUSE_CURSOR_WAIT_PLANET);
     }
 
-    loadingGame = 1;
+    loadingGame = true;
 
     snprintf(gmpath, sizeof(gmpath), "%s\\%s%.2d\\", "SAVEGAME", "SLOT", slot_cursor + 1);
     strcat(gmpath, "SAVE.DAT");
@@ -1617,7 +1617,7 @@ static int LoadSlot(int slot)
     flptr = db_fopen(gmpath, "rb");
     if (flptr == NULL) {
         debug_printf("\nLOADSAVE: ** Error opening load game file for reading! **\n");
-        loadingGame = 0;
+        loadingGame = false;
         return -1;
     }
 
@@ -1626,7 +1626,7 @@ static int LoadSlot(int slot)
         debug_printf("\nLOADSAVE: ** Error reading save  game header! **\n");
         db_fclose(flptr);
         game_reset();
-        loadingGame = 0;
+        loadingGame = false;
         return -1;
     }
 
@@ -1641,7 +1641,7 @@ static int LoadSlot(int slot)
             debug_printf("LOADSAVE: Load function #%d data size read: %d bytes.\n", index, static_cast<int>(db_ftell(flptr) - pos));
             db_fclose(flptr);
             game_reset();
-            loadingGame = 0;
+            loadingGame = false;
             return -1;
         }
 
@@ -1663,7 +1663,7 @@ static int LoadSlot(int slot)
         debug_printf("\nError: Couldn't find LoadSave Message!");
     }
 
-    loadingGame = 0;
+    loadingGame = false;
 
     return 0;
 }
@@ -1955,7 +1955,7 @@ static void ShowSlotList(int a1)
 }
 
 // 0x4708D4
-static void DrawInfoBox(int a1)
+static void DrawInfoBox(int slot)
 {
     buf_to_buf(lsbmp[LOAD_SAVE_FRM_BACKGROUND] + LS_WINDOW_WIDTH * 254 + 396, 164, 60, LS_WINDOW_WIDTH, lsgbuf + LS_WINDOW_WIDTH * 254 + 396, 640);
 
@@ -1963,26 +1963,24 @@ static void DrawInfoBox(int a1)
     const char* text;
     int color = colorTable[992];
 
-    switch (LSstatus[a1]) {
+    switch (LSstatus[slot]) {
     case SLOT_STATE_OCCUPIED:
-        do {
-            LoadSaveSlotData* ptr = &(LSData[a1]);
+        if (1) {
+            LoadSaveSlotData* ptr = &(LSData[slot]);
             text_to_buf(lsgbuf + LS_WINDOW_WIDTH * 254 + 396, ptr->characterName, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
 
-            int v4 = ptr->gameTime / 600;
-            int minutes = v4 % 60;
-            int v6 = 25 * (v4 / 60 % 24);
-            int time = 4 * v6 + minutes;
-
-            text = getmsg(&lsgame_msgfl, &lsgmesg, 116 + ptr->gameMonth);
-            snprintf(str, sizeof(str), "%.2d %s %.4d   %.4d", ptr->gameDay, text, ptr->gameYear, time);
+            snprintf(str, 
+                    sizeof(str),
+                    "%.2d %s %.4d   %.4d",
+                    ptr->gameDay,
+                    getmsg(&lsgame_msgfl, &lsgmesg, 116 + ptr->gameMonth),
+                    ptr->gameYear,
+                    100 * ((ptr->gameTime / 600) / 60 % 24) + (ptr->gameTime / 600) % 60);
 
             int v2 = text_height();
             text_to_buf(lsgbuf + LS_WINDOW_WIDTH * (256 + v2) + 397, str, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
 
-            const char* v22 = map_get_elev_idx(ptr->map, ptr->elevation);
-            const char* v9 = map_get_short_name(ptr->map);
-            snprintf(str, sizeof(str), "%s %s", v9, v22);
+            snprintf(str, sizeof(str), "%s %s", map_get_short_name(ptr->map), map_get_elev_idx(ptr->map, ptr->elevation));
 
             int y = v2 + 3 + v2 + 256;
             short beginnings[WORD_WRAP_MAX_COUNT];
@@ -1997,7 +1995,7 @@ static void DrawInfoBox(int a1)
                     y += v2 + 2;
                 }
             }
-        } while (0);
+        }
         return;
     case SLOT_STATE_EMPTY:
         // Empty.
@@ -2024,30 +2022,28 @@ static void DrawInfoBox(int a1)
 }
 
 // 0x470C3C
-static int LoadTumbSlot(int a1)
+static int LoadTumbSlot(int slot)
 {
-    DB_FILE* stream;
-    int v2;
-
-    v2 = LSstatus[slot_cursor];
-    if (v2 != 0 && v2 != 2 && v2 != 3) {
+    if (LSstatus[slot_cursor] != SLOT_STATE_EMPTY
+        && LSstatus[slot_cursor] != SLOT_STATE_ERROR
+        && LSstatus[slot_cursor] != SLOT_STATE_UNSUPPORTED_VERSION) {
         snprintf(str, sizeof(str), "%s\\%s%.2d\\%s", "SAVEGAME", "SLOT", slot_cursor + 1, "SAVE.DAT");
         debug_printf(" Filename %s\n", str);
 
-        stream = db_fopen(str, "rb");
+        DB_FILE* stream = db_fopen(str, "rb");
         if (stream == NULL) {
-            debug_printf("\nLOADSAVE: ** (A) Error reading thumbnail #%d! **\n", a1);
+            debug_printf("\nLOADSAVE: ** (A) Error reading thumbnail #%d! **\n", slot);
             return -1;
         }
 
         if (db_fseek(stream, 131, SEEK_SET) != 0) {
-            debug_printf("\nLOADSAVE: ** (B) Error reading thumbnail #%d! **\n", a1);
+            debug_printf("\nLOADSAVE: ** (B) Error reading thumbnail #%d! **\n", slot);
             db_fclose(stream);
             return -1;
         }
 
         if (db_fread(thumbnail_image[0], LS_PREVIEW_SIZE, 1, stream) != 1) {
-            debug_printf("\nLOADSAVE: ** (C) Error reading thumbnail #%d! **\n", a1);
+            debug_printf("\nLOADSAVE: ** (C) Error reading thumbnail #%d! **\n", slot);
             db_fclose(stream);
             return -1;
         }
