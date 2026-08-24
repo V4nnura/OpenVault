@@ -1970,11 +1970,11 @@ static void DrawInfoBox(int slot)
             text_to_buf(lsgbuf + LS_WINDOW_WIDTH * 254 + 396, ptr->characterName, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
 
             snprintf(str, sizeof(str),
-                    "%.2d %s %.4d   %.4d",
-                    ptr->gameDay,
-                    getmsg(&lsgame_msgfl, &lsgmesg, 116 + ptr->gameMonth),
-                    ptr->gameYear,
-                    100 * ((ptr->gameTime / 600) / 60 % 24) + (ptr->gameTime / 600) % 60);
+                "%.2d %s %.4d   %.4d",
+                ptr->gameDay,
+                getmsg(&lsgame_msgfl, &lsgmesg, 116 + ptr->gameMonth),
+                ptr->gameYear,
+                100 * ((ptr->gameTime / 600) / 60 % 24) + (ptr->gameTime / 600) % 60);
 
             int v2 = text_height();
             text_to_buf(lsgbuf + LS_WINDOW_WIDTH * (256 + v2) + 397, str, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
