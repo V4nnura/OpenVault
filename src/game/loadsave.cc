@@ -136,10 +136,10 @@ static void GetTimeDate(short* day, short* month, short* year, int* hour);
 static int SaveHeader(int slot);
 static int LoadHeader(int slot);
 static int GetSlotList();
-static void ShowSlotList(int a1);
+static void ShowSlotList(int windowType);
 static void DrawInfoBox(int slot);
 static int LoadTumbSlot(int slot);
-static int GetComment(int a1);
+static int GetComment(int slot);
 static int get_input_str2(int win, int doneKeyCode, int cancelKeyCode, char* description, int maxLength, int x, int y, int textColor, int backgroundColor, int flags);
 static int DummyFunc(DB_FILE* stream);
 static int PrepLoad(DB_FILE* stream);
@@ -147,7 +147,7 @@ static int EndLoad(DB_FILE* stream);
 static int GameMap2Slot(DB_FILE* stream);
 static int SlotMap2Game(DB_FILE* stream);
 static int mygets(char* dest, DB_FILE* stream);
-static int copy_file(const char* a1, const char* a2);
+static int copy_file(const char* existingFileName, const char* newFileName);
 static int SaveBackup();
 static int RestoreSave();
 static int LoadObjDudeCid(DB_FILE* stream);
@@ -180,7 +180,7 @@ static bool bk_enable = false;
 static int map_backup_count = -1;
 
 // 0x50596C
-static int automap_db_flag = 0;
+static bool automap_db_flag = false;
 
 // 0x505970
 static char* patches = NULL;
@@ -463,7 +463,7 @@ int SaveGame(int mode)
         break;
     }
 
-    ShowSlotList(0);
+    ShowSlotList(LOAD_SAVE_WINDOW_TYPE_SAVE_GAME);
     DrawInfoBox(slot_cursor);
     win_draw(lsgwin);
     renderPresent();
@@ -970,7 +970,7 @@ int LoadGame(int mode)
         break;
     }
 
-    ShowSlotList(2);
+    ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
     DrawInfoBox(slot_cursor);
     win_draw(lsgwin);
     dbleclkcntr = 24;
@@ -1138,7 +1138,7 @@ int LoadGame(int mode)
                         break;
                     }
 
-                    ShowSlotList(2);
+                    ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
                     DrawInfoBox(slot_cursor);
                     win_draw(lsgwin);
                 }
@@ -1185,7 +1185,7 @@ int LoadGame(int mode)
                 }
 
                 DrawInfoBox(slot_cursor);
-                ShowSlotList(2);
+                ShowSlotList(LOAD_SAVE_WINDOW_TYPE_LOAD_GAME);
             }
 
             win_draw(lsgwin);
@@ -2054,7 +2054,7 @@ static int LoadTumbSlot(int slot)
 }
 
 // 0x470D50
-static int GetComment(int a1)
+static int GetComment(int slot)
 {
     // Maintain original position in original resolution, otherwise center it.
     int commentWindowX = screenGetWidth() != 640
@@ -2155,7 +2155,7 @@ static int GetComment(int a1)
 
     char description[LOAD_SAVE_DESCRIPTION_LENGTH];
     if (LSstatus[slot_cursor] == SLOT_STATE_OCCUPIED) {
-        strncpy(description, LSData[a1].description, LOAD_SAVE_DESCRIPTION_LENGTH);
+        strncpy(description, LSData[slot].description, LOAD_SAVE_DESCRIPTION_LENGTH);
     } else {
         memset(description, '\0', LOAD_SAVE_DESCRIPTION_LENGTH);
     }
@@ -2605,7 +2605,7 @@ static int mygets(char* dest, DB_FILE* stream)
 }
 
 // 0x471A88
-static int copy_file(const char* a1, const char* a2)
+static int copy_file(const char* existingFileName, const char* newFileName)
 {
     DB_FILE* stream1;
     DB_FILE* stream2;
@@ -2619,7 +2619,7 @@ static int copy_file(const char* a1, const char* a2)
     buf = NULL;
     result = -1;
 
-    stream1 = db_fopen(a1, "rb");
+    stream1 = db_fopen(existingFileName, "rb");
     if (stream1 == NULL) {
         goto out;
     }
@@ -2629,7 +2629,7 @@ static int copy_file(const char* a1, const char* a2)
         goto out;
     }
 
-    stream2 = db_fopen(a2, "wb");
+    stream2 = db_fopen(newFileName, "wb");
     if (stream2 == NULL) {
         goto out;
     }
@@ -2775,7 +2775,7 @@ static int SaveBackup()
     char* v2 = strmfe(str2, "AUTOMAP.DB", "BAK");
     snprintf(str1, sizeof(str1), "%s\\%s", gmpath, v2);
 
-    automap_db_flag = 0;
+    automap_db_flag = false;
 
     DB_FILE* stream2 = db_fopen(str0, "rb");
     if (stream2 != NULL) {
@@ -2785,7 +2785,7 @@ static int SaveBackup()
             return -1;
         }
 
-        automap_db_flag = 1;
+        automap_db_flag = true;
     }
 
     return 0;
