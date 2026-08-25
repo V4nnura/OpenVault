@@ -28,7 +28,7 @@ typedef struct QueueListNode {
 static int queue_destroy(Object* obj, void* data);
 static int queue_explode(Object* obj, void* data);
 static int queue_explode_exit(Object* obj, void* data);
-static int queue_do_explosion(Object* obj, bool a2);
+static int queue_do_explosion(Object* explosive, bool premature);
 static int queue_premature(Object* obj, void* data);
 
 // 0x5076FC
