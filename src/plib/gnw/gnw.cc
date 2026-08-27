@@ -22,7 +22,7 @@ namespace fallout {
 
 static void win_free(int win);
 static void win_clip(Window* window, RectPtr* rectListNodePtr, unsigned char* a3);
-static void refresh_all(Rect* rect, unsigned char* a2);
+static void refresh_all(Rect* rect, unsigned char* dest);
 static void* colorOpen(const char* path);
 static int colorRead(void* handle, void* buf, size_t count);
 static int colorClose(void* handle);
@@ -1065,25 +1065,25 @@ void win_drag(int win)
 }
 
 // 0x4C38B0
-void win_get_mouse_buf(unsigned char* a1)
+void win_get_mouse_buf(unsigned char* dest)
 {
     Rect rect;
     mouse_get_rect(&rect);
-    refresh_all(&rect, a1);
+    refresh_all(&rect, dest);
 }
 
 // 0x4C38CC
-static void refresh_all(Rect* rect, unsigned char* a2)
+static void refresh_all(Rect* rect, unsigned char* dest)
 {
     doing_refresh_all = 1;
 
     for (int index = 0; index < num_windows; index++) {
-        GNW_win_refresh(window[index], rect, a2);
+        GNW_win_refresh(window[index], rect, dest);
     }
 
     doing_refresh_all = 0;
 
-    if (a2 == NULL) {
+    if (dest == NULL) {
         if (!mouse_hidden()) {
             if (mouse_in(rect->ulx, rect->uly, rect->lrx, rect->lry)) {
                 mouse_show();
