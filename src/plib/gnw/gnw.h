@@ -58,7 +58,7 @@ void win_draw_rect(int win, const Rect* rect);
 void GNW_win_refresh(Window* window, Rect* rect, unsigned char* a3);
 void win_refresh_all(Rect* rect);
 void win_drag(int win);
-void win_get_mouse_buf(unsigned char* a1);
+void win_get_mouse_buf(unsigned char* dest);
 Window* GNW_find(int win);
 unsigned char* win_get_buf(int win);
 int win_get_top_win(int x, int y);
