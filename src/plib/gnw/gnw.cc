@@ -835,9 +835,9 @@ void win_draw_rect(int win, const Rect* rect)
 }
 
 // 0x4C3094
-void GNW_win_refresh(Window* w, Rect* rect, unsigned char* a3)
+void GNW_win_refresh(Window* w, Rect* rect, unsigned char* dest)
 {
-    RectPtr v26, v20, v23, v24;
+    RectPtr refreshRectList, clipRect, screenRect, nextRect;
     int dest_pitch;
 
     // TODO: Get rid of this.
@@ -850,87 +850,92 @@ void GNW_win_refresh(Window* w, Rect* rect, unsigned char* a3)
     if ((w->flags & WINDOW_TRANSPARENT) && buffering && !doing_refresh_all) {
         // TODO: Incomplete.
     } else {
-        v26 = rect_malloc();
-        if (v26 == NULL) {
+        // Initial rectangle list node representing the intersection of window and refresh areas.
+        refreshRectList = rect_malloc();
+        if (refreshRectList == NULL) {
             return;
         }
 
-        v26->next = NULL;
+        refreshRectList->next = NULL;
 
-        v26->rect.ulx = std::max(w->rect.ulx, rect->ulx);
-        v26->rect.uly = std::max(w->rect.uly, rect->uly);
-        v26->rect.lrx = std::min(w->rect.lrx, rect->lrx);
-        v26->rect.lry = std::min(w->rect.lry, rect->lry);
+        refreshRectList->rect.ulx = std::max(w->rect.ulx, rect->ulx);
+        refreshRectList->rect.uly = std::max(w->rect.uly, rect->uly);
+        refreshRectList->rect.lrx = std::min(w->rect.lrx, rect->lrx);
+        refreshRectList->rect.lry = std::min(w->rect.lry, rect->lry);
 
-        if (v26->rect.lrx >= v26->rect.ulx && v26->rect.lry >= v26->rect.uly) {
-            if (a3) {
+        if (refreshRectList->rect.lrx >= refreshRectList->rect.ulx && refreshRectList->rect.lry >= refreshRectList->rect.uly) {
+            if (dest) {
                 dest_pitch = rect->lrx - rect->ulx + 1;
             }
 
-            win_clip(w, &v26, a3);
+            // Computes clip boundaries for this window, considering all windows higher in z-index.
+            win_clip(w, &refreshRectList, dest);
 
             if (w->id) {
-                v20 = v26;
-                while (v20) {
-                    GNW_button_refresh(w, &(v20->rect));
+                // Loop through all clip rectangles blitting to dest or screen.
+                clipRect = refreshRectList;
+                while (clipRect) {
+                    GNW_button_refresh(w, &(clipRect->rect));
 
-                    if (a3) {
+                    if (dest) {
                         if (buffering && (w->flags & WINDOW_TRANSPARENT)) {
-                            w->blitProc(w->buffer + v20->rect.ulx - w->rect.ulx + (v20->rect.uly - w->rect.uly) * w->width,
-                                v20->rect.lrx - v20->rect.ulx + 1,
-                                v20->rect.lry - v20->rect.uly + 1,
+                            w->blitProc(w->buffer + clipRect->rect.ulx - w->rect.ulx + (clipRect->rect.uly - w->rect.uly) * w->width,
+                                clipRect->rect.lrx - clipRect->rect.ulx + 1,
+                                clipRect->rect.lry - clipRect->rect.uly + 1,
                                 w->width,
-                                a3 + dest_pitch * (v20->rect.uly - rect->uly) + v20->rect.ulx - rect->ulx,
+                                dest + dest_pitch * (clipRect->rect.uly - rect->uly) + clipRect->rect.ulx - rect->ulx,
                                 dest_pitch);
                         } else {
                             buf_to_buf(
-                                w->buffer + v20->rect.ulx - w->rect.ulx + (v20->rect.uly - w->rect.uly) * w->width,
-                                v20->rect.lrx - v20->rect.ulx + 1,
-                                v20->rect.lry - v20->rect.uly + 1,
+                                w->buffer + clipRect->rect.ulx - w->rect.ulx + (clipRect->rect.uly - w->rect.uly) * w->width,
+                                clipRect->rect.lrx - clipRect->rect.ulx + 1,
+                                clipRect->rect.lry - clipRect->rect.uly + 1,
                                 w->width,
-                                a3 + dest_pitch * (v20->rect.uly - rect->uly) + v20->rect.ulx - rect->ulx,
+                                dest + dest_pitch * (clipRect->rect.uly - rect->uly) + clipRect->rect.ulx - rect->ulx,
                                 dest_pitch);
                         }
                     } else {
+                        // NOTE: 'buffering' appears to always be false.
                         if (buffering) {
                             if (w->flags & WINDOW_TRANSPARENT) {
                                 w->blitProc(
-                                    w->buffer + v20->rect.ulx - w->rect.ulx + (v20->rect.uly - w->rect.uly) * w->width,
-                                    v20->rect.lrx - v20->rect.ulx + 1,
-                                    v20->rect.lry - v20->rect.uly + 1,
+                                    w->buffer + clipRect->rect.ulx - w->rect.ulx + (clipRect->rect.uly - w->rect.uly) * w->width,
+                                    clipRect->rect.lrx - clipRect->rect.ulx + 1,
+                                    clipRect->rect.lry - clipRect->rect.uly + 1,
                                     w->width,
-                                    screen_buffer + v20->rect.uly * (scr_size.lrx - scr_size.ulx + 1) + v20->rect.ulx,
+                                    screen_buffer + clipRect->rect.uly * (scr_size.lrx - scr_size.ulx + 1) + clipRect->rect.ulx,
                                     scr_size.lrx - scr_size.ulx + 1);
                             } else {
                                 buf_to_buf(
-                                    w->buffer + v20->rect.ulx - w->rect.ulx + (v20->rect.uly - w->rect.uly) * w->width,
-                                    v20->rect.lrx - v20->rect.ulx + 1,
-                                    v20->rect.lry - v20->rect.uly + 1,
+                                    w->buffer + clipRect->rect.ulx - w->rect.ulx + (clipRect->rect.uly - w->rect.uly) * w->width,
+                                    clipRect->rect.lrx - clipRect->rect.ulx + 1,
+                                    clipRect->rect.lry - clipRect->rect.uly + 1,
                                     w->width,
-                                    screen_buffer + v20->rect.uly * (scr_size.lrx - scr_size.ulx + 1) + v20->rect.ulx,
+                                    screen_buffer + clipRect->rect.uly * (scr_size.lrx - scr_size.ulx + 1) + clipRect->rect.ulx,
                                     scr_size.lrx - scr_size.ulx + 1);
                             }
                         } else {
                             scr_blit(
-                                w->buffer + v20->rect.ulx - w->rect.ulx + (v20->rect.uly - w->rect.uly) * w->width,
+                                w->buffer + clipRect->rect.ulx - w->rect.ulx + (clipRect->rect.uly - w->rect.uly) * w->width,
                                 w->width,
-                                v20->rect.lry - v20->rect.uly + 1,
+                                clipRect->rect.lry - clipRect->rect.uly + 1,
                                 0,
                                 0,
-                                v20->rect.lrx - v20->rect.ulx + 1,
-                                v20->rect.lry - v20->rect.uly + 1,
-                                v20->rect.ulx,
-                                v20->rect.uly);
+                                clipRect->rect.lrx - clipRect->rect.ulx + 1,
+                                clipRect->rect.lry - clipRect->rect.uly + 1,
+                                clipRect->rect.ulx,
+                                clipRect->rect.uly);
                         }
                     }
 
-                    v20 = v20->next;
+                    clipRect = clipRect->next;
                 }
             } else {
-                rectdata* v16 = v26;
-                while (v16 != NULL) {
-                    int width = v16->rect.lrx - v16->rect.ulx + 1;
-                    int height = v16->rect.lry - v16->rect.uly + 1;
+                // This is special window 0 with no window->buffer, so we fill the rectangles with the background color.
+                rectdata* clipRect = refreshRectList;
+                while (clipRect != NULL) {
+                    int width = clipRect->rect.lrx - clipRect->rect.ulx + 1;
+                    int height = clipRect->rect.lry - clipRect->rect.uly + 1;
                     unsigned char* buf = (unsigned char*)mem_malloc(width * height);
                     if (buf != NULL) {
                         buf_fill(buf, width, height, width, bk_color);
@@ -940,56 +945,59 @@ void GNW_win_refresh(Window* w, Rect* rect, unsigned char* a3)
                                 width,
                                 height,
                                 width,
-                                a3 + dest_pitch * (v16->rect.uly - rect->uly) + v16->rect.ulx - rect->ulx,
+                                dest + dest_pitch * (clipRect->rect.uly - rect->uly) + clipRect->rect.ulx - rect->ulx,
                                 dest_pitch);
                         } else {
+                            // NOTE: 'buffering' appears to always be false.
                             if (buffering) {
                                 buf_to_buf(buf,
                                     width,
                                     height,
                                     width,
-                                    screen_buffer + v16->rect.uly * (scr_size.lrx - scr_size.ulx + 1) + v16->rect.ulx,
+                                    screen_buffer + clipRect->rect.uly * (scr_size.lrx - scr_size.ulx + 1) + clipRect->rect.ulx,
                                     scr_size.lrx - scr_size.ulx + 1);
                             } else {
-                                scr_blit(buf, width, height, 0, 0, width, height, v16->rect.ulx, v16->rect.uly);
+                                scr_blit(buf, width, height, 0, 0, width, height, clipRect->rect.ulx, clipRect->rect.uly);
                             }
                         }
 
                         mem_free(buf);
                     }
-                    v16 = v16->next;
+                    clipRect = clipRect->next;
                 }
             }
 
-            v23 = v26;
-            while (v23) {
-                v24 = v23->next;
+            screenRect = refreshRectList;
+            while (screenRect) {
+                nextRect = screenRect->next;
 
-                if (buffering && !a3) {
+                // If double-buffering, copy double buffer to screen (appears to always be false).
+                if (buffering && !dest) {
                     scr_blit(
-                        screen_buffer + v23->rect.ulx + (scr_size.lrx - scr_size.ulx + 1) * v23->rect.uly,
+                        screen_buffer + screenRect->rect.ulx + (scr_size.lrx - scr_size.ulx + 1) * screenRect->rect.uly,
                         scr_size.lrx - scr_size.ulx + 1,
-                        v23->rect.lry - v23->rect.uly + 1,
+                        screenRect->rect.lry - screenRect->rect.uly + 1,
                         0,
                         0,
-                        v23->rect.lrx - v23->rect.ulx + 1,
-                        v23->rect.lry - v23->rect.uly + 1,
-                        v23->rect.ulx,
-                        v23->rect.uly);
+                        screenRect->rect.lrx - screenRect->rect.ulx + 1,
+                        screenRect->rect.lry - screenRect->rect.uly + 1,
+                        screenRect->rect.ulx,
+                        screenRect->rect.uly);
                 }
 
-                rect_free(v23);
+                // This is where we clean up the main linkedList.
+                rect_free(screenRect);
 
-                v23 = v24;
+                screenRect = nextRect;
             }
 
-            if (!doing_refresh_all && a3 == NULL && mouse_hidden() == 0) {
+            if (!doing_refresh_all && dest == NULL && mouse_hidden() == 0) {
                 if (mouse_in(rect->ulx, rect->uly, rect->lrx, rect->lry)) {
                     mouse_show();
                 }
             }
         } else {
-            rect_free(v26);
+            rect_free(refreshRectList);
         }
     }
 }
