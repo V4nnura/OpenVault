@@ -848,7 +848,9 @@ void GNW_win_refresh(Window* w, Rect* rect, unsigned char* dest)
     }
 
     if ((w->flags & WINDOW_TRANSPARENT) && buffering && !doing_refresh_all) {
-        // TODO: Incomplete.
+        Rect dirtyRect = w->rect;
+        win_refresh_all(&dirtyRect);
+        return;
     } else {
         // Initial rectangle list node representing the intersection of window and refresh areas.
         refreshRectList = rect_malloc();
