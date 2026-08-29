@@ -780,7 +780,7 @@ void win_move(int win, int x, int y)
     }
 
     if ((w->flags & WINDOW_MANAGED) != 0) {
-        // TODO: Not sure what this means.
+        // Truncates x to a multiple of 4 pixels.
         x &= ~0x03;
     }
 
@@ -837,6 +837,8 @@ void win_draw_rect(int win, const Rect* rect)
 // 0x4C3094
 void GNW_win_refresh(Window* w, Rect* rect, unsigned char* dest)
 {
+    // 'dest' is only used when refreshing the portion of the screen containing the cursor (which is subsequently drawn on the buffer).
+
     RectPtr refreshRectList, clipRect, screenRect, nextRect;
     int dest_pitch;
 
@@ -881,6 +883,7 @@ void GNW_win_refresh(Window* w, Rect* rect, unsigned char* dest)
 
                     if (dest) {
                         if (buffering && (w->flags & WINDOW_TRANSPARENT)) {
+                            // 'w->blitProc' is always 'trans_buf_to_buf'.
                             w->blitProc(w->buffer + clipRect->rect.ulx - w->rect.ulx + (clipRect->rect.uly - w->rect.uly) * w->width,
                                 clipRect->rect.lrx - clipRect->rect.ulx + 1,
                                 clipRect->rect.lry - clipRect->rect.uly + 1,
@@ -1070,6 +1073,7 @@ void win_drag(int win)
     }
 
     if ((w->flags & WINDOW_MANAGED) && (w->rect.ulx & 3)) {
+        // Move to a x-pixel multiple of 4.
         win_move(w->id, w->rect.ulx, w->rect.uly);
     }
 }
