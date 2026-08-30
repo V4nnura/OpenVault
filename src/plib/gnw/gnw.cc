@@ -849,7 +849,7 @@ void GNW_win_refresh(Window* w, Rect* rect, unsigned char* dest)
         return;
     }
 
-    // CE: original code seems to have had special code for handling non-refresh-all for transparent updates, but it was incomplete and removed.
+    // NOTE: original code seems to have had special code for handling non-refresh-all for transparent updates, but it was incomplete and removed.
     if ((w->flags & WINDOW_TRANSPARENT) && buffering && !doing_refresh_all) {
         Rect dirtyRect = w->rect;
         win_refresh_all(&dirtyRect);
