@@ -1103,14 +1103,12 @@ static void refresh_all(Rect* rect, unsigned char* dest)
 // 0x4C3940
 Window* GNW_find(int win)
 {
-    int v0;
-
     if (win == -1) {
         return NULL;
     }
 
-    v0 = window_index[win];
-    if (v0 == -1) {
+    int index = window_index[win];
+    if (index == -1) {
         return NULL;
     }
 
@@ -1244,19 +1242,18 @@ Button* GNW_find_button(int btn, Window** windowPtr)
 }
 
 // 0x4C3AEC
-int GNW_check_menu_bars(int a1)
+int GNW_check_menu_bars(int input)
 {
     if (!GNW_win_init_flag) {
         return -1;
     }
 
-    int v1 = a1;
     for (int index = num_windows - 1; index >= 1; index--) {
         Window* w = window[index];
         if (w->menuBar != NULL) {
             for (int pulldownIndex = 0; pulldownIndex < w->menuBar->pulldownsLength; pulldownIndex++) {
-                if (v1 == w->menuBar->pulldowns[pulldownIndex].keyCode) {
-                    v1 = GNW_process_menu(w->menuBar, pulldownIndex);
+                if (input == w->menuBar->pulldowns[pulldownIndex].keyCode) {
+                    input = GNW_process_menu(w->menuBar, pulldownIndex);
                     break;
                 }
             }
@@ -1267,7 +1264,7 @@ int GNW_check_menu_bars(int a1)
         }
     }
 
-    return v1;
+    return input;
 }
 
 // 0x4C4190
