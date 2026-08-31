@@ -1112,7 +1112,7 @@ Window* GNW_find(int win)
         return NULL;
     }
 
-    return window[v0];
+    return window[index];
 }
 
 // 0x4C3968
