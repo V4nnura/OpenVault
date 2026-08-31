@@ -701,11 +701,10 @@ void win_show(int win)
 
     int v5 = num_windows - 1;
     if (v3 < v5 && !(w->flags & WINDOW_DONT_MOVE_TOP)) {
-        int v7 = v3;
-        while (v3 < v5 && ((w->flags & WINDOW_MOVE_ON_TOP) || !(window[v7 + 1]->flags & WINDOW_MOVE_ON_TOP))) {
-            Window* v6 = window[v7 + 1];
-            window[v7] = v6;
-            v7++;
+        while (v3 < v5 && ((w->flags & WINDOW_MOVE_ON_TOP) || !(window[v3 + 1]->flags & WINDOW_MOVE_ON_TOP))) {
+            Window* v6 = window[v3 + 1];
+            window[v3] = v6;
+            v3++;
             window_index[v6->id] = v3++;
         }
 
