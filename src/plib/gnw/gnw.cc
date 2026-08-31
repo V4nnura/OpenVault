@@ -685,14 +685,8 @@ void win_fill(int win, int x, int y, int width, int height, int color)
 // 0x4C2E68
 void win_show(int win)
 {
-    Window* w;
-    int v3;
-    int v5;
-    int v7;
-    Window* v6;
-
-    w = GNW_find(win);
-    v3 = window_index[w->id];
+    Window* w = GNW_find(win);
+    int v3 = window_index[w->id];
 
     if (!GNW_win_init_flag) {
         return;
@@ -705,11 +699,11 @@ void win_show(int win)
         }
     }
 
-    v5 = num_windows - 1;
+    int v5 = num_windows - 1;
     if (v3 < v5 && !(w->flags & WINDOW_DONT_MOVE_TOP)) {
-        v7 = v3;
+        int v7 = v3;
         while (v3 < v5 && ((w->flags & WINDOW_MOVE_ON_TOP) || !(window[v7 + 1]->flags & WINDOW_MOVE_ON_TOP))) {
-            v6 = window[v7 + 1];
+            Window* v6 = window[v7 + 1];
             window[v7] = v6;
             v7++;
             window_index[v6->id] = v3++;
