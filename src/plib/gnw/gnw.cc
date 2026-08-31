@@ -705,7 +705,7 @@ void win_show(int win)
             if ((w->flags & WINDOW_MOVE_ON_TOP) == 0 && (next_window->flags & WINDOW_MOVE_ON_TOP) != 0) {
                 break;
             }
-            
+
             window[index] = next_window;
             window_index[next_window->id] = index;
             index++;
