@@ -686,30 +686,33 @@ void win_fill(int win, int x, int y, int width, int height, int color)
 void win_show(int win)
 {
     Window* w = GNW_find(win);
-    int v3 = window_index[w->id];
+    int index = window_index[w->id];
 
     if (!GNW_win_init_flag) {
         return;
     }
 
-    if (w->flags & WINDOW_HIDDEN) {
+    if ((w->flags & WINDOW_HIDDEN) != 0) {
         w->flags &= ~WINDOW_HIDDEN;
-        if (v3 == num_windows - 1) {
+        if (index == num_windows - 1) {
             GNW_win_refresh(w, &(w->rect), NULL);
         }
     }
 
-    int v5 = num_windows - 1;
-    if (v3 < v5 && !(w->flags & WINDOW_DONT_MOVE_TOP)) {
-        while (v3 < v5 && ((w->flags & WINDOW_MOVE_ON_TOP) || !(window[v3 + 1]->flags & WINDOW_MOVE_ON_TOP))) {
-            Window* v6 = window[v3 + 1];
-            window[v3] = v6;
-            v3++;
-            window_index[v6->id] = v3++;
+    if (index < num_windows - 1 && (w->flags & WINDOW_DONT_MOVE_TOP) == 0) {
+        while (index < num_windows - 1) {
+            Window* next_window = window[index + 1];
+            if ((w->flags & WINDOW_MOVE_ON_TOP) == 0 && (next_window->flags & WINDOW_MOVE_ON_TOP) != 0) {
+                break;
+            }
+            
+            window[index] = next_window;
+            window_index[next_window->id] = index;
+            index++;
         }
 
-        window[v3] = w;
-        window_index[w->id] = v3;
+        window[index] = w;
+        window_index[w->id] = index;
         GNW_win_refresh(w, &(w->rect), NULL);
     } else if ((w->flags & WINDOW_HIDDEN) == 0) {
         // Match Fallout 2 CE's fix for DONT_MOVE_TOP windows that
