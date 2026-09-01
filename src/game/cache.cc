@@ -516,9 +516,9 @@ static int cache_find(Cache* cache, int key, int* indexPtr)
         }
 
         if (cmp > 0) {
-            l = l + 1;
+            l = mid + 1;
         } else {
-            r = r - 1;
+            r = mid - 1;
         }
     } while (r >= l);
 
