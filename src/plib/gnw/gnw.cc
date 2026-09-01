@@ -21,7 +21,7 @@ namespace fallout {
 #define MAX_WINDOW_COUNT 50
 
 static void win_free(int win);
-static void win_clip(Window* window, RectPtr* rectListNodePtr, unsigned char* a3);
+static void win_clip(Window* w, RectPtr* rectListNodePtr, unsigned char* dest);
 static void refresh_all(Rect* rect, unsigned char* dest);
 static void* colorOpen(const char* path);
 static int colorRead(void* handle, void* buf, size_t count);
@@ -1013,11 +1013,9 @@ void win_refresh_all(Rect* rect)
 }
 
 // 0x4C3668
-static void win_clip(Window* w, RectPtr* rectListNodePtr, unsigned char* a3)
+static void win_clip(Window* w, RectPtr* rectListNodePtr, unsigned char* dest)
 {
-    int win;
-
-    for (win = window_index[w->id] + 1; win < num_windows; win++) {
+    for (int index = window_index[w->id] + 1; index < num_windows; index++) {
         if (*rectListNodePtr == NULL) {
             break;
         }
@@ -1036,7 +1034,7 @@ static void win_clip(Window* w, RectPtr* rectListNodePtr, unsigned char* a3)
         }
     }
 
-    if (a3 == screen_buffer || a3 == NULL) {
+    if (dest == screen_buffer || dest == NULL) {
         if (mouse_hidden() == 0) {
             Rect rect;
             mouse_get_rect(&rect);
