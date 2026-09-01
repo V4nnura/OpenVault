@@ -1021,7 +1021,7 @@ static void win_clip(Window* w, RectPtr* rectListNodePtr, unsigned char* dest)
         }
 
         // TODO: Review.
-        Window* w = window[win];
+        Window* w = window[index];
         if (!(w->flags & WINDOW_HIDDEN)) {
             if (!buffering || !(w->flags & WINDOW_TRANSPARENT)) {
                 rect_clip_list(rectListNodePtr, &(w->rect));
