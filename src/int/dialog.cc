@@ -411,6 +411,8 @@ int dialogStart(Program* a1)
         return 1;
     }
 
+    tods++;
+
     ptr = &(dialog[tods]);
     ptr->field_0 = a1;
     ptr->field_4 = 0;
@@ -418,9 +420,7 @@ int dialogStart(Program* a1)
     ptr->field_C = -1;
     ptr->field_10 = -1;
     ptr->field_14 = 1;
-    ptr->field_10 = 1;
-
-    tods++;
+    ptr->field_18 = 1;
 
     return 0;
 }
