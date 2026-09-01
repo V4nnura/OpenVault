@@ -1516,7 +1516,7 @@ static void op_attack(Program* program)
     }
 
     if (dialog_active()) {
-        // TODO: Might be an error, program flag is not removed.
+        program->flags &= ~PROGRAM_FLAG_0x20;
         return;
     }
 
@@ -1905,6 +1905,7 @@ static void op_kill_critter(Program* program)
 
     if (isLoadingGame()) {
         debug_printf("\nError: attempt to destroy critter in load/save-game: %s!", program->name);
+        return;
     }
 
     program->flags |= PROGRAM_FLAG_0x20;
@@ -2053,12 +2054,14 @@ static void op_critter_damage(Program* program)
 
     if (object == NULL) {
         dbg_error(program, "critter_damage", SCRIPT_ERROR_OBJECT_IS_NULL);
+        program->flags &= ~PROGRAM_FLAG_0x20;
         return;
     }
 
     if (PID_TYPE(object->pid) != OBJ_TYPE_CRITTER) {
         dbg_error(program, "critter_damage", SCRIPT_ERROR_FOLLOWS);
         debug_printf(" Can't call on non-critters!");
+        program->flags &= ~PROGRAM_FLAG_0x20;
         return;
     }
 
@@ -2462,7 +2465,7 @@ static void op_critter_rm_trait(Program* program)
 
     if (object == NULL) {
         dbg_error(program, "critter_rm_trait", SCRIPT_ERROR_OBJECT_IS_NULL);
-        // FIXME: Ruins stack.
+        programStackPushInteger(program, -1);
         return;
     }
 
@@ -2535,7 +2538,7 @@ static void op_critter_inven_obj(Program* program)
     int type = programStackPopInteger(program);
     Object* critter = static_cast<Object*>(programStackPopPointer(program));
 
-    if (PID_TYPE(critter->pid) == OBJ_TYPE_CRITTER) {
+    if (critter != NULL && PID_TYPE(critter->pid) == OBJ_TYPE_CRITTER) {
         switch (type) {
         case INVEN_TYPE_WORN:
             programStackPushPointer(program, inven_worn(critter));
