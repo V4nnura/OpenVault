@@ -454,7 +454,9 @@ static void draw_top_down_map(int window, int elevation, unsigned char* backgrou
             if ((flags & AUTOMAP_IN_GAME) != 0) {
                 if (*pixel != colorTable[992] || objectColor != colorTable[480]) {
                     pixel[0] = objectColor;
-                    pixel[1] = objectColor;
+                    if (pixel[1] != colorTable[992] || objectColor != colorTable[480]) {
+                        pixel[1] = objectColor;
+                    }
                 }
 
                 if (object == obj_dude) {
