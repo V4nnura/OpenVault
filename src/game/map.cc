@@ -1143,10 +1143,10 @@ static int map_age_dead_critters()
     }
 
     int agingType;
-    if (hoursSinceLastVisit > 6 * 24) {
-        agingType = 1;
-    } else if (hoursSinceLastVisit > 14 * 24) {
+    if (hoursSinceLastVisit > 21 * 24) {
         agingType = 2;
+    } else if (hoursSinceLastVisit > 14 * 24) {
+        agingType = 1;
     } else {
         return 0;
     }
@@ -1173,7 +1173,7 @@ static int map_age_dead_critters()
                     }
                 }
             }
-        } else if (agingType == 2 && type == OBJ_TYPE_MISC && obj->pid == 0x500000B) {
+        } else if (agingType == 2 && type == OBJ_TYPE_MISC && obj->fid == 0x500000B) {
             objects[count++] = obj;
             if (count >= capacity) {
                 capacity *= 2;
