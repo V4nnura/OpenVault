@@ -35,12 +35,12 @@ static int item_move_func(Object* source, Object* target, Object* item, int quan
 static bool item_identical(Object* item1, Object* item2);
 static int item_m_stealth_effect_on(Object* object);
 static int item_m_stealth_effect_off(Object* critter, Object* item);
-static int insert_drug_effect(Object* critter_obj, Object* item_obj, int a3, int* stats, int* mods);
+static int insert_drug_effect(Object* critter_obj, Object* item_obj, int duration, int* stats, int* mods);
 static void perform_drug_effect(Object* critter_obj, int* stats, int* mods, bool is_immediate);
-static int insert_withdrawal(Object* obj, int a2, int a3, int a4, int a5);
-static int item_wd_clear_all(Object* a1, void* data);
-static void perform_withdrawal_start(Object* obj, int perk, int a3);
-static void perform_withdrawal_end(Object* obj, int a2);
+static int insert_withdrawal(Object* obj, int active, int duration, int perk, int pid);
+static int item_wd_clear_all(Object* obj, void* data);
+static void perform_withdrawal_start(Object* obj, int perk, int pid);
+static void perform_withdrawal_end(Object* obj, int perk);
 static int pid_to_gvar(int drugPid);
 
 // Maps weapon extended flags to skill.
@@ -1308,26 +1308,26 @@ int item_w_reload(Object* weapon, Object* ammo)
     int ammoCapacity = item_w_max_ammo(weapon);
 
     // NOTE: Uninline.
-    int v10 = item_w_curr_ammo(ammo);
+    int quantity = item_w_curr_ammo(ammo);
 
-    int v11 = v10;
+    int left = quantity;
     if (ammoQuantity < ammoCapacity) {
-        int v12;
-        if (ammoQuantity + v10 > ammoCapacity) {
-            v11 = v10 - (ammoCapacity - ammoQuantity);
-            v12 = ammoCapacity;
+        int newQuantity;
+        if (ammoQuantity + quantity > ammoCapacity) {
+            left = quantity - (ammoCapacity - ammoQuantity);
+            newQuantity = ammoCapacity;
         } else {
-            v11 = 0;
-            v12 = ammoQuantity + v10;
+            left = 0;
+            newQuantity = ammoQuantity + quantity;
         }
 
         weapon->data.item.weapon.ammoTypePid = ammo->pid;
 
-        item_w_set_curr_ammo(ammo, v11);
-        item_w_set_curr_ammo(weapon, v12);
+        item_w_set_curr_ammo(ammo, left);
+        item_w_set_curr_ammo(weapon, newQuantity);
     }
 
-    return v11;
+    return left;
 }
 
 // 0x46B104
@@ -2364,14 +2364,14 @@ int item_d_save(DB_FILE* stream, void* data)
 }
 
 // 0x46C348
-static int insert_withdrawal(Object* obj, int a2, int duration, int perk, int pid)
+static int insert_withdrawal(Object* obj, int active, int duration, int perk, int pid)
 {
     WithdrawalEvent* withdrawalEvent = (WithdrawalEvent*)mem_malloc(sizeof(*withdrawalEvent));
     if (withdrawalEvent == NULL) {
         return -1;
     }
 
-    withdrawalEvent->field_0 = a2;
+    withdrawalEvent->active = active;
     withdrawalEvent->pid = pid;
     withdrawalEvent->perk = perk;
 
@@ -2392,7 +2392,7 @@ int item_wd_clear(Object* obj, void* data)
         return 0;
     }
 
-    if (!withdrawalEvent->field_0) {
+    if (!withdrawalEvent->active) {
         perform_withdrawal_end(obj, withdrawalEvent->perk);
     }
 
@@ -2412,10 +2412,11 @@ static int item_wd_clear_all(Object* obj, void* data)
         return 0;
     }
 
-    if (!withdrawalEvent->field_0) {
+    if (!withdrawalEvent->active) {
         perform_withdrawal_end(wd_obj, withdrawalEvent->perk);
     }
 
+    // Schedule start of withdrawal.
     insert_withdrawal(obj, 1, wd_onset, withdrawalEvent->perk, withdrawalEvent->pid);
 
     wd_obj = NULL;
@@ -2428,7 +2429,7 @@ int item_wd_process(Object* obj, void* data)
 {
     WithdrawalEvent* withdrawalEvent = (WithdrawalEvent*)data;
 
-    if (withdrawalEvent->field_0) {
+    if (withdrawalEvent->active) {
         perform_withdrawal_start(obj, withdrawalEvent->perk, withdrawalEvent->pid);
     } else {
         perform_withdrawal_end(obj, withdrawalEvent->perk);
@@ -2454,7 +2455,7 @@ int item_wd_load(DB_FILE* stream, void** dataPtr)
         return -1;
     }
 
-    if (db_freadInt(stream, &(withdrawalEvent->field_0)) == -1) goto err;
+    if (db_freadInt(stream, &(withdrawalEvent->active)) == -1) goto err;
     if (db_freadInt(stream, &(withdrawalEvent->pid)) == -1) goto err;
     if (db_freadInt(stream, &(withdrawalEvent->perk)) == -1) goto err;
 
@@ -2472,7 +2473,7 @@ int item_wd_save(DB_FILE* stream, void* data)
 {
     WithdrawalEvent* withdrawalEvent = (WithdrawalEvent*)data;
 
-    if (db_fwriteInt(stream, withdrawalEvent->field_0) == -1) return -1;
+    if (db_fwriteInt(stream, withdrawalEvent->active) == -1) return -1;
     if (db_fwriteInt(stream, withdrawalEvent->pid) == -1) return -1;
     if (db_fwriteInt(stream, withdrawalEvent->perk) == -1) return -1;
 
@@ -2501,6 +2502,7 @@ static void perform_withdrawal_start(Object* obj, int perk, int pid)
         }
     }
 
+    // Schedule end of withdrawal.
     insert_withdrawal(obj, 0, duration, perk, pid);
 }
 
