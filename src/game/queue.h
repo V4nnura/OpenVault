@@ -30,7 +30,7 @@ typedef struct DrugEffectEvent {
 } DrugEffectEvent;
 
 typedef struct WithdrawalEvent {
-    int field_0;
+    int active; // 0 == end withdrawal, 1 == start withdrawal
     int pid;
     int perk;
 } WithdrawalEvent;
