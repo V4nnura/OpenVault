@@ -1035,7 +1035,7 @@ int a_use_obj(Object* a1, Object* a2, Object* a3)
 
     if (FID_TYPE(a2->fid) == OBJ_TYPE_CRITTER && critter_is_prone(a2)) {
         anim = ANIM_MAGIC_HANDS_GROUND;
-    } else if (FID_TYPE(a2->fid) == OBJ_TYPE_SCENERY && (scenery_proto->scenery.extendedFlags & 0x01) != 0) {
+    } else if (FID_TYPE(a2->fid) == OBJ_TYPE_SCENERY && (scenery_proto->scenery.extendedFlags & PROTO_EXT_FLAG_MAGIC_HANDS_GROUND) != 0) {
         anim = ANIM_MAGIC_HANDS_GROUND;
     } else {
         anim = ANIM_MAGIC_HANDS_MIDDLE;
