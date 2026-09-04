@@ -196,8 +196,8 @@ typedef enum ItemProtoExtendedFlags {
     // This flag is used on weapons to indicate that's an natural (integral)
     // part of it's owner, for example Claw, or Robot's Rocket Launcher. Items
     // with this flag on do count toward total weight and cannot be dropped.
-    // Also used with scenery.
-    PROTO_EXT_FLAG_HIDDEN = 0x08000000,
+    // (Also used with scenery).
+    PROTO_EXT_FLAG_NATURAL_WEAPON = 0x08000000,
 
     // Scenery using this flag plays the ground-level magic hands animation.
     PROTO_EXT_FLAG_MAGIC_HANDS_GROUND = 0x0001,
