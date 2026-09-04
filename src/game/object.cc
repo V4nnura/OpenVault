@@ -965,47 +965,47 @@ int obj_new(Object** objectPtr, int fid, int pid)
 
     obj_set_light(objectListNode->obj, proto->lightDistance, proto->lightIntensity, NULL);
 
-    if ((proto->flags & 0x08) != 0) {
+    if ((proto->flags & PROTO_FLAG_FLAT) != 0) {
         obj_toggle_flat(objectListNode->obj, NULL);
     }
 
-    if ((proto->flags & 0x10) != 0) {
+    if ((proto->flags & PROTO_FLAG_NO_BLOCK) != 0) {
         objectListNode->obj->flags |= OBJECT_NO_BLOCK;
     }
 
-    if ((proto->flags & 0x800) != 0) {
+    if ((proto->flags & PROTO_FLAG_MULTIHEX) != 0) {
         objectListNode->obj->flags |= OBJECT_MULTIHEX;
     }
 
-    if ((proto->flags & 0x8000) != 0) {
+    if ((proto->flags & PROTO_FLAG_TRANS_NONE) != 0) {
         objectListNode->obj->flags |= OBJECT_TRANS_NONE;
     } else {
-        if ((proto->flags & 0x10000) != 0) {
+        if ((proto->flags & PROTO_FLAG_TRANS_WALL) != 0) {
             objectListNode->obj->flags |= OBJECT_TRANS_WALL;
-        } else if ((proto->flags & 0x20000) != 0) {
+        } else if ((proto->flags & PROTO_FLAG_TRANS_GLASS) != 0) {
             objectListNode->obj->flags |= OBJECT_TRANS_GLASS;
-        } else if ((proto->flags & 0x40000) != 0) {
+        } else if ((proto->flags & PROTO_FLAG_TRANS_STEAM) != 0) {
             objectListNode->obj->flags |= OBJECT_TRANS_STEAM;
-        } else if ((proto->flags & 0x80000) != 0) {
+        } else if ((proto->flags & PROTO_FLAG_TRANS_ENERGY) != 0) {
             objectListNode->obj->flags |= OBJECT_TRANS_ENERGY;
-        } else if ((proto->flags & 0x4000) != 0) {
+        } else if ((proto->flags & PROTO_FLAG_TRANS_RED) != 0) {
             objectListNode->obj->flags |= OBJECT_TRANS_RED;
         }
     }
 
-    if ((proto->flags & 0x20000000) != 0) {
+    if ((proto->flags & PROTO_FLAG_LIGHT_THRU) != 0) {
         objectListNode->obj->flags |= OBJECT_LIGHT_THRU;
     }
 
-    if ((proto->flags & 0x80000000) != 0) {
+    if ((proto->flags & PROTO_FLAG_SHOOT_THRU) != 0) {
         objectListNode->obj->flags |= OBJECT_SHOOT_THRU;
     }
 
-    if ((proto->flags & 0x10000000) != 0) {
+    if ((proto->flags & PROTO_FLAG_WALL_TRANS_END) != 0) {
         objectListNode->obj->flags |= OBJECT_WALL_TRANS_END;
     }
 
-    if ((proto->flags & 0x1000) != 0) {
+    if ((proto->flags & PROTO_FLAG_NO_HIGHLIGHT) != 0) {
         objectListNode->obj->flags |= OBJECT_NO_HIGHLIGHT;
     }
 
