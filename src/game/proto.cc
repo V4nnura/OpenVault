@@ -254,7 +254,7 @@ bool proto_action_can_use(int pid)
         return false;
     }
 
-    if ((proto->item.extendedFlags & 0x0800) != 0) {
+    if ((proto->item.extendedFlags & PROTO_EXT_FLAG_CAN_USE) != 0) {
         return true;
     }
 
@@ -273,7 +273,7 @@ bool proto_action_can_use_on(int pid)
         return false;
     }
 
-    if ((proto->item.extendedFlags & 0x1000) != 0) {
+    if ((proto->item.extendedFlags & PROTO_EXT_FLAG_CAN_USE_ON) != 0) {
         return true;
     }
 
@@ -302,7 +302,7 @@ bool proto_action_can_talk_to(int pid)
         return true;
     }
 
-    if (proto->critter.extendedFlags & 0x4000) {
+    if (proto->critter.extendedFlags & PROTO_EXT_FLAG_CAN_TALK_TO) {
         return true;
     }
 
@@ -324,7 +324,7 @@ int proto_action_can_pickup(int pid)
     }
 
     if (proto->item.type == ITEM_TYPE_CONTAINER) {
-        return (proto->item.extendedFlags & 0x8000) != 0;
+        return (proto->item.extendedFlags & PROTO_EXT_FLAG_CAN_PICK_UP) != 0;
     }
 
     return true;
@@ -333,7 +333,7 @@ int proto_action_can_pickup(int pid)
 // 0x48D0B0
 static char* proto_get_msg_info(int pid, int message)
 {
-    char* v1 = proto_none_str;
+    char* messageText = proto_none_str;
 
     Proto* proto;
     if (proto_ptr(pid, &proto) != -1) {
@@ -343,12 +343,12 @@ static char* proto_get_msg_info(int pid, int message)
             MessageListItem messageListItem;
             messageListItem.num = proto->messageId + message;
             if (message_search(messageList, &messageListItem)) {
-                v1 = messageListItem.text;
+                messageText = messageListItem.text;
             }
         }
     }
 
-    return v1;
+    return messageText;
 }
 
 // 0x48D108
@@ -381,8 +381,8 @@ int proto_critter_init(Proto* proto, int pid)
     proto->fid = art_id(OBJ_TYPE_CRITTER, num - 1, 0, 0, 0);
     proto->critter.lightDistance = 0;
     proto->critter.lightIntensity = 0;
-    proto->critter.flags = 0x20000000;
-    proto->critter.extendedFlags = 0x6000;
+    proto->critter.flags = PROTO_FLAG_LIGHT_THRU;
+    proto->critter.extendedFlags = PROTO_EXT_FLAG_0x2000 | PROTO_EXT_FLAG_CAN_TALK_TO;
     proto->critter.sid = -1;
     proto->critter.data.flags = 0;
     proto->critter.data.bodyType = 0;
@@ -736,12 +736,12 @@ int proto_dude_update_gender()
     art_vault_guy_num = art_num;
 
     if (inven_worn(obj_dude) == NULL) {
-        int v1 = 0;
+        int weapon_anim_code = 0;
         if (inven_right_hand(obj_dude) != NULL || inven_left_hand(obj_dude) != NULL) {
-            v1 = (obj_dude->fid & 0xF000) >> 12;
+            weapon_anim_code = (obj_dude->fid & 0xF000) >> 12;
         }
 
-        int fid = art_id(OBJ_TYPE_CRITTER, art_vault_guy_num, 0, v1, 0);
+        int fid = art_id(OBJ_TYPE_CRITTER, art_vault_guy_num, 0, weapon_anim_code, 0);
         obj_change_fid(obj_dude, fid, NULL);
     }
 
