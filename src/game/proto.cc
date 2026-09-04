@@ -382,7 +382,7 @@ int proto_critter_init(Proto* proto, int pid)
     proto->critter.lightDistance = 0;
     proto->critter.lightIntensity = 0;
     proto->critter.flags = PROTO_FLAG_LIGHT_THRU;
-    proto->critter.extendedFlags = PROTO_EXT_FLAG_0x2000 | PROTO_EXT_FLAG_CAN_TALK_TO;
+    proto->critter.extendedFlags = PROTO_EXT_FLAG_LOOK | PROTO_EXT_FLAG_CAN_TALK_TO;
     proto->critter.sid = -1;
     proto->critter.data.flags = 0;
     proto->critter.data.bodyType = 0;
