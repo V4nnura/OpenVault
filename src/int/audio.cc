@@ -58,7 +58,7 @@ static unsigned int decodeRead(void* stream, void* buffer, unsigned int size)
 }
 
 // 0x41992C
-int audioOpen(const char* fname, int flags)
+int audioOpen(const char* fname, int* sampleRate)
 {
     char path[80];
     snprintf(path, sizeof(path), "%s", fname);
@@ -70,28 +70,7 @@ int audioOpen(const char* fname, int flags)
         compression = 0;
     }
 
-    char mode[4];
-    memset(mode, 0, 4);
-
-    // NOTE: Original implementation is slightly different, it uses separate
-    // variable to track index where to set 't' and 'b'.
-    char* pm = mode;
-    if (flags & 1) {
-        *pm++ = 'w';
-    } else if (flags & 2) {
-        *pm++ = 'w';
-        *pm++ = '+';
-    } else {
-        *pm++ = 'r';
-    }
-
-    if (flags & 0x100) {
-        *pm++ = 't';
-    } else if (flags & 0x200) {
-        *pm++ = 'b';
-    }
-
-    DB_FILE* stream = db_fopen(path, mode);
+    DB_FILE* stream = db_fopen(path, "rb");
     if (stream == NULL) {
         debug_printf("AudioOpen: Couldn't open %s for read\n", path);
         return -1;
@@ -125,6 +104,8 @@ int audioOpen(const char* fname, int flags)
             return -1;
         }
         audioFile->fileSize *= 2;
+
+        *sampleRate = audioFile->sampleRate;
     } else {
         audioFile->fileSize = static_cast<int>(db_filelength(stream));
     }
