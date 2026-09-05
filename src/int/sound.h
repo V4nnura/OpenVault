@@ -49,7 +49,7 @@ typedef void*(SoundMallocFunc)(size_t size);
 typedef void*(SoundReallocFunc)(void* ptr, size_t size);
 typedef void(SoundFreeFunc)(void* ptr);
 typedef char*(SoundFileNameMangler)(char*);
-typedef int SoundOpenProc(const char* filePath, int flags);
+typedef int SoundOpenProc(const char* filePath, int* sampleRate);
 typedef int SoundCloseProc(int fileHandle);
 typedef int SoundReadProc(int fileHandle, void* buf, unsigned int size);
 typedef int SoundWriteProc(int fileHandle, const void* buf, unsigned int size);
