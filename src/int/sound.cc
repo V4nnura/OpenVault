@@ -1,12 +1,12 @@
 #include "int/sound.h"
 
+#include <fcntl.h>
 #include <stdlib.h>
 #include <string.h>
 
 #ifdef _WIN32
 #include <io.h>
 #else
-#include <fcntl.h>
 #include <unistd.h>
 #endif
 
@@ -47,7 +47,7 @@ static long soundFileSize(int fileHandle);
 static long soundTellData(int fileHandle);
 static int soundWriteData(int fileHandle, const void* buf, unsigned int size);
 static int soundReadData(int fileHandle, void* buf, unsigned int size);
-static int soundOpenData(const char* filePath, int flags);
+static int soundOpenData(const char* filePath, int* sampleRate);
 static long soundSeekData(int fileHandle, long offset, int origin);
 static int soundCloseData(int fileHandle);
 static char* defaultMangler(char* fname);
@@ -219,8 +219,16 @@ static int soundReadData(int fileHandle, void* buf, unsigned int size)
 }
 
 // 0x499CF8
-static int soundOpenData(const char* filePath, int flags)
+static int soundOpenData(const char* filePath, int* sampleRate)
 {
+    int flags;
+
+#ifdef _WIN32
+    flags = _O_RDONLY | _O_BINARY;
+#else
+    flags = O_RDONLY;
+#endif
+
     return open(filePath, flags);
 }
 
@@ -606,7 +614,7 @@ int soundLoad(Sound* sound, char* filePath)
         return soundErrorno;
     }
 
-    sound->io.fd = sound->io.open(nameMangler(filePath), 0x0200);
+    sound->io.fd = sound->io.open(nameMangler(filePath), &(sound->rate));
     if (sound->io.fd == -1) {
         soundErrorno = SOUND_FILE_NOT_FOUND;
         return soundErrorno;
