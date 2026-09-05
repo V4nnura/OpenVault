@@ -29,7 +29,7 @@
 namespace fallout {
 
 static void gsound_bkg_proc();
-static int gsound_open(const char* fname, int flags);
+static int gsound_open(const char* fname, int* sampleRate);
 static long gsound_compressed_tell(int handle);
 static int gsound_write(int handle, const void* buf, unsigned int size);
 static int gsound_close(int handle);
@@ -1633,12 +1633,8 @@ static void gsound_bkg_proc()
 }
 
 // 0x449334
-static int gsound_open(const char* fname, int flags)
+static int gsound_open(const char* fname, int* sampleRate)
 {
-    if ((flags & 2) != 0) {
-        return -1;
-    }
-
     DB_FILE* stream = db_fopen(fname, "rb");
     if (stream == NULL) {
         return -1;
