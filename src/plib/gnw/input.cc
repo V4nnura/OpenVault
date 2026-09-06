@@ -457,27 +457,20 @@ void register_pause(int new_pause_key, PauseWinFunc* new_pause_win_func)
 // 0x4B3794
 void dump_screen()
 {
-    ScreenBlitFunc* old_scr_blit;
-    ScreenBlitFunc* old_mouse_blit;
-    ScreenTransBlitFunc* old_mouse_blit_trans;
-    int width;
-    int length;
-    unsigned char* pal;
-
-    width = scr_size.lrx - scr_size.ulx + 1;
-    length = scr_size.lry - scr_size.uly + 1;
+    int width = scr_size.lrx - scr_size.ulx + 1;
+    int length = scr_size.lry - scr_size.uly + 1;
     screendump_buf = (unsigned char*)mem_malloc(width * length);
     if (screendump_buf == NULL) {
         return;
     }
 
-    old_scr_blit = scr_blit;
+    ScreenBlitFunc* old_scr_blit = scr_blit;
     scr_blit = buf_blit;
 
-    old_mouse_blit = mouse_blit;
+    ScreenBlitFunc* old_mouse_blit = mouse_blit;
     mouse_blit = buf_blit;
 
-    old_mouse_blit_trans = mouse_blit_trans;
+    ScreenTransBlitFunc* old_mouse_blit_trans = mouse_blit_trans;
     mouse_blit_trans = NULL;
 
     win_refresh_all(&scr_size);
@@ -486,7 +479,7 @@ void dump_screen()
     mouse_blit = old_mouse_blit;
     scr_blit = old_scr_blit;
 
-    pal = getSystemPalette();
+    unsigned char* pal = getSystemPalette();
     screendump_func(width, length, screendump_buf, pal);
     mem_free(screendump_buf);
 }
