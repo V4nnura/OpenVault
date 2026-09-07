@@ -140,7 +140,6 @@ void credits(const char* filePath, int backgroundFid, bool useReversedStyle)
 
                                 palette_fade_to(cmap);
 
-                                unsigned char* v40 = intermediateBuffer + windowWidth * windowHeight - windowWidth;
                                 char str[260];
                                 int font;
                                 int color;
@@ -149,15 +148,15 @@ void credits(const char* filePath, int backgroundFid, bool useReversedStyle)
                                 while (credits_get_next_line(str, &font, &color)) {
                                     text_font(font);
 
-                                    int v19 = text_width(str);
-                                    if (v19 >= windowWidth) {
+                                    int stringWidth = text_width(str);
+                                    if (stringWidth >= windowWidth) {
                                         continue;
                                     }
 
                                     memset(stringBuffer, 0, stringBufferSize);
                                     text_to_buf(stringBuffer, str, windowWidth, windowWidth, color);
 
-                                    unsigned char* dest = intermediateBuffer + windowWidth * windowHeight - windowWidth + (windowWidth - v19) / 2;
+                                    unsigned char* dest = intermediateBuffer + windowWidth * windowHeight - windowWidth + (windowWidth - stringWidth) / 2;
                                     unsigned char* src = stringBuffer;
                                     for (int index = 0; index < lineHeight; index++) {
                                         sharedFpsLimiter.mark();
@@ -177,7 +176,7 @@ void credits(const char* filePath, int backgroundFid, bool useReversedStyle)
                                         }
 
                                         memmove(intermediateBuffer, intermediateBuffer + windowWidth, windowWidth * windowHeight - windowWidth);
-                                        memcpy(dest, src, v19);
+                                        memcpy(dest, src, stringWidth);
 
                                         buf_to_buf(backgroundBuffer,
                                             windowWidth,
