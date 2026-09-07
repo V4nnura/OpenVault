@@ -42,25 +42,14 @@ int codesize;
 int match_position;
 
 // 0x4464F0
-int HighRGB(int a1)
+unsigned char HighRGB(unsigned char color)
 {
-    // TODO: Some strange bit arithmetic.
-    int v1 = Color2RGB(a1);
-    int r = (v1 & 0x7C00) >> 10;
-    int g = (v1 & 0x3E0) >> 5;
-    int b = (v1 & 0x1F);
+    int rgb = Color2RGB(color);
+    int r = (rgb & 0x7C00) >> 10;
+    int g = (rgb & 0x3E0) >> 5;
+    int b = (rgb & 0x1F);
 
-    int result = g;
-    if (r > result) {
-        result = r;
-    }
-
-    result = result & 0xFF;
-    if (result <= b) {
-        result = b;
-    }
-
-    return result;
+    return std::max(std::max(r, g), b);
 }
 
 // 0x44652C
@@ -68,15 +57,13 @@ void bit1exbit8(int ulx, int uly, int lrx, int lry, int offset_x, int offset_y, 
 {
     int x;
     int y;
-    int width;
-    int height;
     int mask;
     int bits;
     unsigned char* src_base;
     unsigned char* src_curr;
 
-    width = lrx - ulx + 1;
-    height = lry - uly + 1;
+    int width = lrx - ulx + 1;
+    int height = lry - uly + 1;
 
     src_base = src + uly * (src_pitch / 8);
     src_curr = src_base + ulx / 8;
@@ -464,8 +451,7 @@ void InitGreyTable(int a1, int a2)
 {
     if (a1 >= 0 && a2 <= 255) {
         for (int index = a1; index <= a2; index++) {
-            // NOTE: The only way to explain so much calls to [Color2RGB] with
-            // the same repeated pattern is by the use of min/max macros.
+            // NOTE: Calls `Color2RGB` many times due to `min` and `max` macro uses.
 
             int v1 = std::max((Color2RGB(index) & 0x7C00) >> 10, std::max((Color2RGB(index) & 0x3E0) >> 5, Color2RGB(index) & 0x1F));
             int v2 = std::min((Color2RGB(index) & 0x7C00) >> 10, std::min((Color2RGB(index) & 0x3E0) >> 5, Color2RGB(index) & 0x1F));
