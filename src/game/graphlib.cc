@@ -55,26 +55,19 @@ unsigned char HighRGB(unsigned char color)
 // 0x44652C
 void bit1exbit8(int ulx, int uly, int lrx, int lry, int offset_x, int offset_y, unsigned char* src, unsigned char* dest, int src_pitch, int dest_pitch, unsigned char color)
 {
-    int x;
-    int y;
-    int mask;
-    int bits;
-    unsigned char* src_base;
-    unsigned char* src_curr;
-
     int width = lrx - ulx + 1;
     int height = lry - uly + 1;
 
-    src_base = src + uly * (src_pitch / 8);
-    src_curr = src_base + ulx / 8;
-    bits = *src_curr++;
+    unsigned char* src_base = src + uly * (src_pitch / 8);
+    unsigned char* src_curr = src_base + ulx / 8;
+    int bits = *src_curr++;
 
     dest += dest_pitch * offset_y + offset_x;
 
-    for (y = 0; y < height; y++) {
-        mask = 128 >> (ulx % 8);
+    for (int y = 0; y < height; y++) {
+        int mask = 128 >> (ulx % 8);
 
-        for (x = 0; x < width; x++) {
+        for (int x = 0; x < width; x++) {
             if ((bits & mask) != 0) {
                 *dest = color;
             }
