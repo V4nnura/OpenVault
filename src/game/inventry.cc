@@ -1731,8 +1731,6 @@ static void display_inventory_info(Object* item, int quantity, unsigned char* de
                 itemsQuantity -= selected_quantity;
             }
 
-            // NOTE: Checking for quantity twice probably means inlined function
-            // or some macro expansion.
             if (quantity > 1) {
                 if (itemsQuantity > 99999) {
                     itemsQuantity = 99999;
