@@ -1,5 +1,7 @@
 #include "game/light.h"
 
+#include <algorithm>
+
 #include "game/map_defs.h"
 #include "game/object.h"
 #include "game/perk.h"
@@ -79,8 +81,6 @@ void light_decrease_ambient(int value, bool refresh_screen)
 // 0x46CAE8
 int light_get_tile(int elevation, int tile)
 {
-    int intensity;
-
     if (!elevationIsValid(elevation)) {
         return 0;
     }
@@ -89,12 +89,7 @@ int light_get_tile(int elevation, int tile)
         return 0;
     }
 
-    intensity = tile_intensity[elevation][tile];
-    if (intensity >= LIGHT_INTENSITY_MAX) {
-        intensity = LIGHT_INTENSITY_MAX;
-    }
-
-    return intensity;
+    return std::min(tile_intensity[elevation][tile], LIGHT_INTENSITY_MAX);
 }
 
 // 0x46CB2C
@@ -156,11 +151,8 @@ void light_subtract_from_tile(int elevation, int tile, int lightIntensity)
 // 0x46CBEC
 void light_reset_tiles()
 {
-    int elevation;
-    int tile;
-
-    for (elevation = 0; elevation < ELEVATION_COUNT; elevation++) {
-        for (tile = 0; tile < HEX_GRID_SIZE; tile++) {
+    for (int elevation = 0; elevation < ELEVATION_COUNT; elevation++) {
+        for (int tile = 0; tile < HEX_GRID_SIZE; tile++) {
             tile_intensity[elevation][tile] = 655;
         }
     }
