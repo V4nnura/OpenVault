@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <algorithm>
+
 #include "game/actions.h"
 #include "game/art.h"
 #include "game/combat.h"
@@ -881,22 +883,17 @@ void gmouse_bk_process()
 
         char formattedActionPoints[8];
         int color;
-        int v6 = make_path(obj_dude, obj_dude->tile, obj_mouse_flat->tile, NULL, 1);
-        if (v6) {
+        int distance = make_path(obj_dude, obj_dude->tile, obj_mouse_flat->tile, NULL, 1);
+        if (distance != 0) {
             if (!isInCombat()) {
                 formattedActionPoints[0] = '\0';
                 color = colorTable[31744];
             } else {
-                int v7 = critter_compute_ap_from_distance(obj_dude, v6);
-                int v8;
-                if (v7 - combat_free_move >= 0) {
-                    v8 = v7 - combat_free_move;
-                } else {
-                    v8 = 0;
-                }
+                int actionPointsMax = critter_compute_ap_from_distance(obj_dude, distance);
+                int actionPointsRequired = std::max(0, actionPointsMax - combat_free_move);
 
-                if (v8 <= obj_dude->data.critter.combat.ap) {
-                    snprintf(formattedActionPoints, sizeof(formattedActionPoints), "%d", v8);
+                if (actionPointsRequired <= obj_dude->data.critter.combat.ap) {
+                    snprintf(formattedActionPoints, sizeof(formattedActionPoints), "%d", actionPointsRequired);
                     color = colorTable[32767];
                 } else {
                     snprintf(formattedActionPoints, sizeof(formattedActionPoints), "%c", 'X');
