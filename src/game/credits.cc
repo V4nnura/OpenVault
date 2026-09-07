@@ -2,6 +2,8 @@
 
 #include <string.h>
 
+#include <algorithm>
+
 #include "game/art.h"
 #include "game/cycle.h"
 #include "game/gconfig.h"
@@ -116,7 +118,7 @@ void credits(const char* filePath, int backgroundFid, bool useReversedStyle)
                             text_font(name_font);
                             int nameFontLineHeight = text_height();
 
-                            int lineHeight = nameFontLineHeight + (titleFontLineHeight >= nameFontLineHeight ? titleFontLineHeight - nameFontLineHeight : 0);
+                            int lineHeight = std::max(titleFontLineHeight, nameFontLineHeight);
                             int stringBufferSize = windowWidth * lineHeight;
                             unsigned char* stringBuffer = (unsigned char*)mem_malloc(stringBufferSize);
                             if (stringBuffer != NULL) {
