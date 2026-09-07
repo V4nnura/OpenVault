@@ -106,13 +106,11 @@ int text_object_init(unsigned char* windowBuffer, int width, int height)
 // 0x49CE64
 int text_object_reset()
 {
-    int index;
-
     if (!text_object_initialized) {
         return -1;
     }
 
-    for (index = 0; index < text_object_index; index++) {
+    for (int index = 0; index < text_object_index; index++) {
         mem_free(text_object_list[index]->data);
         mem_free(text_object_list[index]);
     }
@@ -238,11 +236,8 @@ int text_object_create(Object* object, char* string, int font, int color, int ou
         char c = *ending;
         *ending = '\0';
 
-        // NOTE: Calls [text_width] twice, probably result of using min/max macro
-        int width = text_width(beginning);
-        if (width >= textObject->width) {
-            textObject->width = width;
-        }
+        // NOTE: Calls `text_width` twice.
+        textObject->width = std::max(textObject->width, text_width(beginning));
 
         *ending = c;
     }
@@ -324,20 +319,17 @@ int text_object_create(Object* object, char* string, int font, int color, int ou
 // 0x49D330
 void text_object_render(Rect* rect)
 {
-    int index;
-    TextObject* textObject;
-    Rect textObjectRect;
-
     if (!text_object_initialized) {
         return;
     }
 
-    for (index = 0; index < text_object_index; index++) {
-        textObject = text_object_list[index];
+    for (int index = 0; index < text_object_index; index++) {
+        TextObject* textObject = text_object_list[index];
         tile_coord(textObject->tile, &(textObject->x), &(textObject->y), map_elevation);
         textObject->x += textObject->sx;
         textObject->y += textObject->sy;
 
+        Rect textObjectRect;
         textObjectRect.ulx = textObject->x;
         textObjectRect.uly = textObject->y;
         textObjectRect.lrx = textObject->width + textObject->x - 1;
@@ -497,9 +489,7 @@ static void text_object_get_offset(TextObject* textObject)
 // 0x49D848
 void text_object_remove(Object* object)
 {
-    int index;
-
-    for (index = 0; index < text_object_index; index++) {
+    for (int index = 0; index < text_object_index; index++) {
         if (text_object_list[index]->owner == object) {
             text_object_list[index]->flags |= TEXT_OBJECT_MARKED_FOR_REMOVAL;
         }
