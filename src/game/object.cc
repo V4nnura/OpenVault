@@ -1720,34 +1720,28 @@ void obj_rebuild_all_light()
 // 0x47C878
 int obj_set_light(Object* obj, int lightDistance, int lightIntensity, Rect* rect)
 {
-    int v7;
-    Rect new_rect;
-
     if (obj == NULL) {
         return -1;
     }
 
-    v7 = obj_turn_off_light(obj, rect);
+    int rc = obj_turn_off_light(obj, rect);
     if (lightIntensity > 0) {
-        if (lightDistance >= 8) {
-            lightDistance = 8;
-        }
-
+        obj->lightDistance = std::min(lightDistance, 8);
         obj->lightIntensity = lightIntensity;
-        obj->lightDistance = lightDistance;
 
         if (rect != NULL) {
-            v7 = obj_turn_on_light(obj, &new_rect);
-            rect_min_bound(rect, &new_rect, rect);
+            Rect tempRect;
+            rc = obj_turn_on_light(obj, &tempRect);
+            rect_min_bound(rect, &tempRect, rect);
         } else {
-            v7 = obj_turn_on_light(obj, NULL);
+            rc = obj_turn_on_light(obj, NULL);
         }
     } else {
         obj->lightIntensity = 0;
         obj->lightDistance = 0;
     }
 
-    return v7;
+    return rc;
 }
 
 // 0x47C8EC
