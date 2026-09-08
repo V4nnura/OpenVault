@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <algorithm>
+
 #include "game/art.h"
 #include "game/bmpdlog.h"
 #include "game/critter.h"
@@ -4510,12 +4512,6 @@ static int DrawCard(int graphicId, const char* name, const char* attributes, cha
     Size size;
     int fid;
     unsigned char* buf;
-    unsigned char* ptr;
-    int v9;
-    int x;
-    int y;
-    short beginnings[WORD_WRAP_MAX_COUNT];
-    short beginningsCount;
 
     fid = art_id(OBJ_TYPE_SKILLDEX, graphicId, 0, 0, 0);
     buf = art_lock(fid, &graphicHandle, &(size.width), &(size.height));
@@ -4525,20 +4521,20 @@ static int DrawCard(int graphicId, const char* name, const char* attributes, cha
 
     buf_to_buf(buf, size.width, size.height, size.width, win_buf + 640 * 309 + 484, 640);
 
-    v9 = 150;
-    ptr = buf;
-    for (y = 0; y < size.height; y++) {
-        for (x = 0; x < size.width; x++) {
-            if (HighRGB(*ptr) < 2 && v9 >= x) {
-                v9 = x;
+    int extraDescriptionWidth = 150;
+    unsigned char* data = buf;
+    for (int y = 0; y < size.height; y++) {
+        for (int x = 0; x < size.width; x++) {
+            if (HighRGB(*data) < 2) {
+                extraDescriptionWidth = std::min(extraDescriptionWidth, x);
             }
-            ptr++;
+            data++;
         }
     }
 
-    v9 -= 8;
-    if (v9 < 0) {
-        v9 = 0;
+    extraDescriptionWidth -= 8;
+    if (extraDescriptionWidth < 0) {
+        extraDescriptionWidth = 0;
     }
 
     text_font(102);
@@ -4553,20 +4549,21 @@ static int DrawCard(int graphicId, const char* name, const char* attributes, cha
         text_to_buf(win_buf + 640 * (268 + nameFontLineHeight - attributesFontLineHeight) + 348 + nameWidth + 8, attributes, 640, 640, colorTable[0]);
     }
 
-    y = nameFontLineHeight;
-    win_line(edit_win, 348, y + 272, 613, y + 272, colorTable[0]);
-    win_line(edit_win, 348, y + 273, 613, y + 273, colorTable[0]);
+    win_line(edit_win, 348, nameFontLineHeight + 272, 613, nameFontLineHeight + 272, colorTable[0]);
+    win_line(edit_win, 348, nameFontLineHeight + 273, 613, nameFontLineHeight + 273, colorTable[0]);
 
     text_font(101);
 
     int descriptionFontLineHeight = text_height();
 
-    if (word_wrap(description, v9 + 136, beginnings, &beginningsCount) != 0) {
+    short beginnings[WORD_WRAP_MAX_COUNT];
+    short beginningsCount;
+    if (word_wrap(description, extraDescriptionWidth + 136, beginnings, &beginningsCount) != 0) {
         // TODO: Leaking graphic handle.
         return -1;
     }
 
-    y = 315;
+    int y = 315;
     for (short i = 0; i < beginningsCount - 1; i++) {
         short beginning = beginnings[i];
         short ending = beginnings[i + 1];
@@ -6078,9 +6075,7 @@ static int DrawCard2(int frmId, const char* name, const char* rank, char* descri
         unsigned char* stride = data;
         for (int x = 0; x < width; x++) {
             if (HighRGB(*stride) < 2) {
-                if (extraDescriptionWidth > x) {
-                    extraDescriptionWidth = x;
-                }
+                extraDescriptionWidth = std::min(extraDescriptionWidth, x);
             }
             stride++;
         }
