@@ -2076,7 +2076,7 @@ static void gsound_check_active_effects()
 }
 
 // 0x449CA4
-static Sound* gsound_get_sound_ready_for_effect()
+Sound* gsound_get_sound_ready_for_effect()
 {
     int rc;
 
