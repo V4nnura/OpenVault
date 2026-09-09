@@ -267,7 +267,7 @@ const char* soundError(int err)
 // 0x499D40
 static void refreshSoundBuffers(Sound* sound)
 {
-    if (sound->soundFlags & 0x80) {
+    if ((sound->soundFlags & SOUND_FLAG_0x80) != 0) {
         return;
     }
 
@@ -284,14 +284,14 @@ static void refreshSoundBuffers(Sound* sound)
         sound->numBytesRead += readPos - sound->lastPosition;
     }
 
-    if (sound->soundFlags & 0x0100) {
-        if (sound->type & 0x20) {
-            if (sound->soundFlags & 0x0200) {
-                sound->soundFlags |= 0x80;
+    if ((sound->soundFlags & SOUND_FLAG_0x100) != 0) {
+        if ((sound->type & SOUND_TYPE_0x20) != 0) {
+            if ((sound->soundFlags & SOUND_FLAG_0x200) != 0) {
+                sound->soundFlags |= SOUND_FLAG_0x80;
             }
         } else {
             if (sound->fileSize <= sound->numBytesRead) {
-                sound->soundFlags |= 0x0280;
+                sound->soundFlags |= SOUND_FLAG_0x200 | SOUND_FLAG_0x80;
             }
         }
     }
@@ -348,7 +348,7 @@ static void refreshSoundBuffers(Sound* sound)
     int audioBytes = audioBytes1;
     while (--v53 != -1) {
         int bytesRead;
-        if (sound->soundFlags & 0x0200) {
+        if ((sound->soundFlags & SOUND_FLAG_0x200) != 0) {
             bytesRead = sound->dataSize;
             memset(sound->data, 0, bytesRead);
         } else {
@@ -362,9 +362,9 @@ static void refreshSoundBuffers(Sound* sound)
 
             bytesRead = sound->io.read(sound->io.fd, sound->data, bytesToRead);
             if (bytesRead < sound->dataSize) {
-                if (!(sound->soundFlags & 0x20) || (sound->soundFlags & 0x0100)) {
+                if ((sound->soundFlags & SOUND_LOOPING) == 0 || (sound->soundFlags & SOUND_FLAG_0x100) != 0) {
                     memset(sound->data + bytesRead, 0, sound->dataSize - bytesRead);
-                    sound->soundFlags |= 0x0200;
+                    sound->soundFlags |= SOUND_FLAG_0x200;
                     bytesRead = sound->dataSize;
                 } else {
                     while (bytesRead < sound->dataSize) {
@@ -378,7 +378,7 @@ static void refreshSoundBuffers(Sound* sound)
                                 sound->field_58 = -1;
                                 sound->field_54 = 0;
                                 sound->loops = 0;
-                                sound->soundFlags &= ~0x20;
+                                sound->soundFlags &= ~SOUND_LOOPING;
                                 bytesRead += sound->io.read(sound->io.fd, sound->data + bytesRead, sound->dataSize - bytesRead);
                                 break;
                             }
@@ -498,7 +498,7 @@ Sound* soundAllocate(int type, int soundFlags)
 
     memcpy(&(sound->io), &defaultStream, sizeof(defaultStream));
 
-    if (!(soundFlags & SOUND_FLAG_0x02)) {
+    if ((soundFlags & SOUND_FLAG_0x02) == 0) {
         soundFlags |= SOUND_FLAG_0x02;
     }
 
@@ -643,7 +643,7 @@ int soundRewind(Sound* sound)
         sound->lastUpdate = 0;
         sound->lastPosition = 0;
         sound->numBytesRead = 0;
-        sound->soundFlags &= 0xFD7F;
+        sound->soundFlags &= ~(SOUND_FLAG_0x200 | SOUND_FLAG_0x80);
         hr = audioEngineSoundBufferSetCurrentPosition(sound->soundBuffer, 0);
         preloadBuffers(sound);
     } else {
@@ -873,13 +873,13 @@ int soundContinue(Sound* sound)
             sound->callback = NULL;
         }
 
-        if (sound->type & 0x04) {
+        if (sound->type & SOUND_TYPE_FIRE_AND_FORGET) != 0) {
             sound->callback = NULL;
             soundDelete(sound);
         } else {
             sound->statusFlags |= SOUND_STATUS_DONE;
 
-            if (sound->statusFlags & SOUND_STATUS_IS_PLAYING) {
+            if ((sound->statusFlags & SOUND_STATUS_IS_PLAYING) != 0) {
                 --numSounds;
             }
 
@@ -1026,7 +1026,7 @@ int soundLoop(Sound* sound, int loops)
         return soundErrorno;
     }
 
-    if (loops) {
+    if (loops != 0) {
         sound->soundFlags |= SOUND_LOOPING;
         sound->loops = loops;
     } else {
