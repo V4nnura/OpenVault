@@ -437,7 +437,7 @@ static int lips_make_speech()
         lip_info.sound = NULL;
     }
 
-    lip_info.sound = soundAllocate(1, 8);
+    lip_info.sound = soundAllocate(SOUND_TYPE_MEMORY, SOUND_16BIT);
     if (lip_info.sound == NULL) {
         debug_printf("\nsoundAllocate falied in lips_make_speech!");
         return -1;
