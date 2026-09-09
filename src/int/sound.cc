@@ -873,7 +873,7 @@ int soundContinue(Sound* sound)
             sound->callback = NULL;
         }
 
-        if (sound->type & SOUND_TYPE_FIRE_AND_FORGET) != 0) {
+        if ((sound->type & SOUND_TYPE_FIRE_AND_FORGET) != 0) {
             sound->callback = NULL;
             soundDelete(sound);
         } else {
