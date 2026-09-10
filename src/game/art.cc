@@ -206,23 +206,18 @@ int art_init()
     }
 
     for (int headIndex = 0; headIndex < art[OBJ_TYPE_HEAD].fileNamesLength; headIndex++) {
-        char* sep1;
-        char* sep2;
-        char* sep3;
-        char* sep4;
-
         if (!db_fgets(string, sizeof(string), stream)) {
             break;
         }
 
-        sep1 = strchr(string, ',');
+        char* sep1 = strchr(string, ',');
         if (sep1 != NULL) {
             *sep1 = '\0';
         } else {
             sep1 = string;
         }
 
-        sep2 = strchr(sep1, ',');
+        char* sep2 = strchr(sep1 + 1, ',');
         if (sep2 != NULL) {
             *sep2 = '\0';
         } else {
@@ -231,7 +226,7 @@ int art_init()
 
         head_info[headIndex].goodFidgetCount = atoi(sep1 + 1);
 
-        sep3 = strchr(sep2, ',');
+        char* sep3 = strchr(sep2 + 1, ',');
         if (sep3 != NULL) {
             *sep3 = '\0';
         } else {
@@ -240,7 +235,7 @@ int art_init()
 
         head_info[headIndex].neutralFidgetCount = atoi(sep2 + 1);
 
-        sep4 = strpbrk(sep3 + 1, " ,;\t\n");
+        char* sep4 = strpbrk(sep3 + 1, " ,;\t\n");
         if (sep4 != NULL) {
             *sep4 = '\0';
         }
