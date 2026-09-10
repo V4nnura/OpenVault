@@ -1709,7 +1709,7 @@ static void op_set_obj_visibility(Program* program)
     }
 
     if (isLoadingGame()) {
-        debug_printf("Error: attempt to set_obj_visibility in load/save-game: %s!", program->name);
+        debug_printf("ERROR: attempt to set_obj_visibility in load/save-game: %s!", program->name);
         return;
     }
 
