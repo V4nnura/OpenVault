@@ -125,9 +125,9 @@ typedef struct Sound {
 
 void soundRegisterAlloc(SoundMallocFunc* mallocProc, SoundReallocFunc* reallocProc, SoundFreeFunc* freeProc);
 const char* soundError(int err);
-int soundInit(int a1, int a2, int a3, int a4, int rate);
+int soundInit(int a1, int num_buffers, int a3, int data_size, int sample_rate);
 void soundClose();
-Sound* soundAllocate(int a1, int a2);
+Sound* soundAllocate(int type, int soundFlags);
 int soundLoad(Sound* sound, char* filePath);
 int soundRewind(Sound* sound);
 int soundSetData(Sound* sound, unsigned char* buf, int size);
@@ -140,11 +140,11 @@ bool soundPlaying(Sound* sound);
 bool soundDone(Sound* sound);
 bool soundFading(Sound* sound);
 bool soundPaused(Sound* sound);
-int soundFlags(Sound* sound, int a2);
-int soundType(Sound* sound, int a2);
+int soundFlags(Sound* sound, int flags);
+int soundType(Sound* sound, int type);
 int soundLength(Sound* sound);
-int soundLoop(Sound* sound, int a2);
-int soundVolumeHMItoDirectSound(int a1);
+int soundLoop(Sound* sound, int loops);
+int soundVolumeHMItoDirectSound(int volume);
 int soundVolume(Sound* sound, int volume);
 int soundGetVolume(Sound* sound);
 int soundSetCallback(Sound* sound, SoundCallback* callback, void* userData);
@@ -156,7 +156,7 @@ int soundSetFileIO(Sound* sound, SoundOpenProc* openProc, SoundCloseProc* closeP
 void soundMgrDelete(Sound* sound);
 int soundSetMasterVolume(int value);
 int soundGetPosition(Sound* sound);
-int soundSetPosition(Sound* sound, int a2);
+int soundSetPosition(Sound* sound, int pos);
 int soundFade(Sound* sound, int duration, int targetVolume);
 void soundFlushAllSounds();
 void soundUpdate();
