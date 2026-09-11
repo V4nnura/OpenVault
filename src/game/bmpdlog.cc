@@ -154,7 +154,7 @@ int dialog_out(const char* title, const char** body, int bodyLength, int x, int 
 
     int linesCount = 0;
     for (int index = 0; index < bodyLength; index++) {
-        // NOTE: Calls [text_width] twice because of [max] macro.
+        // NOTE: Originally there is no `max` macro.
         maximumLineWidth = std::max(text_width(body[index]), maximumLineWidth);
         linesCount++;
     }
@@ -400,57 +400,83 @@ int dialog_out(const char* title, const char** body, int bodyLength, int x, int 
 
     text_font(101);
 
-    int v23 = ytable[dialogType];
+    int nextY = ytable[dialogType];
+    int maxY = ytable[dialogType] + dblines[dialogType] * text_height();
 
     if ((flags & DIALOG_BOX_NO_VERTICAL_CENTERING) == 0) {
-        int v41 = dblines[dialogType] * text_height() / 2 + v23;
-        v23 = v41 - ((bodyLength + 1) * text_height() / 2);
+        int numberOfLines = 0;
+
+        if (hasTitle) {
+            numberOfLines++;
+        }
+
+        for (int index = 0; index < bodyLength; index++) {
+            short beginnings[WORD_WRAP_MAX_COUNT];
+            short subLineCount;
+            int maxWidth = backgroundWidth - xtable[dialogType] * 2;
+            if (word_wrap(body[index], maxWidth, beginnings, &subLineCount) == 0 {
+                numberOfLines += subLineCount - 1;
+            }
+        }
+
+        if (numberOfLines > dblines[dialogType]) {
+            numberOfLines = dblines[dialogType];
+        }
+
+        nextY += (dblines[dialogType] - numberOfLines) * text_height() / 2;
     }
 
     if (hasTitle) {
         if ((flags & DIALOG_BOX_NO_HORIZONTAL_CENTERING) != 0) {
-            text_to_buf(windowBuf + backgroundWidth * v23 + xtable[dialogType], title, backgroundWidth, backgroundWidth, titleColor);
+            text_to_buf(windowBuf + backgroundWidth * nextY + xtable[dialogType], title, backgroundWidth, backgroundWidth, titleColor);
         } else {
             int length = text_width(title);
-            text_to_buf(windowBuf + backgroundWidth * v23 + (backgroundWidth - length) / 2, title, backgroundWidth, backgroundWidth, titleColor);
+            text_to_buf(windowBuf + backgroundWidth * nextY + (backgroundWidth - length) / 2, title, backgroundWidth, backgroundWidth, titleColor);
         }
-        v23 += text_height();
+        nextY += text_height();
     }
 
-    for (int v94 = 0; v94 < bodyLength; v94++) {
-        int len = text_width(body[v94]);
-        if (len <= backgroundWidth - 26) {
+    for (int index = 0; index < bodyLength && nextY < maxY; index++) {
+        int width = text_width(body[index]);
+        int maxWidth = backgroundWidth - xtable[dialogType] * 2;
+        if (width <= maxWidth) {
             if ((flags & DIALOG_BOX_NO_HORIZONTAL_CENTERING) != 0) {
-                text_to_buf(windowBuf + backgroundWidth * v23 + xtable[dialogType], body[v94], backgroundWidth, backgroundWidth, bodyColor);
+                text_to_buf(windowBuf + backgroundWidth * nextY + xtable[dialogType], body[index], backgroundWidth, backgroundWidth, bodyColor);
             } else {
-                int length = text_width(body[v94]);
-                text_to_buf(windowBuf + backgroundWidth * v23 + (backgroundWidth - length) / 2, body[v94], backgroundWidth, backgroundWidth, bodyColor);
+                int length = text_width(body[index]);
+                text_to_buf(windowBuf + backgroundWidth * nextY + (backgroundWidth - length) / 2, body[index], backgroundWidth, backgroundWidth, bodyColor);
             }
-            v23 += text_height();
+            nextY += text_height();
         } else {
             short beginnings[WORD_WRAP_MAX_COUNT];
             short count;
-            if (word_wrap(body[v94], backgroundWidth - 26, beginnings, &count) != 0) {
+            if (word_wrap(body[index], maxWidth, beginnings, &count) != 0) {
                 debug_printf("\nError: dialog_out");
             }
 
-            for (int v48 = 1; v48 < count; v48++) {
-                int v51 = beginnings[v48] - beginnings[v48 - 1];
-                if (v51 >= 260) {
-                    v51 = 259;
+            for (int beginningIndex = 1; beginningIndex < count && nextY < maxY; beginningIndex++) {
+                int subLineLength = beginnings[beginningIndex] - beginnings[beginningIndex - 1];
+                if (subLineLength >= 260) {
+                    subLineLength = 259;
                 }
 
                 char string[260];
-                strncpy(string, body[v94] + beginnings[v48 - 1], v51);
-                string[v51] = '\0';
+                strncpy(string, body[index] + beginnings[beginningIndex - 1], subLineLength);
+                string[subLineLength] = '\0';
+
+                // Remove trailing space as it affects width calculation.
+                if (subLineLength > 0 && string[subLineLength - 1] == ' ') {
+                    string[subLineLength - 1] = '\0';
+                    subLineLength -= 1;
+                }
 
                 if ((flags & DIALOG_BOX_NO_HORIZONTAL_CENTERING) != 0) {
-                    text_to_buf(windowBuf + backgroundWidth * v23 + xtable[dialogType], string, backgroundWidth, backgroundWidth, bodyColor);
+                    text_to_buf(windowBuf + backgroundWidth * nextY + xtable[dialogType], string, backgroundWidth, backgroundWidth, bodyColor);
                 } else {
                     int length = text_width(string);
-                    text_to_buf(windowBuf + backgroundWidth * v23 + (backgroundWidth - length) / 2, string, backgroundWidth, backgroundWidth, bodyColor);
+                    text_to_buf(windowBuf + backgroundWidth * nextY + (backgroundWidth - length) / 2, string, backgroundWidth, backgroundWidth, bodyColor);
                 }
-                v23 += text_height();
+                nextY += text_height();
             }
         }
     }
