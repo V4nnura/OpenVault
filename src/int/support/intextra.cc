@@ -2632,7 +2632,7 @@ static void op_float_msg(Program* program)
     Object* obj = static_cast<Object*>(programStackPopPointer(program));
 
     int color = colorTable[32747];
-    int a5 = colorTable[0];
+    int backgroundColor = colorTable[0];
     int font = 101;
 
     if (obj == NULL) {
@@ -2660,7 +2660,7 @@ static void op_float_msg(Program* program)
     switch (floatingMessageType) {
     case FLOATING_MESSAGE_TYPE_WARNING:
         color = colorTable[31744];
-        a5 = colorTable[0];
+        backgroundColor = colorTable[0];
         font = 103;
         tile_set_center(obj_dude->tile, TILE_SET_CENTER_REFRESH_WINDOW);
         break;
@@ -2700,7 +2700,7 @@ static void op_float_msg(Program* program)
     }
 
     Rect rect;
-    if (text_object_create(obj, string, font, color, a5, &rect) != -1) {
+    if (text_object_create(obj, string, font, color, backgroundColor, &rect) != -1) {
         tile_refresh_rect(&rect, obj->elevation);
     }
 }
@@ -3384,16 +3384,16 @@ static void op_running_burning_guy(Program* program)
 static void op_inven_unwield(Program* program)
 {
     Object* obj;
-    int v1;
+    int hand;
 
     obj = scr_find_obj_from_program(program);
-    v1 = 1;
+    hand = HAND_RIGHT;
 
-    if (obj == obj_dude && !intface_is_item_right_hand()) {
-        v1 = 0;
+    if (obj == obj_dude && intface_is_item_right_hand() == HAND_LEFT) {
+        hand = HAND_LEFT;
     }
 
-    inven_unwield(obj, v1);
+    inven_unwield(obj, hand);
 }
 
 // 0x450F68
