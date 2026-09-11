@@ -414,7 +414,7 @@ int dialog_out(const char* title, const char** body, int bodyLength, int x, int 
             short beginnings[WORD_WRAP_MAX_COUNT];
             short subLineCount;
             int maxWidth = backgroundWidth - xtable[dialogType] * 2;
-            if (word_wrap(body[index], maxWidth, beginnings, &subLineCount) == 0 {
+            if (word_wrap(body[index], maxWidth, beginnings, &subLineCount) == 0) {
                 numberOfLines += subLineCount - 1;
             }
         }
