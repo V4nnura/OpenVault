@@ -129,23 +129,23 @@ int roll_random(int min, int max)
 // 0x49150C
 static int ran1(int max)
 {
-    int v1 = 16807 * (idum % 127773) - 2836 * (idum / 127773);
+    int seed = 16807 * (idum % 127773) - 2836 * (idum / 127773);
 
-    if (v1 < 0) {
-        v1 += 0x7FFFFFFF;
+    if (seed < 0) {
+        seed += 0x7FFFFFFF;
     }
 
-    if (v1 < 0) {
-        v1 += 0x7FFFFFFF;
+    if (seed < 0) {
+        seed += 0x7FFFFFFF;
     }
 
-    int v2 = iy & 0x1F;
-    int v3 = iv[v2];
-    iv[v2] = v1;
-    iy = v3;
-    idum = v1;
+    int idx = iy & 0x1F;
+    int value = iv[idx];
+    iv[idx] = seed;
+    iy = value;
+    idum = seed;
 
-    return v3 % max;
+    return value % max;
 }
 
 // 0x491584
@@ -222,16 +222,16 @@ static void check_chi_squared()
         results[value - 1]++;
     }
 
-    double v1 = 0.0;
+    double chiSquared = 0.0;
 
     for (int index = 0; index < 25; index++) {
-        double v2 = ((double)results[index] - 4000.0) * ((double)results[index] - 4000.0) / 4000.0;
-        v1 += v2;
+        double contrib = ((double)results[index] - 4000.0) * ((double)results[index] - 4000.0) / 4000.0;
+        chiSquared += contrib;
     }
 
-    debug_printf("Chi squared is %f, P = %f at 0.05\n", v1, 4000.0);
+    debug_printf("Chi squared is %f, P = %f at 0.05\n", chiSquared, 4000.0);
 
-    if (v1 < 36.42) {
+    if (chiSquared < 36.42) {
         debug_printf("Sequence is random, 95%% confidence.\n");
     } else {
         debug_printf("Warning! Sequence is not random, 95%% confidence.\n");
