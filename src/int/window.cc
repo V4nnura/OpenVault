@@ -428,8 +428,8 @@ static void doRegionFunc(Region* region, int a2)
     }
 
     if (a2 < 4) {
-        if (region->program != NULL && region->rightProcs[a2] != 0) {
-            executeProc(region->program, region->rightProcs[a2]);
+        if (region->program != NULL && region->procs[a2] != 0) {
+            executeProc(region->program, region->procs[a2]);
         }
     }
 }
@@ -527,6 +527,7 @@ static void doButtonProc(int btn, int mouseEvent)
                             managedButton->mouseEventCallback(managedButton->mouseEventCallbackUserData, mouseEvent);
                         }
                     }
+                    return;
                 }
             }
         }
@@ -582,6 +583,7 @@ static void doRightButtonProc(int btn, int mouseEvent)
                             managedButton->rightMouseEventCallback(managedButton->rightMouseEventCallbackUserData, mouseEvent);
                         }
                     }
+                    return;
                 }
             }
         }
@@ -1150,7 +1152,7 @@ char** windowWordWrap(char* string, int maxLength, int a3, int* substringListLen
             pch++;
         } else {
             while (v1 > maxLength) {
-                v1 -= text_char_width(*pch);
+                v1 -= text_char_width(*pch & 0xFF);
                 pch--;
             }
 
