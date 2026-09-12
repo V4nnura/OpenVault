@@ -177,7 +177,7 @@ static int correctFidForRemovedItem(Object* critter, Object* item, int flags)
     }
 
     int fid = critter->fid;
-    int anim = (fid & 0xF000) >> 12;
+    int anim = FID_WEAPON_CODE(fid);
     int newFid = -1;
 
     if ((flags & OBJECT_IN_ANY_HAND) != 0) {
@@ -198,11 +198,11 @@ static int correctFidForRemovedItem(Object* critter, Object* item, int flags)
         }
 
         if (anim == 0) {
-            newFid = art_id(FID_TYPE(fid), fid & 0xFFF, FID_ANIM_TYPE(fid), 0, (fid & 0x70000000) >> 28);
+            newFid = art_id(FID_TYPE(fid), fid & 0xFFF, FID_ANIM_TYPE(fid), 0, FID_ROTATION(fid));
         }
     } else {
         if (critter == obj_dude) {
-            newFid = art_id(FID_TYPE(fid), art_vault_guy_num, FID_ANIM_TYPE(fid), anim, (fid & 0x70000000) >> 28);
+            newFid = art_id(FID_TYPE(fid), art_vault_guy_num, FID_ANIM_TYPE(fid), anim, FID_ROTATION(fid));
             adjust_ac(obj_dude, item, NULL);
         }
     }
