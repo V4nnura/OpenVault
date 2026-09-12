@@ -177,32 +177,32 @@ static int correctFidForRemovedItem(Object* critter, Object* item, int flags)
     }
 
     int fid = critter->fid;
-    int anim = FID_WEAPON_CODE(fid);
+    int weaponCode = FID_WEAPON_CODE(fid);
     int newFid = -1;
 
     if ((flags & OBJECT_IN_ANY_HAND) != 0) {
         if (critter == obj_dude) {
             if (intface_is_item_right_hand()) {
                 if ((flags & OBJECT_IN_RIGHT_HAND) != 0) {
-                    anim = 0;
+                    weaponCode = 0;
                 }
             } else {
                 if ((flags & OBJECT_IN_LEFT_HAND) != 0) {
-                    anim = 0;
+                    weaponCode = 0;
                 }
             }
         } else {
             if ((flags & OBJECT_IN_RIGHT_HAND) != 0) {
-                anim = 0;
+                weaponCode = 0;
             }
         }
 
-        if (anim == 0) {
+        if (weaponCode == 0) {
             newFid = art_id(FID_TYPE(fid), fid & 0xFFF, FID_ANIM_TYPE(fid), 0, FID_ROTATION(fid));
         }
     } else {
         if (critter == obj_dude) {
-            newFid = art_id(FID_TYPE(fid), art_vault_guy_num, FID_ANIM_TYPE(fid), anim, FID_ROTATION(fid));
+            newFid = art_id(FID_TYPE(fid), art_vault_guy_num, FID_ANIM_TYPE(fid), weaponCode, FID_ROTATION(fid));
             adjust_ac(obj_dude, item, NULL);
         }
     }
