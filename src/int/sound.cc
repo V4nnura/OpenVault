@@ -1314,7 +1314,7 @@ void soundMgrDelete(Sound* sound)
 
     if (sound->soundBuffer != -1) {
         // NOTE: Uninline.
-        if (!soundPlaying(sound)) {
+        if (soundPlaying(sound)) {
             soundStop(sound);
         }
 
@@ -1518,6 +1518,8 @@ static void fadeSounds()
 
     ptr = fadeHead;
     while (ptr != NULL) {
+        FadeSound* next = ptr->next;
+
         if ((ptr->currentVolume > ptr->targetVolume || ptr->currentVolume + ptr->deltaVolume < ptr->targetVolume) && (ptr->currentVolume < ptr->targetVolume || ptr->currentVolume + ptr->deltaVolume > ptr->targetVolume)) {
             ptr->currentVolume += ptr->deltaVolume;
             soundVolume(ptr->sound, ptr->currentVolume);
@@ -1543,6 +1545,8 @@ static void fadeSounds()
 
             removeFadeSound(ptr);
         }
+
+        ptr = next;
     }
 
     if (fadeHead == NULL) {
