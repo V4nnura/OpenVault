@@ -40,14 +40,14 @@ static int pick_death(Object* attacker, Object* defender, int damage, int damage
 static int check_death(Object* obj, int anim, int minViolenceLevel, bool isFallingBack);
 static int internal_destroy(Object* a1, Object* a2);
 static int show_death(Object* obj, int anim);
-static int action_melee(Attack* attack, int a2);
-static int action_ranged(Attack* attack, int a2);
-static int is_next_to(Object* a1, Object* a2);
-static int action_climb_ladder(Object* a1, Object* a2);
+static int action_melee(Attack* attack, int anim);
+static int action_ranged(Attack* attack, int anim);
+static int is_next_to(Object* obj1, Object* obj2);
+static int action_climb_ladder(Object* critter, Object* ladder);
 static int report_explosion(Attack* attack, Object* a2);
 static int finished_explosion(Object* a1, Object* a2);
 static int compute_explosion_damage(int min, int max, Object* def, int* knockback_distance);
-static int can_talk_to(Object* a1, Object* a2);
+static int can_talk_to(Object* obj, Object* critter);
 static int talk_to(Object* a1, Object* a2);
 static int report_dmg(Attack* attack, Object* a2);
 static int compute_dmg_damage(int min, int max, Object* obj, int* knockback_distance, int damage_type);
@@ -899,12 +899,12 @@ int use_an_object(Object* item)
 }
 
 // 0x411BE4
-static int is_next_to(Object* a1, Object* a2)
+static int is_next_to(Object* obj1, Object* obj2)
 {
     MessageListItem messageListItem;
 
-    if (obj_dist(a1, a2) > 1) {
-        if (a2 == obj_dude) {
+    if (obj_dist(obj1, obj2) > 1) {
+        if (obj2 == obj_dude) {
             // You cannot get there.
             messageListItem.num = 2000;
             if (message_search(&misc_message_file, &messageListItem)) {
@@ -918,9 +918,9 @@ static int is_next_to(Object* a1, Object* a2)
 }
 
 // 0x411C30
-static int action_climb_ladder(Object* a1, Object* a2)
+static int action_climb_ladder(Object* critter, Object* ladder)
 {
-    if (a1 == obj_dude) {
+    if (critter == obj_dude) {
         int anim = FID_ANIM_TYPE(obj_dude->fid);
         if (anim == ANIM_WALK || anim == ANIM_RUNNING) {
             register_clear(obj_dude);
@@ -931,44 +931,44 @@ static int action_climb_ladder(Object* a1, Object* a2)
     int actionPoints;
     if (isInCombat()) {
         animationRequestOptions = ANIMATION_REQUEST_RESERVED;
-        actionPoints = a1->data.critter.combat.ap;
+        actionPoints = critter->data.critter.combat.ap;
     } else {
         animationRequestOptions = ANIMATION_REQUEST_UNRESERVED;
         actionPoints = -1;
     }
 
-    if (a1 == obj_dude) {
+    if (critter == obj_dude) {
         animationRequestOptions = ANIMATION_REQUEST_RESERVED;
     }
 
     animationRequestOptions |= ANIMATION_REQUEST_NO_STAND;
     register_begin(animationRequestOptions);
 
-    int tile = tile_num_in_direction(a2->tile, ROTATION_SE, 1);
-    if (actionPoints != -1 || obj_dist(a1, a2) < 5) {
-        register_object_move_to_tile(a1, tile, a2->elevation, actionPoints, 0);
+    int tile = tile_num_in_direction(ladder->tile, ROTATION_SE, 1);
+    if (actionPoints != -1 || obj_dist(critter, ladder) < 5) {
+        register_object_move_to_tile(critter, tile, ladder->elevation, actionPoints, 0);
     } else {
-        register_object_run_to_tile(a1, tile, a2->elevation, actionPoints, 0);
+        register_object_run_to_tile(critter, tile, ladder->elevation, actionPoints, 0);
     }
 
-    register_object_must_call(a1, a2, (AnimationCallback*)is_next_to, -1);
-    register_object_turn_towards(a1, a2->tile);
-    register_object_must_call(a1, a2, (AnimationCallback*)check_scenery_ap_cost, -1);
+    register_object_must_call(critter, ladder, (AnimationCallback*)is_next_to, -1);
+    register_object_turn_towards(critter, ladder->tile);
+    register_object_must_call(critter, ladder, (AnimationCallback*)check_scenery_ap_cost, -1);
 
-    int weaponAnimationCode = (a1->fid & 0xF000) >> 12;
+    int weaponAnimationCode = (critter->fid & 0xF000) >> 12;
     if (weaponAnimationCode != 0) {
-        const char* puttingAwaySfx = gsnd_build_character_sfx_name(a1, ANIM_PUT_AWAY, CHARACTER_SOUND_EFFECT_UNUSED);
-        register_object_play_sfx(a1, puttingAwaySfx, -1);
-        register_object_animate(a1, ANIM_PUT_AWAY, 0);
+        const char* puttingAwaySfx = gsnd_build_character_sfx_name(critter, ANIM_PUT_AWAY, CHARACTER_SOUND_EFFECT_UNUSED);
+        register_object_play_sfx(critter, puttingAwaySfx, -1);
+        register_object_animate(critter, ANIM_PUT_AWAY, 0);
     }
 
-    const char* climbingSfx = gsnd_build_character_sfx_name(a1, ANIM_CLIMB_LADDER, CHARACTER_SOUND_EFFECT_UNUSED);
-    register_object_play_sfx(a1, climbingSfx, -1);
-    register_object_animate(a1, ANIM_CLIMB_LADDER, 0);
-    register_object_call(a1, a2, (AnimationCallback*)obj_use, -1);
+    const char* climbingSfx = gsnd_build_character_sfx_name(critter, ANIM_CLIMB_LADDER, CHARACTER_SOUND_EFFECT_UNUSED);
+    register_object_play_sfx(critter, climbingSfx, -1);
+    register_object_animate(critter, ANIM_CLIMB_LADDER, 0);
+    register_object_call(critter, ladder, (AnimationCallback*)obj_use, -1);
 
     if (weaponAnimationCode != 0) {
-        register_object_take_out(a1, weaponAnimationCode, -1);
+        register_object_take_out(critter, weaponAnimationCode, -1);
     }
 
     return register_end();
@@ -1813,12 +1813,12 @@ int action_talk_to(Object* a1, Object* a2)
 }
 
 // 0x413198
-static int can_talk_to(Object* a1, Object* a2)
+static int can_talk_to(Object* obj, Object* critter)
 {
     MessageListItem messageListItem;
 
-    if (combat_is_shot_blocked(a1, a1->tile, a2->tile, a2, NULL) || obj_dist(a1, a2) >= 9) {
-        if (a1 == obj_dude) {
+    if (combat_is_shot_blocked(obj, obj->tile, critter->tile, critter, NULL) || obj_dist(obj, critter) >= 9) {
+        if (obj == obj_dude) {
             // You cannot get there. (used in actions.c)
             messageListItem.num = 2000;
             if (message_search(&misc_message_file, &messageListItem)) {
