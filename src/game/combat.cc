@@ -90,7 +90,7 @@ static char _a_1[] = ".";
 static int combat_turn_running = 0;
 
 // 0x4FEC84
-unsigned int combat_state = COMBAT_STATE_0x02;
+unsigned int combat_state = COMBAT_STATE_PLAYER_TURN;
 
 // 0x4FEC88
 CombatStartData* gcsd = NULL;
@@ -1558,7 +1558,7 @@ int combat_init()
     list_total = 0;
     gcsd = NULL;
     combat_call_display = 0;
-    combat_state = COMBAT_STATE_0x02;
+    combat_state = COMBAT_STATE_PLAYER_TURN;
     obj_dude->data.critter.combat.ap = stat_level(obj_dude, STAT_MAXIMUM_ACTION_POINTS);
     combat_free_move = 0;
     combat_ending_guy = NULL;
@@ -1589,7 +1589,7 @@ void combat_reset()
     list_total = 0;
     gcsd = NULL;
     combat_call_display = 0;
-    combat_state = COMBAT_STATE_0x02;
+    combat_state = COMBAT_STATE_PLAYER_TURN;
     obj_dude->data.critter.combat.ap = stat_level(obj_dude, STAT_MAXIMUM_ACTION_POINTS);
     combat_free_move = 0;
     combat_ending_guy = NULL;
@@ -1775,7 +1775,7 @@ static void combat_begin(Object* a1)
             }
         }
 
-        combat_state |= COMBAT_STATE_0x01;
+        combat_state |= COMBAT_STATE_IN_COMBAT;
 
         tile_refresh_display();
         game_ui_disable(0);
@@ -1849,8 +1849,8 @@ static void combat_over()
 
     combat_exps = 0;
 
-    combat_state &= ~COMBAT_STATE_0x01;
-    combat_state |= COMBAT_STATE_0x02;
+    combat_state &= ~COMBAT_STATE_IN_COMBAT;
+    combat_state |= COMBAT_STATE_PLAYER_TURN;
 
     if (list_total != 0) {
         obj_delete_list(combat_list);
@@ -2149,7 +2149,7 @@ void combat_end()
         }
     }
 
-    combat_state |= COMBAT_STATE_0x08;
+    combat_state |= COMBAT_STATE_EXIT_REQUESTED;
 }
 
 // 0x420698
@@ -2170,10 +2170,10 @@ static int combat_input()
 {
     int input;
 
-    while ((combat_state & COMBAT_STATE_0x02) != 0) {
+    while ((combat_state & COMBAT_STATE_PLAYER_TURN) != 0) {
         sharedFpsLimiter.mark();
 
-        if ((combat_state & COMBAT_STATE_0x08) != 0) {
+        if ((combat_state & COMBAT_STATE_EXIT_REQUESTED) != 0) {
             break;
         }
 
@@ -2215,8 +2215,8 @@ static int combat_input()
         game_user_wants_to_quit = 0;
     }
 
-    if ((combat_state & COMBAT_STATE_0x08) != 0) {
-        combat_state &= ~COMBAT_STATE_0x08;
+    if ((combat_state & COMBAT_STATE_EXIT_REQUESTED) != 0) {
+        combat_state &= ~COMBAT_STATE_EXIT_REQUESTED;
         return -1;
     }
 
@@ -2232,7 +2232,7 @@ static int combat_input()
 // 0x420790
 void combat_end_turn()
 {
-    combat_state &= ~COMBAT_STATE_0x02;
+    combat_state &= ~COMBAT_STATE_PLAYER_TURN;
 }
 
 // 0x420798
