@@ -13,9 +13,9 @@ namespace fallout {
 #define WEAPON_CRITICAL_FAILURE_EFFECT_COUNT (5)
 
 typedef enum CombatState {
-    COMBAT_STATE_0x01 = 0x01,
-    COMBAT_STATE_0x02 = 0x02,
-    COMBAT_STATE_0x08 = 0x08,
+    COMBAT_STATE_IN_COMBAT = 0x01,
+    COMBAT_STATE_PLAYER_TURN = 0x02,
+    COMBAT_STATE_EXIT_REQUESTED = 0x08,
 } CombatState;
 
 typedef enum HitMode {
