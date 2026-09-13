@@ -2296,7 +2296,7 @@ static int combat_turn(Object* obj, bool a2)
                 }
 
                 if (!a2) {
-                    combat_state |= 0x02;
+                    combat_state |= COMBAT_STATE_PLAYER_TURN;
                 }
 
                 intface_end_buttons_enable();
@@ -2408,7 +2408,7 @@ void combat(CombatStartData* csd)
     if (csd == NULL
         || ((csd->attacker == NULL || csd->attacker->elevation == map_elevation)
             && (csd->defender == NULL || csd->defender->elevation == map_elevation))) {
-        bool wasInCombat = (combat_state & 0x01) != 0;
+        bool wasInCombat = (combat_state & COMBAT_STATE_IN_COMBAT) != 0;
 
         combat_begin(NULL);
 
@@ -4514,7 +4514,7 @@ void combat_attack_this(Object* target)
         return;
     }
 
-    if ((combat_state & 0x02) == 0) {
+    if ((combat_state & COMBAT_STATE_PLAYER_TURN) == 0) {
         return;
     }
 
@@ -4668,7 +4668,7 @@ void combat_outline_off()
     int v5;
     Object** v9;
 
-    if (combat_state & 1) {
+    if ((combat_state & COMBAT_STATE_IN_COMBAT) != 0) {
         for (i = 0; i < list_total; i++) {
             obj_turn_off_outline(combat_list[i], NULL);
         }
