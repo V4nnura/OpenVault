@@ -60,7 +60,7 @@ void combat_delete_critter(Object* obj);
 
 static inline bool isInCombat()
 {
-    return (combat_state & COMBAT_STATE_0x01) != 0;
+    return (combat_state & COMBAT_STATE_IN_COMBAT) != 0;
 }
 
 } // namespace fallout
