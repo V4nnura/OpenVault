@@ -770,12 +770,14 @@ int tile_num(int screenX, int screenY, int elevation, bool ignoreBounds)
         yTile--;
         break;
     case 2:
-        if (++xTile & 1) {
+        xTile++;
+        if (xTile & 1) {
             yTile--;
         }
         break;
     case 3:
-        if (!(--xTile & 1)) {
+        xTile--;
+        if (!(xTile & 1)) {
             yTile++;
         }
         break;
