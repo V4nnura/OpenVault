@@ -2594,7 +2594,7 @@ static void op_obj_set_light_level(Program* program)
 
     Rect rect;
     if (lightIntensity != 0) {
-        if (obj_set_light(object, lightDistance, (lightIntensity * 65636) / 100, &rect) == -1) {
+        if (obj_set_light(object, lightDistance, (lightIntensity * 65536) / 100, &rect) == -1) {
             return;
         }
     } else {
