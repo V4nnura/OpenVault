@@ -523,7 +523,7 @@ static void showRegion(UpdateRegion* updateRegion)
         value = *(float*)updateRegion->value;
         break;
     case 4:
-        value = *(float*)updateRegion->value / 65636.0f;
+        value = *(float*)updateRegion->value / 65536.0f;
         break;
     case 8:
         win_print(updateRegion->win,
