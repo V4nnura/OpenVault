@@ -817,12 +817,10 @@ int tile_dist(int tile1, int tile2)
 // 0x49E4A0
 bool tile_in_front_of(int tile1, int tile2)
 {
-    int x1;
-    int y1;
+    int x1, y1;
     tile_coord(tile1, &x1, &y1, 0);
 
-    int x2;
-    int y2;
+    int x2, y2;
     tile_coord(tile2, &x2, &y2, 0);
 
     int dx = x2 - x1;
@@ -834,12 +832,10 @@ bool tile_in_front_of(int tile1, int tile2)
 // 0x49E508
 bool tile_to_right_of(int tile1, int tile2)
 {
-    int x1;
-    int y1;
+    int x1, y1;
     tile_coord(tile1, &x1, &y1, 0);
 
-    int x2;
-    int y2;
+    int x2, y2;
     tile_coord(tile2, &x2, &y2, 0);
 
     int dx = x2 - x1;
@@ -907,14 +903,12 @@ int tile_num_beyond(int from, int to, int distance)
         return from;
     }
 
-    int fromX;
-    int fromY;
+    int fromX, fromY;
     tile_coord(from, &fromX, &fromY, 0);
     fromX += 16;
     fromY += 8;
 
-    int toX;
-    int toY;
+    int toX, toY;
     tile_coord(to, &toX, &toY, 0);
     toX += 16;
     toY += 8;
@@ -1056,28 +1050,21 @@ bool tile_get_scroll_limiting()
 // 0x49E8B4
 int square_coord(int squareTile, int* coordX, int* coordY, int elevation)
 {
-    int v5;
-    int v6;
-    int v7;
-    int v8;
-    int v9;
-
     if (squareTile < 0 || squareTile >= square_size) {
         return -1;
     }
 
-    v5 = square_width - 1 - squareTile % square_width;
-    v6 = squareTile / square_width;
-    v7 = square_x;
+    int tileCol = square_width - 1 - squareTile % square_width;
+    int tileRow = squareTile / square_width;
 
     *coordX = square_offx;
     *coordY = square_offy;
 
-    v8 = v5 - v7;
+    int colDelta = tileCol - square_x;
     *coordX += 48 * v8;
     *coordY -= 12 * v8;
 
-    v9 = v6 - square_y;
+    int rowDelta = tileRow - square_y;
     *coordX += 32 * v9;
     *coordY += 24 * v9;
 
