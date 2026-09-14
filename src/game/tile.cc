@@ -801,13 +801,10 @@ int tile_dist(int tile1, int tile2)
 {
     int tile = tile1;
     int distance = 0;
-    int parity;
-    int dir;
 
     while (tile != tile2) {
-        parity = (tile % grid_width) & 1;
-        dir = tile_dir(tile, tile2);
-        tile += dir_tile[parity][dir];
+        int dir = tile_dir(tile, tile2);
+        tile += dir_tile[(tile % grid_width) & 1][dir];
         distance++;
     }
 
@@ -1061,12 +1058,12 @@ int square_coord(int squareTile, int* coordX, int* coordY, int elevation)
     *coordY = square_offy;
 
     int colDelta = tileCol - square_x;
-    *coordX += 48 * v8;
-    *coordY -= 12 * v8;
+    *coordX += 48 * colDelta;
+    *coordY -= 12 * colDelta;
 
     int rowDelta = tileRow - square_y;
-    *coordX += 32 * v9;
-    *coordY += 24 * v9;
+    *coordX += 32 * rowDelta;
+    *coordY += 24 * rowDelta;
 
     return 0;
 }
