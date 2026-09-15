@@ -487,7 +487,7 @@ void movieStop()
 // 0x478F74
 int movieSetFlags(int flags)
 {
-    if ((flags & MOVIE_FLAG_0x04) != 0) {
+    if ((flags & MOVIE_FLAG_DIRECT_CENTERED) != 0) {
         movieFlags |= MOVIE_EXTENDED_FLAG_DIRECT | MOVIE_EXTENDED_FLAG_CENTERED;
     } else {
         movieFlags &= ~MOVIE_EXTENDED_FLAG_CENTERED;
