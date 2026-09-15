@@ -223,7 +223,7 @@ static void movieDirect(unsigned char* pixels, int src_width, int src_height, in
     SDL_Rect destRect;
 
     if (movieScaleFlag) {
-        if ((movieFlags & MOVIE_EXTENDED_FLAG_0x08) != 0) {
+        if ((movieFlags & MOVIE_EXTENDED_FLAG_CENTERED) != 0) {
             destRect.y = (winRect.lry - winRect.uly + 1 - dst_height) / 2;
             destRect.x = (movWinSpan - 4 * src_width / 3) / 2;
         } else {
@@ -234,7 +234,7 @@ static void movieDirect(unsigned char* pixels, int src_width, int src_height, in
         destRect.w = 4 * src_width / 3 + destRect.x;
         destRect.h = dst_height + destRect.y;
     } else {
-        if ((movieFlags & MOVIE_EXTENDED_FLAG_0x08) != 0) {
+        if ((movieFlags & MOVIE_EXTENDED_FLAG_CENTERED) != 0) {
             destRect.y = (winRect.lry - winRect.uly + 1 - dst_height) / 2;
             destRect.x = (movWinSpan - dst_width) / 2;
         } else {
@@ -480,7 +480,7 @@ void movieClose()
 void movieStop()
 {
     if (running) {
-        movieFlags |= MOVIE_EXTENDED_FLAG_0x02;
+        movieFlags |= MOVIE_EXTENDED_FLAG_STOP_REQUESTED;
     }
 }
 
@@ -488,30 +488,30 @@ void movieStop()
 int movieSetFlags(int flags)
 {
     if ((flags & MOVIE_FLAG_0x04) != 0) {
-        movieFlags |= MOVIE_EXTENDED_FLAG_0x04 | MOVIE_EXTENDED_FLAG_0x08;
+        movieFlags |= MOVIE_EXTENDED_FLAG_DIRECT | MOVIE_EXTENDED_FLAG_CENTERED;
     } else {
-        movieFlags &= ~MOVIE_EXTENDED_FLAG_0x08;
-        if ((flags & MOVIE_FLAG_0x02) != 0) {
-            movieFlags |= MOVIE_EXTENDED_FLAG_0x04;
+        movieFlags &= ~MOVIE_EXTENDED_FLAG_CENTERED;
+        if ((flags & MOVIE_FLAG_DIRECT) != 0) {
+            movieFlags |= MOVIE_EXTENDED_FLAG_DIRECT;
         } else {
-            movieFlags &= ~MOVIE_EXTENDED_FLAG_0x04;
+            movieFlags &= ~MOVIE_EXTENDED_FLAG_DIRECT;
         }
     }
 
-    if ((flags & MOVIE_FLAG_0x01) != 0) {
+    if ((flags & MOVIE_FLAG_SCALE) != 0) {
         movieScaleFlag = 1;
     } else {
         movieScaleFlag = 0;
 
-        if ((movieFlags & MOVIE_EXTENDED_FLAG_0x04) == 0) {
-            movieFlags &= ~MOVIE_EXTENDED_FLAG_0x08;
+        if ((movieFlags & MOVIE_EXTENDED_FLAG_DIRECT) == 0) {
+            movieFlags &= ~MOVIE_EXTENDED_FLAG_CENTERED;
         }
     }
 
-    if ((flags & MOVIE_FLAG_0x08) != 0) {
-        movieFlags |= MOVIE_EXTENDED_FLAG_0x10;
+    if ((flags & MOVIE_FLAG_SUBTITLES) != 0) {
+        movieFlags |= MOVIE_EXTENDED_FLAG_SUBTITLES;
     } else {
-        movieFlags &= ~MOVIE_EXTENDED_FLAG_0x10;
+        movieFlags &= ~MOVIE_EXTENDED_FLAG_SUBTITLES;
     }
 
     return 0;
@@ -582,7 +582,7 @@ static void openSubtitle(char* filePath)
     DB_FILE* stream = db_fopen(path, "r");
     if (stream == NULL) {
         debug_printf("Couldn't open subtitle file %s\n", path);
-        movieFlags &= ~MOVIE_EXTENDED_FLAG_0x10;
+        movieFlags &= ~MOVIE_EXTENDED_FLAG_SUBTITLES;
         return;
     }
 
@@ -643,7 +643,7 @@ static void doSubtitle()
         return;
     }
 
-    if ((movieFlags & MOVIE_EXTENDED_FLAG_0x10) == 0) {
+    if ((movieFlags & MOVIE_EXTENDED_FLAG_SUBTITLES) == 0) {
         return;
     }
 
@@ -710,13 +710,13 @@ static int movieStart(int win, char* filePath)
 
     GNWWin = win;
     running = 1;
-    movieFlags &= ~MOVIE_EXTENDED_FLAG_0x01;
+    movieFlags &= ~MOVIE_EXTENDED_FLAG_ERROR;
 
-    if ((movieFlags & MOVIE_EXTENDED_FLAG_0x10) != 0) {
+    if ((movieFlags & MOVIE_EXTENDED_FLAG_SUBTITLES) != 0) {
         openSubtitle(filePath);
     }
 
-    if ((movieFlags & MOVIE_EXTENDED_FLAG_0x04) != 0) {
+    if ((movieFlags & MOVIE_EXTENDED_FLAG_DIRECT) != 0) {
         debug_printf("Direct ");
         win_get_rect(GNWWin, &winRect);
         debug_printf("Playing at (%d, %d)  ", movieX + winRect.ulx, movieY + winRect.uly);
@@ -845,13 +845,13 @@ void movieUpdate()
         return;
     }
 
-    if ((movieFlags & MOVIE_EXTENDED_FLAG_0x02) != 0) {
+    if ((movieFlags & MOVIE_EXTENDED_FLAG_STOP_REQUESTED) != 0) {
         debug_printf("Movie aborted\n");
         cleanupMovie(1);
         return;
     }
 
-    if ((movieFlags & MOVIE_EXTENDED_FLAG_0x01) != 0) {
+    if ((movieFlags & MOVIE_EXTENDED_FLAG_ERROR) != 0) {
         debug_printf("Movie error\n");
         cleanupMovie(1);
         return;
