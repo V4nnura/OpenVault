@@ -1675,7 +1675,7 @@ int proto_find_free_subnode(int type, Proto** protoPtr)
     if (protoList->head != NULL) {
         if (protoListExtent->length == PROTO_LIST_EXTENT_SIZE) {
             ProtoListExtent* newExtent = protoListExtent->next = (ProtoListExtent*)mem_malloc(sizeof(ProtoListExtent));
-            if (protoListExtent == NULL) {
+            if (newExtent == NULL) {
                 mem_free(proto);
                 *protoPtr = NULL;
                 return -1;
