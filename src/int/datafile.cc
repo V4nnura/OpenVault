@@ -10,7 +10,8 @@
 
 namespace fallout {
 
-static char* defaultMangleName(char* path);
+constexpr size_t INDEXED_PALETTE_MAX = 256;
+constexpr size_t DATA_FILE_PALETTE_MAX = INDEXED_PALETTE_MAX * 3;
 
 // 0x504EAC
 static DatafileLoader* loadFunc = NULL;
@@ -19,7 +20,7 @@ static DatafileLoader* loadFunc = NULL;
 static DatafileNameMangler* mangleName = defaultMangleName;
 
 // 0x56BF70
-static unsigned char pal[768];
+uint8_t pal[DATA_FILE_PALETTE_MAX];
 
 // 0x429450
 static char* defaultMangleName(char* path)
@@ -40,16 +41,15 @@ void setBitmapLoadFunc(DatafileLoader* loader)
 }
 
 // 0x429464
-void datafileConvertData(unsigned char* data, unsigned char* palette, int width, int height)
+void datafileConvertData(uint8_t* data, uint8_t* palette, int width, int height)
 {
-    unsigned char indexedPalette[256];
+    uint8_t indexedPalette[INDEXED_PALETTE_MAX];
 
     indexedPalette[0] = 0;
-    for (int index = 1; index < 256; index++) {
-        // TODO: Check.
-        int r = palette[index * 3 + 2] >> 3;
+    for (int index = 1; index < INDEXED_PALETTE_MAX; index++) {
+        int r = palette[index * 3] >> 3;
         int g = palette[index * 3 + 1] >> 3;
-        int b = palette[index * 3] >> 3;
+        int b = palette[index * 3 + 2] >> 3;
         int colorTableIndex = (r << 10) | (g << 5) | b;
         indexedPalette[index] = colorTable[colorTableIndex];
     }
@@ -61,16 +61,15 @@ void datafileConvertData(unsigned char* data, unsigned char* palette, int width,
 }
 
 // 0x4294D8
-void datafileConvertDataVGA(unsigned char* data, unsigned char* palette, int width, int height)
+void datafileConvertDataVGA(uint8_t* data, uint8_t* palette, int width, int height)
 {
-    unsigned char indexedPalette[256];
+    uint8_t indexedPalette[INDEXED_PALETTE_MAX];
 
     indexedPalette[0] = 0;
-    for (int index = 1; index < 256; index++) {
-        // TODO: Check.
-        int r = palette[index * 3 + 2] >> 1;
+    for (int index = 1; index < INDEXED_PALETTE_MAX; index++) {
+        int r = palette[index * 3] >> 1;
         int g = palette[index * 3 + 1] >> 1;
-        int b = palette[index * 3] >> 1;
+        int b = palette[index * 3 + 2] >> 1;
         int colorTableIndex = (r << 10) | (g << 5) | b;
         indexedPalette[index] = colorTable[colorTableIndex];
     }
@@ -82,7 +81,7 @@ void datafileConvertDataVGA(unsigned char* data, unsigned char* palette, int wid
 }
 
 // 0x429540
-unsigned char* loadRawDataFile(char* path, int* widthPtr, int* heightPtr)
+uint8_t* loadRawDataFile(char* path, int* widthPtr, int* heightPtr)
 {
     char* mangledPath = mangleName(path);
     char* dot = strrchr(mangledPath, '.');
@@ -100,23 +99,23 @@ unsigned char* loadRawDataFile(char* path, int* widthPtr, int* heightPtr)
 }
 
 // 0x4295AC
-unsigned char* loadDataFile(char* path, int* widthPtr, int* heightPtr)
+uint8_t* loadDataFile(char* path, int* widthPtr, int* heightPtr)
 {
-    unsigned char* v1 = loadRawDataFile(path, widthPtr, heightPtr);
-    if (v1 != NULL) {
-        datafileConvertData(v1, pal, *widthPtr, *heightPtr);
+    uint8_t* imageData = loadRawDataFile(path, widthPtr, heightPtr);
+    if (imageData != NULL) {
+        datafileConvertData(imageData, pal, *widthPtr, *heightPtr);
     }
-    return v1;
+    return imageData;
 }
 
 // 0x4295D4
-unsigned char* load256Palette(char* path)
+uint8_t* load256Palette(char* path)
 {
     int width;
     int height;
-    unsigned char* v3 = loadRawDataFile(path, &width, &height);
-    if (v3 != NULL) {
-        myfree(v3, __FILE__, __LINE__); // "..\\int\\DATAFILE.C", 148
+    uint8_t* imageData = loadRawDataFile(path, &width, &height);
+    if (imageData != NULL) {
+        myfree(imageData, __FILE__, __LINE__); // "..\\int\\DATAFILE.C", 148
         return pal;
     }
 
@@ -124,46 +123,46 @@ unsigned char* load256Palette(char* path)
 }
 
 // 0x429604
-void trimBuffer(unsigned char* data, int* widthPtr, int* heightPtr)
+void trimBuffer(uint8_t* data, int* widthPtr, int* heightPtr)
 {
     int width = *widthPtr;
     int height = *heightPtr;
-    unsigned char* temp = (unsigned char*)mymalloc(width * height, __FILE__, __LINE__); // "..\\int\\DATAFILE.C", 157
+    uint8_t* compactDataWritePtr = (uint8_t*)mymalloc(width * height, __FILE__, __LINE__); // "..\\int\\DATAFILE.C", 157
 
     // NOTE: Original code does not initialize `x`.
     int y = 0;
     int x = 0;
-    unsigned char* src1 = data;
+    uint8_t* rowStart = data;
 
     for (y = 0; y < height; y++) {
-        if (*src1 == 0) {
+        if (*rowStart == 0) {
             break;
         }
 
-        unsigned char* src2 = src1;
+        uint8_t* currentPixel = rowStart;
         for (x = 0; x < width; x++) {
-            if (*src2 == 0) {
+            if (*currentPixel == 0) {
                 break;
             }
 
-            *temp++ = *src2++;
+            *compactDataWritePtr++ = *currentPixel++;
         }
 
-        src1 += width;
+        rowStart += width;
     }
 
-    memcpy(data, temp, x * y);
-    myfree(temp, __FILE__, __LINE__); // // "..\\int\\DATAFILE.C", 171
+    memcpy(data, compactDataWritePtr, x * y);
+    myfree(compactDataWritePtr, __FILE__, __LINE__); // // "..\\int\\DATAFILE.C", 171
 }
 
 // 0x4296C4
-unsigned char* datafileGetPalette()
+uint8_t* datafileGetPalette()
 {
     return pal;
 }
 
 // 0x4296CC
-unsigned char* datafileLoadBlock(char* path, int* sizePtr)
+uint8_t* datafileLoadBlock(char* path, int* sizePtr)
 {
     const char* mangledPath = mangleName(path);
     DB_FILE* stream = db_fopen(mangledPath, "rb");
@@ -172,7 +171,7 @@ unsigned char* datafileLoadBlock(char* path, int* sizePtr)
     }
 
     int size = db_filelength(stream);
-    unsigned char* data = (unsigned char*)mymalloc(size, __FILE__, __LINE__); // "..\\int\\DATAFILE.C", 185
+    uint8_t* data = (uint8_t*)mymalloc(size, __FILE__, __LINE__); // "..\\int\\DATAFILE.C", 185
     if (data == NULL) {
         // NOTE: This code is unreachable, mymalloc never fails.
         // Otherwise it leaks stream.
