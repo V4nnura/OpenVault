@@ -23,7 +23,7 @@ static DatafileNameMangler* mangleName = defaultMangleName;
 uint8_t pal[DATA_FILE_PALETTE_MAX];
 
 // 0x429450
-static char* defaultMangleName(char* path)
+char* defaultMangleName(char* path)
 {
     return path;
 }
