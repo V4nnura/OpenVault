@@ -39,8 +39,6 @@ void movieSetSubtitleFunc(MovieSubtitleFunc* proc);
 void movieSetVolume(int volume);
 void movieUpdate();
 int moviePlaying();
-void movieHandleRendererReset();
-void movieRenderDirectOverlay();
 
 } // namespace fallout
 
