@@ -135,13 +135,13 @@ int gmovie_play(int game_movie, int game_movie_flags)
         configGetBool(&game_config, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_SUBTITLES_KEY, &subtitlesEnabled);
     }
 
-    int movie_flags = MOVIE_FLAG_0x04;
+    int movie_flags = MOVIE_FLAG_DIRECT_CENTERED;
 
     if (subtitlesEnabled) {
         char* subtitlesFilePath = gmovie_subtitle_func(movieFilePath);
 
         if (db_dir_entry(subtitlesFilePath, &de) == 0) {
-            movie_flags |= MOVIE_FLAG_0x08;
+            movie_flags |= MOVIE_FLAG_SUBTITLES;
         } else {
             subtitlesEnabled = false;
         }
