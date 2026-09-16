@@ -111,9 +111,9 @@ int obj_new_sid(Object* object, int* sidPtr)
 }
 
 // 0x48A080
-int obj_new_sid_inst(Object* obj, int scriptType, int a3)
+int obj_new_sid_inst(Object* obj, int scriptType, int scriptIndex)
 {
-    if (a3 == -1) {
+    if (scriptIndex == -1) {
         return -1;
     }
 
@@ -127,7 +127,7 @@ int obj_new_sid_inst(Object* obj, int scriptType, int a3)
         return -1;
     }
 
-    script->scr_script_idx = a3;
+    script->scr_script_idx = scriptIndex;
     if (scriptType == SCRIPT_TYPE_SPATIAL) {
         script->sp.built_tile = builtTileCreate(obj->tile, obj->elevation);
         script->sp.radius = 3;
@@ -140,7 +140,7 @@ int obj_new_sid_inst(Object* obj, int scriptType, int a3)
 
     script->owner = obj;
 
-    scr_find_str_run_info(a3 & 0xFFFFFF, &(script->run_info_flags), sid);
+    scr_find_str_run_info(scriptIndex & 0xFFFFFF, &(script->run_info_flags), sid);
 
     if (PID_TYPE(obj->pid) == OBJ_TYPE_CRITTER) {
         obj->scriptIndex = script->scr_script_idx;
