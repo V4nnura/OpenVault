@@ -612,7 +612,7 @@ int register_object_move_to_object(Object* owner, Object* destination, int actio
     animationDescription->actionPoints = actionPoints;
     animationDescription->delay = delay;
 
-    int fid = art_id(FID_TYPE(owner->fid), owner->fid & 0xFFF, animationDescription->anim, (owner->fid & 0xF000) >> 12, owner->rotation + 1);
+    int fid = art_id(FID_TYPE(owner->fid), owner->fid & 0xFFF, animationDescription->anim, FID_WEAPON_CODE(owner->fid), owner->rotation + 1);
 
     // NOTE: Uninline.
     if (anim_preload(owner, fid, &(animationDescription->artCacheKey)) == -1) {
@@ -653,7 +653,7 @@ int register_object_run_to_object(Object* owner, Object* destination, int action
     animationDescription->actionPoints = actionPoints;
     animationDescription->delay = delay;
 
-    int fid = art_id(FID_TYPE(owner->fid), owner->fid & 0xFFF, animationDescription->anim, (owner->fid & 0xF000) >> 12, owner->rotation + 1);
+    int fid = art_id(FID_TYPE(owner->fid), owner->fid & 0xFFF, animationDescription->anim, FID_WEAPON_CODE(owner->fid), owner->rotation + 1);
 
     // NOTE: Uninline.
     if (anim_preload(owner, fid, &(animationDescription->artCacheKey)) == -1) {
@@ -686,7 +686,7 @@ int register_object_move_to_tile(Object* owner, int tile, int elevation, int act
     animationDescription->actionPoints = actionPoints;
     animationDescription->delay = delay;
 
-    int fid = art_id(FID_TYPE(owner->fid), owner->fid & 0xFFF, animationDescription->anim, (owner->fid & 0xF000) >> 12, owner->rotation + 1);
+    int fid = art_id(FID_TYPE(owner->fid), owner->fid & 0xFFF, animationDescription->anim, FID_WEAPON_CODE(owner->fid), owner->rotation + 1);
 
     // NOTE: Uninline.
     if (anim_preload(owner, fid, &(animationDescription->artCacheKey)) == -1) {
@@ -728,7 +728,7 @@ int register_object_run_to_tile(Object* owner, int tile, int elevation, int acti
     animationDescription->actionPoints = actionPoints;
     animationDescription->delay = delay;
 
-    int fid = art_id(FID_TYPE(owner->fid), owner->fid & 0xFFF, animationDescription->anim, (owner->fid & 0xF000) >> 12, owner->rotation + 1);
+    int fid = art_id(FID_TYPE(owner->fid), owner->fid & 0xFFF, animationDescription->anim, FID_WEAPON_CODE(owner->fid), owner->rotation + 1);
 
     // NOTE: Uninline.
     if (anim_preload(owner, fid, &(animationDescription->artCacheKey)) == -1) {
@@ -763,7 +763,7 @@ int register_object_move_straight_to_tile(Object* object, int tile, int elevatio
     animationDescription->anim = anim;
     animationDescription->delay = delay;
 
-    int fid = art_id(FID_TYPE(object->fid), object->fid & 0xFFF, animationDescription->anim, (object->fid & 0xF000) >> 12, object->rotation + 1);
+    int fid = art_id(FID_TYPE(object->fid), object->fid & 0xFFF, animationDescription->anim, FID_WEAPON_CODE(object->fid), object->rotation + 1);
 
     // NOTE: Uninline.
     if (anim_preload(object, fid, &(animationDescription->artCacheKey)) == -1) {
@@ -797,7 +797,7 @@ int register_object_animate_and_move_straight(Object* owner, int tile, int eleva
     animationDescription->anim = anim;
     animationDescription->delay = delay;
 
-    int fid = art_id(FID_TYPE(owner->fid), owner->fid & 0xFFF, animationDescription->anim, (owner->fid & 0xF000) >> 12, owner->rotation + 1);
+    int fid = art_id(FID_TYPE(owner->fid), owner->fid & 0xFFF, animationDescription->anim, FID_WEAPON_CODE(owner->fid), owner->rotation + 1);
 
     // NOTE: Uninline.
     if (anim_preload(owner, fid, &(animationDescription->artCacheKey)) == -1) {
@@ -848,7 +848,7 @@ int register_object_move_on_stairs(Object* owner, Object* stairs, int delay)
     animationDescription->anim = anim;
     animationDescription->delay = delay;
 
-    fid = art_id(FID_TYPE(owner->fid), owner->fid & 0xFFF, animationDescription->anim, (owner->fid & 0xF000) >> 12, owner->rotation + 1);
+    fid = art_id(FID_TYPE(owner->fid), owner->fid & 0xFFF, animationDescription->anim, FID_WEAPON_CODE(owner->fid), owner->rotation + 1);
 
     // NOTE: Uninline
     if (anim_preload(owner, fid, &(animationDescription->artCacheKey)) == -1) {
@@ -880,7 +880,7 @@ int register_object_check_falling(Object* owner, int delay)
     animationDescription->owner = owner;
     animationDescription->delay = delay;
 
-    fid = art_id(FID_TYPE(owner->fid), owner->fid & 0xFFF, animationDescription->anim, (owner->fid & 0xF000) >> 12, owner->rotation + 1);
+    fid = art_id(FID_TYPE(owner->fid), owner->fid & 0xFFF, animationDescription->anim, FID_WEAPON_CODE(owner->fid), owner->rotation + 1);
 
     // NOTE: Uninline
     if (anim_preload(owner, fid, &(animationDescription->artCacheKey)) == -1) {
@@ -908,7 +908,7 @@ int register_object_animate(Object* owner, int anim, int delay)
     animationDescription->anim = anim;
     animationDescription->delay = delay;
 
-    int fid = art_id(FID_TYPE(owner->fid), owner->fid & 0xFFF, animationDescription->anim, (owner->fid & 0xF000) >> 12, owner->rotation + 1);
+    int fid = art_id(FID_TYPE(owner->fid), owner->fid & 0xFFF, animationDescription->anim, FID_WEAPON_CODE(owner->fid), owner->rotation + 1);
 
     // NOTE: Uninline.
     if (anim_preload(owner, fid, &(animationDescription->artCacheKey)) == -1) {
@@ -937,7 +937,7 @@ int register_object_animate_reverse(Object* owner, int anim, int delay)
     animationDescription->delay = delay;
     animationDescription->artCacheKey = NULL;
 
-    int fid = art_id(FID_TYPE(owner->fid), owner->fid & 0xFFF, animationDescription->anim, (owner->fid & 0xF000) >> 12, owner->rotation + 1);
+    int fid = art_id(FID_TYPE(owner->fid), owner->fid & 0xFFF, animationDescription->anim, FID_WEAPON_CODE(owner->fid), owner->rotation + 1);
 
     // NOTE: Uninline.
     if (anim_preload(owner, fid, &(animationDescription->artCacheKey)) == -1) {
@@ -966,7 +966,7 @@ int register_object_animate_and_hide(Object* owner, int anim, int delay)
     animationDescription->delay = delay;
     animationDescription->artCacheKey = NULL;
 
-    int fid = art_id(FID_TYPE(owner->fid), owner->fid & 0xFFF, anim, (owner->fid & 0xF000) >> 12, owner->rotation + 1);
+    int fid = art_id(FID_TYPE(owner->fid), owner->fid & 0xFFF, anim, FID_WEAPON_CODE(owner->fid), owner->rotation + 1);
 
     // NOTE: Uninline.
     if (anim_preload(owner, fid, &(animationDescription->artCacheKey)) == -1) {
@@ -1374,7 +1374,7 @@ int register_object_animate_forever(Object* owner, int anim, int delay)
     animationDescription->anim = anim;
     animationDescription->delay = delay;
 
-    int fid = art_id(FID_TYPE(owner->fid), owner->fid & 0xFFF, anim, (owner->fid & 0xF000) >> 12, owner->rotation + 1);
+    int fid = art_id(FID_TYPE(owner->fid), owner->fid & 0xFFF, anim, FID_WEAPON_CODE(owner->fid), owner->rotation + 1);
 
     // NOTE: Uninline.
     if (anim_preload(owner, fid, &(animationDescription->artCacheKey)) == -1) {
@@ -2429,7 +2429,7 @@ static int anim_move(Object* obj, int tile, int elev, int a3, int anim, int a5, 
     }
 
     sad_entry->step = -2000;
-    sad_entry->fid = art_id(FID_TYPE(obj->fid), obj->fid & 0xFFF, anim, (obj->fid & 0xF000) >> 12, obj->rotation + 1);
+    sad_entry->fid = art_id(FID_TYPE(obj->fid), obj->fid & 0xFFF, anim, FID_WEAPON_CODE(obj->fid), obj->rotation + 1);
     sad_entry->animationTimestamp = 0;
     sad_entry->ticksPerFrame = compute_tpf(obj, sad_entry->fid);
     sad_entry->targetTile = tile;
@@ -2466,7 +2466,7 @@ static int anim_move_straight_to_tile(Object* obj, int tile, int elevation, int 
         sad_entry->fid = obj->fid;
         sad_entry->flags |= ANIM_SAD_NO_ANIM;
     } else {
-        sad_entry->fid = art_id(FID_TYPE(obj->fid), obj->fid & 0xFFF, anim, (obj->fid & 0xF000) >> 12, obj->rotation + 1);
+        sad_entry->fid = art_id(FID_TYPE(obj->fid), obj->fid & 0xFFF, anim, FID_WEAPON_CODE(obj->fid), obj->rotation + 1);
     }
     sad_entry->step = -2000;
     sad_entry->animationTimestamp = 0;
@@ -2508,7 +2508,7 @@ int anim_move_on_stairs(Object* obj, int tile, int elevation, int anim, int anim
         sad_entry->fid = obj->fid;
         sad_entry->flags |= ANIM_SAD_NO_ANIM;
     } else {
-        sad_entry->fid = art_id(FID_TYPE(obj->fid), obj->fid & 0xFFF, anim, (obj->fid & 0xF000) >> 12, obj->rotation + 1);
+        sad_entry->fid = art_id(FID_TYPE(obj->fid), obj->fid & 0xFFF, anim, FID_WEAPON_CODE(obj->fid), obj->rotation + 1);
     }
     sad_entry->step = -2000;
     sad_entry->animationTimestamp = 0;
@@ -2543,7 +2543,7 @@ int check_for_falling(Object* obj, int anim, int a3)
         sad_entry->fid = obj->fid;
         sad_entry->flags |= ANIM_SAD_NO_ANIM;
     } else {
-        sad_entry->fid = art_id(FID_TYPE(obj->fid), obj->fid & 0xFFF, anim, (obj->fid & 0xF000) >> 12, obj->rotation + 1);
+        sad_entry->fid = art_id(FID_TYPE(obj->fid), obj->fid & 0xFFF, anim, FID_WEAPON_CODE(obj->fid), obj->rotation + 1);
     }
     sad_entry->step = -2000;
     sad_entry->animationTimestamp = 0;
@@ -2578,7 +2578,7 @@ static void object_move(int index)
         obj_set_rotation(object, sad_entry->rotations[0], &temp);
         rect_min_bound(&dirty, &temp, &dirty);
 
-        int fid = art_id(FID_TYPE(object->fid), object->fid & 0xFFF, sad_entry->anim, (object->fid & 0xF000) >> 12, object->rotation + 1);
+        int fid = art_id(FID_TYPE(object->fid), object->fid & 0xFFF, sad_entry->anim, FID_WEAPON_CODE(object->fid), object->rotation + 1);
         obj_change_fid(object, fid, &temp);
         rect_min_bound(&dirty, &temp, &dirty);
 
@@ -2751,7 +2751,7 @@ static int anim_animate(Object* obj, int anim, int animationSequenceIndex, int f
         fid = art_id(FID_TYPE(obj->fid), obj->fid & 0xFFF, ANIM_TAKE_OUT, flags, obj->rotation + 1);
     } else {
         sad_entry->flags = flags;
-        fid = art_id(FID_TYPE(obj->fid), obj->fid & 0xFFF, anim, (obj->fid & 0xF000) >> 12, obj->rotation + 1);
+        fid = art_id(FID_TYPE(obj->fid), obj->fid & 0xFFF, anim, FID_WEAPON_CODE(obj->fid), obj->rotation + 1);
     }
 
     if (!art_exists(fid)) {
@@ -3161,7 +3161,7 @@ void dude_stand(Object* obj, int rotation, int fid)
     int x = 0;
     int y = 0;
 
-    int weaponAnimationCode = (obj->fid & 0xF000) >> 12;
+    int weaponAnimationCode = FID_WEAPON_CODE(obj->fid);
     if (weaponAnimationCode != 0) {
         if (fid == -1) {
             int takeOutFid = art_id(FID_TYPE(obj->fid), obj->fid & 0xFFF, ANIM_TAKE_OUT, weaponAnimationCode, obj->rotation + 1);
@@ -3201,7 +3201,7 @@ void dude_stand(Object* obj, int rotation, int fid)
         } else {
             anim = ANIM_STAND;
         }
-        fid = art_id(FID_TYPE(obj->fid), (obj->fid & 0xFFF), anim, (obj->fid & 0xF000) >> 12, obj->rotation + 1);
+        fid = art_id(FID_TYPE(obj->fid), (obj->fid & 0xFFF), anim, FID_WEAPON_CODE(obj->fid), obj->rotation + 1);
     }
 
     Rect temp;
