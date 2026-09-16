@@ -4878,7 +4878,7 @@ void obj_fix_violence_settings(int* fid)
         anim = (anim == ANIM_FALL_BACK_BLOOD_SF)
             ? ANIM_FALL_BACK_SF
             : ANIM_FALL_FRONT_SF;
-        *fid = art_id(OBJ_TYPE_CRITTER, *fid & 0xFFF, anim, (*fid & 0xF000) >> 12, (*fid & 0x70000000) >> 28);
+        *fid = art_id(OBJ_TYPE_CRITTER, *fid & 0xFFF, anim, FID_WEAPON_CODE(*fid), FID_ROTATION(*fid));
     }
 
     if (shouldResetViolenceLevel) {
