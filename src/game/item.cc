@@ -493,7 +493,7 @@ int item_drop_all(Object* critter, int tile)
 
     if (hasEquippedItems) {
         Rect updatedRect;
-        int fid = art_id(OBJ_TYPE_CRITTER, frmId, FID_ANIM_TYPE(critter->fid), 0, (critter->fid & 0x70000000) >> 28);
+        int fid = art_id(OBJ_TYPE_CRITTER, frmId, FID_ANIM_TYPE(critter->fid), 0, FID_ROTATION(critter->fid));
         obj_change_fid(critter, fid, &updatedRect);
         if (FID_ANIM_TYPE(critter->fid) == ANIM_STAND) {
             tile_refresh_rect(&updatedRect, map_elevation);
