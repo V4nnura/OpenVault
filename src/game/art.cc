@@ -553,7 +553,7 @@ int art_get_code(int animation, int weaponType, char* weaponCodePtr, char* animC
 // 0x418BFC
 char* art_get_name(int fid)
 {
-    int rotation = (fid & 0x70000000) >> 28;
+    int rotation = FID_ROTATION(fid);
 
     int alias_fid = art_alias_fid(fid);
     if (alias_fid != -1) {
