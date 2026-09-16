@@ -2511,7 +2511,7 @@ int combat_attack(Object* attacker, Object* defender, int hitMode, int hitLocati
     int actionPoints;
 
     if (hitMode == HIT_MODE_PUNCH && roll_random(1, 4) == 1) {
-        int fid = art_id(OBJ_TYPE_CRITTER, attacker->fid & 0xFFF, ANIM_KICK_LEG, (attacker->fid & 0xF000) >> 12, (attacker->fid & 0x70000000) >> 28);
+        int fid = art_id(OBJ_TYPE_CRITTER, attacker->fid & 0xFFF, ANIM_KICK_LEG, FID_WEAPON_CODE(attacker->fid), FID_ROTATION(attacker->fid));
         if (art_exists(fid)) {
             hitMode = HIT_MODE_KICK;
         }
