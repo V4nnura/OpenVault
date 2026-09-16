@@ -690,7 +690,7 @@ static int action_ranged(Attack* attack, int anim)
     combatai_msg(attack->attacker, attack, AI_MESSAGE_TYPE_ATTACK, 0);
 
     const char* sfx;
-    if (FID_WEAPON_CODE(attack->attacker->fid) != 0) {
+    if ((FID_WEAPON_CODE(attack->attacker->fid)) != 0) {
         sfx = gsnd_build_weapon_sfx_name(WEAPON_SOUND_EFFECT_ATTACK, weapon, attack->hitMode, attack->defender);
     } else {
         sfx = gsnd_build_character_sfx_name(attack->attacker, anim, CHARACTER_SOUND_EFFECT_UNUSED);
