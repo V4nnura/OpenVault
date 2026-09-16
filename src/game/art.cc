@@ -971,7 +971,6 @@ void art_data_free(void* ptr)
     mem_free(ptr);
 }
 
-
 /* FID Structure:
     3 bits for rotation
     4 bits for object type
