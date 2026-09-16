@@ -108,7 +108,7 @@ void switch_dude()
 int action_knockback(Object* obj, int* anim, int maxDistance, int rotation, int delay)
 {
     if (*anim == ANIM_FALL_FRONT) {
-        int fid = art_id(OBJ_TYPE_CRITTER, obj->fid & 0xFFF, *anim, (obj->fid & 0xF000) >> 12, obj->rotation + 1);
+        int fid = art_id(OBJ_TYPE_CRITTER, obj->fid & 0xFFF, *anim, FID_WEAPON_CODE(obj->fid), obj->rotation + 1);
         if (!art_exists(fid)) {
             *anim = ANIM_FALL_BACK;
         }
@@ -160,7 +160,7 @@ int action_blood(Object* obj, int anim, int delay)
         return anim;
     }
 
-    int fid = art_id(OBJ_TYPE_CRITTER, obj->fid & 0xFFF, bloodyAnim, (obj->fid & 0xF000) >> 12, obj->rotation + 1);
+    int fid = art_id(OBJ_TYPE_CRITTER, obj->fid & 0xFFF, bloodyAnim, FID_WEAPON_CODE(obj->fid), obj->rotation + 1);
     if (art_exists(fid)) {
         register_object_animate(obj, bloodyAnim, delay);
     } else {
@@ -233,7 +233,7 @@ static int check_death(Object* obj, int anim, int min_violence_level, bool hit_f
 
     config_get_value(&game_config, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_VIOLENCE_LEVEL_KEY, &violence_level);
     if (violence_level >= min_violence_level) {
-        fid = art_id(OBJ_TYPE_CRITTER, obj->fid & 0xFFF, anim, (obj->fid & 0xF000) >> 12, obj->rotation + 1);
+        fid = art_id(OBJ_TYPE_CRITTER, obj->fid & 0xFFF, anim, FID_WEAPON_CODE(obj->fid), obj->rotation + 1);
         if (art_exists(fid)) {
             return anim;
         }
@@ -243,7 +243,7 @@ static int check_death(Object* obj, int anim, int min_violence_level, bool hit_f
         return ANIM_FALL_BACK;
     }
 
-    fid = art_id(OBJ_TYPE_CRITTER, obj->fid & 0xFFF, ANIM_FALL_FRONT, (obj->fid & 0xF000) >> 12, obj->rotation + 1);
+    fid = art_id(OBJ_TYPE_CRITTER, obj->fid & 0xFFF, ANIM_FALL_FRONT, FID_WEAPON_CODE(obj->fid), obj->rotation + 1);
     if (art_exists(fid)) {
         return ANIM_FALL_BACK;
     }
@@ -296,7 +296,7 @@ void show_damage_to_object(Object* defender, int damage, int flags, Object* weap
                     }
                 }
             } else {
-                fid = art_id(OBJ_TYPE_CRITTER, defender->fid & 0xFFF, ANIM_FIRE_DANCE, (defender->fid & 0xF000) >> 12, defender->rotation + 1);
+                fid = art_id(OBJ_TYPE_CRITTER, defender->fid & 0xFFF, ANIM_FIRE_DANCE, FID_WEAPON_CODE(defender->fid), defender->rotation + 1);
                 if (art_exists(fid)) {
                     sfx_name = gsnd_build_character_sfx_name(defender, anim, CHARACTER_SOUND_EFFECT_UNUSED);
                     register_object_play_sfx(defender, sfx_name, delay);
@@ -335,10 +335,10 @@ void show_damage_to_object(Object* defender, int damage, int flags, Object* weap
                     anim = pick_fall(defender, anim);
                     register_object_animate(defender, anim, 0);
                 }
-            } else if ((flags & DAM_ON_FIRE) != 0 && art_exists(art_id(OBJ_TYPE_CRITTER, defender->fid & 0xFFF, ANIM_FIRE_DANCE, (defender->fid & 0xF000) >> 12, defender->rotation + 1))) {
+            } else if ((flags & DAM_ON_FIRE) != 0 && art_exists(art_id(OBJ_TYPE_CRITTER, defender->fid & 0xFFF, ANIM_FIRE_DANCE, FID_WEAPON_CODE(defender->fid), defender->rotation + 1))) {
                 register_object_animate(defender, ANIM_FIRE_DANCE, delay);
 
-                fid = art_id(OBJ_TYPE_CRITTER, defender->fid & 0xFFF, ANIM_STAND, (defender->fid & 0xF000) >> 12, defender->rotation + 1);
+                fid = art_id(OBJ_TYPE_CRITTER, defender->fid & 0xFFF, ANIM_STAND, FID_WEAPON_CODE(defender->fid), defender->rotation + 1);
                 register_object_change_fid(defender, fid, -1);
             } else {
                 if (knockback_distance != 0) {
@@ -350,7 +350,7 @@ void show_damage_to_object(Object* defender, int damage, int flags, Object* weap
                         register_object_animate(defender, ANIM_PRONE_TO_STANDING, -1);
                     }
                 } else {
-                    if (hit_from_front || !art_exists(art_id(OBJ_TYPE_CRITTER, defender->fid & 0xFFF, ANIM_HIT_FROM_BACK, (defender->fid & 0xF000) >> 12, defender->rotation + 1))) {
+                    if (hit_from_front || !art_exists(art_id(OBJ_TYPE_CRITTER, defender->fid & 0xFFF, ANIM_HIT_FROM_BACK, FID_WEAPON_CODE(defender->fid), defender->rotation + 1))) {
                         anim = ANIM_HIT_FROM_FRONT;
                     } else {
                         anim = ANIM_HIT_FROM_BACK;
@@ -564,7 +564,7 @@ static int action_melee(Attack* attack, int anim)
     register_begin(ANIMATION_REQUEST_RESERVED);
     register_priority(1);
 
-    fid = art_id(OBJ_TYPE_CRITTER, attack->attacker->fid & 0xFFF, anim, (attack->attacker->fid & 0xF000) >> 12, attack->attacker->rotation + 1);
+    fid = art_id(OBJ_TYPE_CRITTER, attack->attacker->fid & 0xFFF, anim, FID_WEAPON_CODE(attack->attacker->fid), attack->attacker->rotation + 1);
     art = art_ptr_lock(fid, &cache_entry);
     if (art != NULL) {
         delay = art_frame_action_frame(art);
@@ -604,7 +604,7 @@ static int action_melee(Attack* attack, int anim)
             register_object_play_sfx(attack->attacker, sfx_name_temp, -1);
             register_object_animate(attack->attacker, anim, 0);
         } else {
-            fid = art_id(OBJ_TYPE_CRITTER, attack->defender->fid & 0xFFF, ANIM_DODGE_ANIM, (attack->defender->fid & 0xF000) >> 12, attack->defender->rotation + 1);
+            fid = art_id(OBJ_TYPE_CRITTER, attack->defender->fid & 0xFFF, ANIM_DODGE_ANIM, FID_WEAPON_CODE(attack->defender->fid), attack->defender->rotation + 1);
             art = art_ptr_lock(fid, &cache_entry);
             if (art != NULL) {
                 int dodgeDelay = art_frame_action_frame(art);
