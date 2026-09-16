@@ -2761,7 +2761,7 @@ static void op_anim(Program* program)
         if (frame == 0) {
             register_object_animate(obj, anim, 0);
             if (anim >= ANIM_FALL_BACK && anim <= ANIM_FALL_FRONT_BLOOD) {
-                int fid = art_id(OBJ_TYPE_CRITTER, obj->fid & 0xFFF, anim + 28, (obj->fid & 0xF000) >> 12, (obj->fid & 0x70000000) >> 28);
+                int fid = art_id(OBJ_TYPE_CRITTER, obj->fid & 0xFFF, anim + 28, FID_WEAPON_CODE(obj->fid), FID_ROTATION(obj->fid));
                 register_object_change_fid(obj, fid, -1);
             }
 
@@ -2769,13 +2769,13 @@ static void op_anim(Program* program)
                 combatData->results &= DAM_KNOCKED_DOWN;
             }
         } else {
-            int fid = art_id(FID_TYPE(obj->fid), obj->fid & 0xFFF, anim, (obj->fid & 0xF000) >> 12, (obj->fid & 0x70000000) >> 24);
+            int fid = art_id(FID_TYPE(obj->fid), obj->fid & 0xFFF, anim, FID_WEAPON_CODE(obj->fid), (obj->fid & 0x70000000) >> 24);
             register_object_animate_reverse(obj, anim, 0);
 
             if (anim == ANIM_PRONE_TO_STANDING) {
-                fid = art_id(FID_TYPE(obj->fid), obj->fid & 0xFFF, ANIM_FALL_FRONT_SF, (obj->fid & 0xF000) >> 12, (obj->fid & 0x70000000) >> 24);
+                fid = art_id(FID_TYPE(obj->fid), obj->fid & 0xFFF, ANIM_FALL_FRONT_SF, FID_WEAPON_CODE(obj->fid), (obj->fid & 0x70000000) >> 24);
             } else if (anim == ANIM_BACK_TO_STANDING) {
-                fid = art_id(FID_TYPE(obj->fid), obj->fid & 0xFFF, ANIM_FALL_BACK_SF, (obj->fid & 0xF000) >> 12, (obj->fid & 0x70000000) >> 24);
+                fid = art_id(FID_TYPE(obj->fid), obj->fid & 0xFFF, ANIM_FALL_BACK_SF, FID_WEAPON_CODE(obj->fid), (obj->fid & 0x70000000) >> 24);
             }
 
             if (combatData != NULL) {
