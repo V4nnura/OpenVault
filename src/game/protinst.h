@@ -7,7 +7,7 @@ namespace fallout {
 
 int obj_sid(Object* object, int* sidPtr);
 int obj_new_sid(Object* object, int* sidPtr);
-int obj_new_sid_inst(Object* obj, int a2, int a3);
+int obj_new_sid_inst(Object* obj, int scriptType, int scriptIndex);
 int obj_look_at(Object* a1, Object* a2);
 int obj_look_at_func(Object* a1, Object* a2, void (*a3)(char* string));
 int obj_examine(Object* a1, Object* a2);
@@ -16,8 +16,8 @@ int obj_pickup(Object* critter, Object* item);
 int obj_remove_from_inven(Object* critter, Object* item);
 int obj_drop(Object* a1, Object* a2);
 int obj_destroy(Object* obj);
-int obj_use_radio(Object* item_obj);
-int protinst_use_item(Object* a1, Object* a2);
+int obj_use_radio(Object* item);
+int protinst_use_item(Object* critter, Object* item);
 int obj_use_item(Object* a1, Object* a2);
 int protinst_use_item_on(Object* critter, Object* targetObj, Object* item);
 int obj_use_item_on(Object* a1, Object* a2, Object* a3);
@@ -25,7 +25,7 @@ int check_scenery_ap_cost(Object* obj, Object* a2);
 int obj_use(Object* a1, Object* a2);
 int obj_use_door(Object* a1, Object* a2, int a3);
 int obj_use_container(Object* critter, Object* item);
-int obj_use_skill_on(Object* a1, Object* a2, int skill);
+int obj_use_skill_on(Object* source, Object* target, int skill);
 bool obj_is_a_portal(Object* obj);
 bool obj_is_lockable(Object* obj);
 bool obj_is_locked(Object* obj);
