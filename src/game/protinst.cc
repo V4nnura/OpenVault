@@ -548,7 +548,7 @@ int obj_remove_from_inven(Object* critter, Object* item)
                 v5 = proto->fid;
             }
 
-            fid = art_id(OBJ_TYPE_CRITTER, v5, FID_ANIM_TYPE(critter->fid), (critter->fid & 0xF000) >> 12, critter->rotation);
+            fid = art_id(OBJ_TYPE_CRITTER, v5, FID_ANIM_TYPE(critter->fid), FID_WEAPON_CODE(critter->fid), critter->rotation);
             obj_change_fid(critter, fid, &updatedRect);
             v11 = 3;
         }
