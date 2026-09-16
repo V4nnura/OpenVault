@@ -664,7 +664,7 @@ static int action_ranged(Attack* attack, int anim)
     Object* weapon = attack->weapon;
     proto_ptr(weapon->pid, &weaponProto);
 
-    int fid = art_id(OBJ_TYPE_CRITTER, attack->attacker->fid & 0xFFF, anim, (attack->attacker->fid & 0xF000) >> 12, attack->attacker->rotation + 1);
+    int fid = art_id(OBJ_TYPE_CRITTER, attack->attacker->fid & 0xFFF, anim, FID_WEAPON_CODE(attack->attacker->fid), attack->attacker->rotation + 1);
     CacheEntry* artHandle;
     Art* art = art_ptr_lock(fid, &artHandle);
     int delay = (art != NULL) ? art_frame_action_frame(art) : 0;
@@ -690,7 +690,7 @@ static int action_ranged(Attack* attack, int anim)
     combatai_msg(attack->attacker, attack, AI_MESSAGE_TYPE_ATTACK, 0);
 
     const char* sfx;
-    if (((attack->attacker->fid & 0xF000) >> 12) != 0) {
+    if (FID_WEAPON_CODE(attack->attacker->fid) != 0) {
         sfx = gsnd_build_weapon_sfx_name(WEAPON_SOUND_EFFECT_ATTACK, weapon, attack->hitMode, attack->defender);
     } else {
         sfx = gsnd_build_character_sfx_name(attack->attacker, anim, CHARACTER_SOUND_EFFECT_UNUSED);
@@ -955,7 +955,7 @@ static int action_climb_ladder(Object* critter, Object* ladder)
     register_object_turn_towards(critter, ladder->tile);
     register_object_must_call(critter, ladder, (AnimationCallback*)check_scenery_ap_cost, -1);
 
-    int weaponAnimationCode = (critter->fid & 0xF000) >> 12;
+    int weaponAnimationCode = FID_WEAPON_CODE(critter->fid);
     if (weaponAnimationCode != 0) {
         const char* puttingAwaySfx = gsnd_build_character_sfx_name(critter, ANIM_PUT_AWAY, CHARACTER_SOUND_EFFECT_UNUSED);
         register_object_play_sfx(critter, puttingAwaySfx, -1);
@@ -1026,7 +1026,7 @@ int a_use_obj(Object* a1, Object* a2, Object* a3)
     register_object_must_call(a1, a2, (AnimationCallback*)is_next_to, -1);
     register_object_call(a1, a2, (AnimationCallback*)check_scenery_ap_cost, -1);
 
-    weapon_anim_code = (a1->fid & 0xF000) >> 12;
+    weapon_anim_code = FID_WEAPON_CODE(a1->fid);
     if (weapon_anim_code != 0) {
         const char* sfx = gsnd_build_character_sfx_name(a1, ANIM_PUT_AWAY, CHARACTER_SOUND_EFFECT_UNUSED);
         register_object_play_sfx(a1, sfx, -1);
@@ -1110,7 +1110,7 @@ int action_get_an_object(Object* critter, Object* item)
     if (itemProto->item.type != ITEM_TYPE_CONTAINER || proto_action_can_pickup(item->pid)) {
         register_object_animate(critter, ANIM_MAGIC_HANDS_GROUND, 0);
 
-        int fid = art_id(OBJ_TYPE_CRITTER, critter->fid & 0xFFF, ANIM_MAGIC_HANDS_GROUND, (critter->fid & 0xF000) >> 12, critter->rotation + 1);
+        int fid = art_id(OBJ_TYPE_CRITTER, critter->fid & 0xFFF, ANIM_MAGIC_HANDS_GROUND, FID_WEAPON_CODE(critter->fid), critter->rotation + 1);
 
         int actionFrame;
         CacheEntry* cacheEntry;
@@ -1129,7 +1129,7 @@ int action_get_an_object(Object* critter, Object* item)
 
         register_object_call(critter, item, (AnimationCallback*)obj_pickup, actionFrame);
     } else {
-        int weaponAnimationCode = (critter->fid & 0xF000) >> 12;
+        int weaponAnimationCode = FID_WEAPON_CODE(critter->fid);
         if (weaponAnimationCode != 0) {
             const char* sfx = gsnd_build_character_sfx_name(critter, ANIM_PUT_AWAY, CHARACTER_SOUND_EFFECT_UNUSED);
             register_object_play_sfx(critter, sfx, -1);
@@ -1522,7 +1522,7 @@ int pick_fall(Object* obj, int anim)
     }
 
     if (anim == ANIM_FALL_FRONT) {
-        fid = art_id(OBJ_TYPE_CRITTER, obj->fid & 0xFFF, ANIM_FALL_FRONT, (obj->fid & 0xF000) >> 12, obj->rotation + 1);
+        fid = art_id(OBJ_TYPE_CRITTER, obj->fid & 0xFFF, ANIM_FALL_FRONT, FID_WEAPON_CODE(obj->fid), obj->rotation + 1);
         if (!art_exists(fid)) {
             anim = ANIM_FALL_BACK;
         }
