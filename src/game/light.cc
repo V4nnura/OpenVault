@@ -41,26 +41,16 @@ int light_get_ambient()
 }
 
 // 0x46CA88
-void light_set_ambient(int new_ambient_light, bool refresh_screen)
+void light_set_ambient(int intensity, bool refresh_screen)
 {
-    int normalized;
-    int old_ambient_light;
+    int adjusted = intensity + perk_level(PERK_NIGHT_VISION) * LIGHT_LEVEL_NIGHT_VISION_BONUS;
+    int normalized = std::clamp(adjusted, LIGHT_INTENSITY_MIN, LIGHT_INTENSITY_MAX);
 
-    normalized = new_ambient_light + perk_level(PERK_NIGHT_VISION) * LIGHT_LEVEL_NIGHT_VISION_BONUS;
-
-    if (normalized < LIGHT_INTENSITY_MIN) {
-        normalized = LIGHT_INTENSITY_MIN;
-    }
-
-    if (normalized > LIGHT_INTENSITY_MAX) {
-        normalized = LIGHT_INTENSITY_MAX;
-    }
-
-    old_ambient_light = ambient_light;
-    ambient_light = normalized;
+    int old_ambient = ambient;
+    ambient = normalized;
 
     if (refresh_screen) {
-        if (old_ambient_light != normalized) {
+        if (old_ambient != normalized) {
             tile_refresh_display();
         }
     }
