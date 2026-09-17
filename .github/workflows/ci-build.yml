@@ -392,7 +392,7 @@ jobs:
 
       - name: Upload new release
         if: ${{ always() && github.ref == 'refs/heads/main' && github.event_name == 'push' }}
-        uses: softprops/action-gh-release@v3.0.2
+        uses: softprops/action-gh-release@v3.0.3
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: artifacts/*
