@@ -49,7 +49,7 @@ static int gmouse_3d_lock_frames();
 static void gmouse_3d_unlock_frames();
 static int gmouse_3d_set_flat_fid(int fid, Rect* rect);
 static int gmouse_3d_reset_flat_fid(Rect* rect);
-static int gmouse_3d_move_to(int x, int y, int elevation, Rect* a4);
+static int gmouse_3d_move_to(int x, int y, int elevation, Rect* rect);
 static int gmouse_check_scrolling(int x, int y, int cursor);
 static int gmouse_3d_determine_auto_mode(int mouseX, int mouseY, int elevation);
 static void gmouse_tooltip_update(Object* target, int mouseX, int mouseY);
@@ -2338,7 +2338,7 @@ static int gmouse_3d_reset_flat_fid(Rect* rect)
 }
 
 // 0x445A20
-static int gmouse_3d_move_to(int x, int y, int elevation, Rect* a4)
+static int gmouse_3d_move_to(int x, int y, int elevation, Rect* rect)
 {
     if (gmouse_mapper_mode == 0) {
         if (gmouse_3d_current_mode != GAME_MOUSE_MODE_MOVE) {
@@ -2359,7 +2359,7 @@ static int gmouse_3d_move_to(int x, int y, int elevation, Rect* a4)
                 art_ptr_unlock(hexCursorFrmHandle);
             }
 
-            obj_move(obj_mouse_flat, x + offsetX, y + offsetY, elevation, a4);
+            obj_move(obj_mouse_flat, x + offsetX, y + offsetY, elevation, rect);
         } else {
             int tile = tile_num(x, y, 0);
             if (tile != -1) {
@@ -2382,7 +2382,7 @@ static int gmouse_3d_move_to(int x, int y, int elevation, Rect* a4)
                         rectCopy(&rect1, &rect2);
                     }
 
-                    rectCopy(a4, &rect1);
+                    rectCopy(rect, &rect1);
                 }
             }
         }
@@ -2470,7 +2470,7 @@ static int gmouse_3d_move_to(int x, int y, int elevation, Rect* a4)
         }
 
         if (v1) {
-            rectCopy(a4, &rect1);
+            rectCopy(rect, &rect1);
         }
     }
 
