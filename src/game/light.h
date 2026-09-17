@@ -15,7 +15,7 @@ int light_init();
 void light_reset();
 void light_exit();
 int light_get_ambient();
-void light_set_ambient(int new_ambient_light, bool refresh_screen);
+void light_set_ambient(int intensity, bool refresh_screen);
 void light_increase_ambient(int value, bool refresh_screen);
 void light_decrease_ambient(int value, bool refresh_screen);
 int light_get_tile(int elevation, int tile);
