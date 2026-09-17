@@ -46,8 +46,8 @@ void light_set_ambient(int intensity, bool refresh_screen)
     int adjusted = intensity + perk_level(PERK_NIGHT_VISION) * LIGHT_LEVEL_NIGHT_VISION_BONUS;
     int normalized = std::clamp(adjusted, LIGHT_INTENSITY_MIN, LIGHT_INTENSITY_MAX);
 
-    int old_ambient = ambient;
-    ambient = normalized;
+    int old_ambient = ambient_light;
+    ambient_light = normalized;
 
     if (refresh_screen) {
         if (old_ambient != normalized) {
