@@ -269,10 +269,10 @@ int elevator_select(int elevator, int* mapPtr, int* elevationPtr, int* tilePtr)
 
     debug_printf("\n the start elev level %d\n", *elevationPtr);
 
-    int v18 = (GInfo[ELEVATOR_FRM_GAUGE].width * GInfo[ELEVATOR_FRM_GAUGE].height) / 13;
-    float v42 = 12.0f / (float)(btncnt[elevator] - 1);
+    int gaugeSliceSize = (GInfo[ELEVATOR_FRM_GAUGE].width * GInfo[ELEVATOR_FRM_GAUGE].height) / 13;
+    float gaugeUnitsPerLevel = 12.0f / (float)(btncnt[elevator] - 1);
     buf_to_buf(
-        grphbmp[ELEVATOR_FRM_GAUGE] + v18 * (int)((float)(*elevationPtr) * v42),
+        grphbmp[ELEVATOR_FRM_GAUGE] + gaugeSliceSize * (int)((float)(*elevationPtr) * gaugeUnitsPerLevel),
         GInfo[ELEVATOR_FRM_GAUGE].width,
         GInfo[ELEVATOR_FRM_GAUGE].height / 13,
         GInfo[ELEVATOR_FRM_GAUGE].width,
@@ -310,12 +310,12 @@ int elevator_select(int elevator, int* mapPtr, int* elevationPtr, int* tilePtr)
         keyCode -= 500;
 
         if (*elevationPtr != keyCode) {
-            float v43 = (float)(btncnt[elevator] - 1) / 12.0f;
+            float levelStep = (float)(btncnt[elevator] - 1) / 12.0f;
 
-            unsigned int delay = (unsigned int)(v43 * 276.92307);
+            unsigned int delay = (unsigned int)(levelStep * 276.92307);
 
             if (keyCode < *elevationPtr) {
-                v43 = -v43;
+                levelStep = -levelStep;
             }
 
             int numberOfLevelsTravelled = keyCode - *elevationPtr;
@@ -325,15 +325,15 @@ int elevator_select(int elevator, int* mapPtr, int* elevationPtr, int* tilePtr)
 
             gsound_play_sfx_file(sfxtable[btncnt[elevator] - 2][numberOfLevelsTravelled]);
 
-            float v41 = (float)keyCode * v42;
-            float v44 = (float)(*elevationPtr) * v42;
+            float targetGaugePosition = (float)keyCode * gaugeUnitsPerLevel;
+            float currentGaugePosition = (float)(*elevationPtr) * gaugeUnitsPerLevel;
             do {
                 sharedFpsLimiter.mark();
 
                 unsigned int tick = get_time();
-                v44 += v43;
+                currentGaugePosition += levelStep;
                 buf_to_buf(
-                    grphbmp[ELEVATOR_FRM_GAUGE] + v18 * (int)v44,
+                    grphbmp[ELEVATOR_FRM_GAUGE] + gaugeSliceSize * (int)currentGaugePosition,
                     GInfo[ELEVATOR_FRM_GAUGE].width,
                     GInfo[ELEVATOR_FRM_GAUGE].height / 13,
                     GInfo[ELEVATOR_FRM_GAUGE].width,
@@ -347,7 +347,7 @@ int elevator_select(int elevator, int* mapPtr, int* elevationPtr, int* tilePtr)
 
                 renderPresent();
                 sharedFpsLimiter.throttle();
-            } while ((v43 <= 0.0 || v44 < v41) && (v43 > 0.0 || v44 > v41));
+            } while ((levelStep <= 0.0 || currentGaugePosition < targetGaugePosition) && (levelStep > 0.0 || currentGaugePosition > targetGaugePosition));
 
             pause_for_tocks(200);
         }
