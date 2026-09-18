@@ -1150,7 +1150,7 @@ char** windowWordWrap(char* string, int maxLength, int a3, int* substringListLen
             pch++;
         } else {
             while (v1 > maxLength) {
-                v1 -= text_char_width(*pch);
+                v1 -= text_char_width(*pch & 0xFF);
                 pch--;
             }
 
