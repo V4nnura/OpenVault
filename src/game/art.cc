@@ -564,7 +564,7 @@ char* art_get_name(int fid)
 
     int index = fid & 0xFFF;
     int anim = FID_ANIM_TYPE(fid);
-    int weapon_anim = (fid & 0xF000) >> 12;
+    int weapon_anim = FID_WEAPON_CODE(fid);
     int type = FID_TYPE(fid);
 
     if (index >= art[type].fileNamesLength) {
