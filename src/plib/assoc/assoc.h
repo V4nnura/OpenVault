@@ -3,8 +3,6 @@
 
 #include <stdio.h>
 
-#include "plib/db/db.h"
-
 namespace fallout {
 
 typedef void*(assoc_malloc_func)(size_t size);
@@ -63,7 +61,6 @@ int assoc_delete(assoc_array* a, const char* name);
 int assoc_copy(assoc_array* dst, assoc_array* src);
 int assoc_load(FILE* fp, assoc_array* a, int flags);
 int assoc_save(FILE* fp, assoc_array* a, int flags);
-void assoc_register_mem(assoc_malloc_func* malloc_func, assoc_realloc_func* realloc_func, assoc_free_func* free_func);
 
 } // namespace fallout
 
