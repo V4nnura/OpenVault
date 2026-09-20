@@ -39,7 +39,7 @@ int assoc_init(assoc_array* a, int n, size_t datasize, assoc_func_list* assoc_fu
     int rc = 0;
 
     if (n != 0) {
-        a->list = (assoc_pair*)internal_malloc(sizeof(*a->list) * n);
+        a->list = (assoc_pair*)mem_malloc(sizeof(*a->list) * n);
         if (a->list == NULL) {
             rc = -1;
         }
@@ -65,7 +65,7 @@ int assoc_resize(assoc_array* a, int n)
         return -1;
     }
 
-    assoc_pair* entries = (assoc_pair*)internal_realloc(a->list, sizeof(*a->list) * n);
+    assoc_pair* entries = (assoc_pair*)mem_realloc(a->list, sizeof(*a->list) * n);
     if (entries == NULL) {
         return -1;
     }
@@ -86,16 +86,16 @@ int assoc_free(assoc_array* a)
     for (int index = 0; index < a->size; index++) {
         assoc_pair* entry = &(a->list[index]);
         if (entry->name != NULL) {
-            internal_free(entry->name);
+            mem_free(entry->name);
         }
 
         if (entry->data != NULL) {
-            internal_free(entry->data);
+            mem_free(entry->data);
         }
     }
 
     if (a->list != NULL) {
-        internal_free(a->list);
+        mem_free(a->list);
     }
 
     memset(a, 0, sizeof(*a));
@@ -198,7 +198,7 @@ int assoc_insert(assoc_array* a, const char* name, const void* data)
     }
 
     // Make a copy of the key.
-    char* keyCopy = (char*)internal_malloc(strlen(name) + 1);
+    char* keyCopy = (char*)mem_malloc(strlen(name) + 1);
     if (keyCopy == NULL) {
         return -1;
     }
@@ -208,9 +208,9 @@ int assoc_insert(assoc_array* a, const char* name, const void* data)
     // Make a copy of the value.
     void* valueCopy = NULL;
     if (data != NULL && a->datasize != 0) {
-        valueCopy = internal_malloc(a->datasize);
+        valueCopy = mem_malloc(a->datasize);
         if (valueCopy == NULL) {
-            internal_free(keyCopy);
+            mem_free(keyCopy);
             return -1;
         }
     }
@@ -256,9 +256,9 @@ int assoc_delete(assoc_array* a, const char* name)
     assoc_pair* entry = &(a->list[indexToRemove]);
 
     // Free key and value (which are copies).
-    internal_free(entry->name);
+    mem_free(entry->name);
     if (entry->data != NULL) {
-        internal_free(entry->data);
+        mem_free(entry->data);
     }
 
     a->size--;
@@ -392,16 +392,16 @@ int assoc_load(FILE* fp, assoc_array* a, int flags)
     for (int index = 0; index < a->size; index++) {
         assoc_pair* entry = &(a->list[index]);
         if (entry->name != NULL) {
-            internal_free(entry->name);
+            mem_free(entry->name);
         }
 
         if (entry->data != NULL) {
-            internal_free(entry->data);
+            mem_free(entry->data);
         }
     }
 
     if (a->list != NULL) {
-        internal_free(a->list);
+        mem_free(a->list);
     }
 
     if (assoc_read_assoc_array(fp, a) != 0) {
@@ -414,7 +414,7 @@ int assoc_load(FILE* fp, assoc_array* a, int flags)
         return 0;
     }
 
-    a->list = (assoc_pair*)internal_malloc(sizeof(*a->list) * a->max);
+    a->list = (assoc_pair*)mem_malloc(sizeof(*a->list) * a->max);
     if (a->list == NULL) {
         return -1;
     }
@@ -436,7 +436,7 @@ int assoc_load(FILE* fp, assoc_array* a, int flags)
             return -1;
         }
 
-        entry->name = (char*)internal_malloc(keyLength + 1);
+        entry->name = (char*)mem_malloc(keyLength + 1);
         if (entry->name == NULL) {
             return -1;
         }
@@ -446,7 +446,7 @@ int assoc_load(FILE* fp, assoc_array* a, int flags)
         }
 
         if (a->datasize != 0) {
-            entry->data = internal_malloc(a->datasize);
+            entry->data = mem_malloc(a->datasize);
             if (entry->data == NULL) {
                 return -1;
             }
