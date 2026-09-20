@@ -32,8 +32,6 @@ int assoc_init(assoc_array* a, int n, size_t datasize, assoc_func_list* assoc_fu
     } else {
         a->load_save_funcs.loadFunc = NULL;
         a->load_save_funcs.saveFunc = NULL;
-        a->load_save_funcs.loadFuncDB = NULL;
-        a->load_save_funcs.saveFuncDB = NULL;
     }
 
     int rc = 0;
