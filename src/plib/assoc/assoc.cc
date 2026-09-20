@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "plib/gnw/memory.h"
 #include "platform_compat.h"
+#include "plib/gnw/memory.h"
 
 namespace fallout {
 
