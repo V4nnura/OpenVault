@@ -26,9 +26,19 @@ typedef enum WindowFlags {
 } WindowFlags;
 
 typedef enum ButtonFlags {
-    BUTTON_FLAG_0x01 = 0x01,
-    BUTTON_FLAG_0x02 = 0x02,
-    BUTTON_FLAG_0x04 = 0x04,
+    // Button keeps a persistent checked state and uses the pressed image while checked.
+    //
+    // Seen in-game on toggles like the automap hi/low switch. Combining this
+    // with `BUTTON_FLAG_CHECK_ON_DOWN` makes the visual/logical toggle happen
+    // on mouse-down, as used by the preferences checkbox. Combining it with
+    // `BUTTON_FLAG_NO_TOGGLE_OFF` and `BUTTON_FLAG_RADIO` yields radio-button
+    // behavior like the character editor sex selector and party disposition
+    // controls.
+    BUTTON_FLAG_CHECKABLE = 0x01,
+    // Checkable button toggles on mouse-down instead of mouse-up.
+    BUTTON_FLAG_CHECK_ON_DOWN = 0x02,
+    // Checked button cannot be unchecked by clicking itself again.
+    BUTTON_FLAG_NO_TOGGLE_OFF = 0x04,
     BUTTON_FLAG_DISABLED = 0x08,
     // Specifies that the button is a drag handle for parent window.
     BUTTON_DRAG_HANDLE = 0x10,
