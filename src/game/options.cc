@@ -1042,7 +1042,7 @@ static int PrefStart()
         prfbmp[PREFERENCES_WINDOW_FRM_CHECKBOX_OFF],
         prfbmp[PREFERENCES_WINDOW_FRM_CHECKBOX_ON],
         NULL,
-        BUTTON_FLAG_TRANSPARENT | BUTTON_FLAG_0x01 | BUTTON_FLAG_0x02);
+        BUTTON_FLAG_TRANSPARENT | BUTTON_FLAG_CHECKABLE | BUTTON_FLAG_CHECK_ON_DOWN);
     if (plyrspdbid != -1) {
         win_set_button_rest_state(plyrspdbid, player_speedup, 0);
     }
