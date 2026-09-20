@@ -300,13 +300,13 @@ static Button* button_create(int win, int x, int y, int width, int height, int m
         return NULL;
     }
 
-    if ((flags & BUTTON_FLAG_0x01) == 0) {
-        if ((flags & BUTTON_FLAG_0x02) != 0) {
-            flags &= ~BUTTON_FLAG_0x02;
+    if ((flags & BUTTON_FLAG_CHECKABLE) == 0) {
+        if ((flags & BUTTON_FLAG_CHECK_ON_DOWN) != 0) {
+            flags &= ~BUTTON_FLAG_CHECK_ON_DOWN;
         }
 
-        if ((flags & BUTTON_FLAG_0x04) != 0) {
-            flags &= ~BUTTON_FLAG_0x04;
+        if ((flags & BUTTON_FLAG_NO_TOGGLE_OFF) != 0) {
+            flags &= ~BUTTON_FLAG_NO_TOGGLE_OFF;
         }
     }
 
@@ -365,7 +365,7 @@ bool win_button_down(int btn)
         return false;
     }
 
-    if ((button->flags & BUTTON_FLAG_0x01) != 0 && (button->flags & BUTTON_FLAG_CHECKED) != 0) {
+    if ((button->flags & BUTTON_FLAG_CHECKABLE) != 0 && (button->flags & BUTTON_FLAG_CHECKED) != 0) {
         return true;
     }
 
@@ -414,7 +414,7 @@ int GNW_check_buttons(Window* w, int* keyCodePtr)
                     *keyCodePtr = hoveredButton->mouseExitEventCode;
                 }
 
-                if ((hoveredButton->flags & BUTTON_FLAG_0x01) && (hoveredButton->flags & BUTTON_FLAG_CHECKED)) {
+                if ((hoveredButton->flags & BUTTON_FLAG_CHECKABLE) && (hoveredButton->flags & BUTTON_FLAG_CHECKED)) {
                     button_draw(hoveredButton, w, hoveredButton->pressedImage, true, NULL, true);
                 } else {
                     button_draw(hoveredButton, w, hoveredButton->normalImage, true, NULL, true);
@@ -441,7 +441,7 @@ int GNW_check_buttons(Window* w, int* keyCodePtr)
                     *keyCodePtr = clickedButton->mouseEnterEventCode;
                 }
 
-                if ((clickedButton->flags & BUTTON_FLAG_0x01) && (clickedButton->flags & BUTTON_FLAG_CHECKED)) {
+                if ((clickedButton->flags & BUTTON_FLAG_CHECKABLE) && (clickedButton->flags & BUTTON_FLAG_CHECKED)) {
                     button_draw(clickedButton, w, clickedButton->pressedImage, true, NULL, true);
                 } else {
                     button_draw(clickedButton, w, clickedButton->normalImage, true, NULL, true);
@@ -475,7 +475,7 @@ int GNW_check_buttons(Window* w, int* keyCodePtr)
                         *keyCodePtr = v28->mouseExitEventCode;
                     }
 
-                    if ((v28->flags & BUTTON_FLAG_0x01) && (v28->flags & BUTTON_FLAG_CHECKED)) {
+                    if ((v28->flags & BUTTON_FLAG_CHECKABLE) && (v28->flags & BUTTON_FLAG_CHECKED)) {
                         button_draw(v28, v26, v28->pressedImage, true, NULL, true);
                     } else {
                         button_draw(v28, v26, v28->normalImage, true, NULL, true);
@@ -518,10 +518,10 @@ int GNW_check_buttons(Window* w, int* keyCodePtr)
                             w->clickedButton = button;
                             w->hoveredButton = button;
 
-                            if ((button->flags & BUTTON_FLAG_0x01) != 0) {
-                                if ((button->flags & BUTTON_FLAG_0x02) != 0) {
+                            if ((button->flags & BUTTON_FLAG_CHECKABLE) != 0) {
+                                if ((button->flags & BUTTON_FLAG_CHECK_ON_DOWN) != 0) {
                                     if ((button->flags & BUTTON_FLAG_CHECKED) != 0) {
-                                        if (!(button->flags & BUTTON_FLAG_0x04)) {
+                                        if (!(button->flags & BUTTON_FLAG_NO_TOGGLE_OFF)) {
                                             if (button->buttonGroup != NULL) {
                                                 button->buttonGroup->currChecked--;
                                             }
@@ -577,10 +577,10 @@ int GNW_check_buttons(Window* w, int* keyCodePtr)
                             w->clickedButton = NULL;
                             w->hoveredButton = v49;
 
-                            if (v49->flags & BUTTON_FLAG_0x01) {
-                                if (!(v49->flags & BUTTON_FLAG_0x02)) {
+                            if (v49->flags & BUTTON_FLAG_CHECKABLE) {
+                                if (!(v49->flags & BUTTON_FLAG_CHECK_ON_DOWN)) {
                                     if (v49->flags & BUTTON_FLAG_CHECKED) {
-                                        if (!(v49->flags & BUTTON_FLAG_0x04)) {
+                                        if (!(v49->flags & BUTTON_FLAG_NO_TOGGLE_OFF)) {
                                             if (v49->buttonGroup != NULL) {
                                                 v49->buttonGroup->currChecked--;
                                             }
@@ -686,7 +686,7 @@ int GNW_check_buttons(Window* w, int* keyCodePtr)
         *keyCodePtr = hoveredButton->mouseExitEventCode;
 
         unsigned char* data;
-        if ((hoveredButton->flags & BUTTON_FLAG_0x01) && (hoveredButton->flags & BUTTON_FLAG_CHECKED)) {
+        if ((hoveredButton->flags & BUTTON_FLAG_CHECKABLE) && (hoveredButton->flags & BUTTON_FLAG_CHECKED)) {
             data = hoveredButton->pressedImage;
         } else {
             data = hoveredButton->normalImage;
@@ -938,7 +938,7 @@ int win_set_button_rest_state(int btn, bool checked, int flags)
         return -1;
     }
 
-    if ((button->flags & BUTTON_FLAG_0x01) != 0) {
+    if ((button->flags & BUTTON_FLAG_CHECKABLE) != 0) {
         int keyCode = -1;
 
         if ((button->flags & BUTTON_FLAG_CHECKED) != 0) {
