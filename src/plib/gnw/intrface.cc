@@ -303,7 +303,7 @@ int win_list_select_at(const char* title, char** items, int itemsLength, SelectF
         NULL,
         NULL,
         NULL,
-        BUTTON_FLAG_0x10);
+        BUTTON_DRAG_HANDLE);
 
     win_draw(win);
 
@@ -793,7 +793,7 @@ int win_debug(char* string)
             NULL,
             NULL,
             NULL,
-            BUTTON_FLAG_0x10);
+            BUTTON_DRAG_HANDLE);
     }
 
     char temp[2];
