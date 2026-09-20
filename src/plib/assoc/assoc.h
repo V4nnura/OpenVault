@@ -10,14 +10,10 @@ typedef void*(assoc_realloc_func)(void* ptr, size_t newSize);
 typedef void(assoc_free_func)(void* ptr);
 typedef int(assoc_load_func)(FILE* stream, void* buffer, size_t size, int flags);
 typedef int(assoc_save_func)(FILE* stream, void* buffer, size_t size, int flags);
-typedef int(assoc_load_func_db)(DB_FILE* stream, void* buffer, size_t size, int flags);
-typedef int(assoc_save_func_db)(DB_FILE* stream, void* buffer, size_t size, int flags);
 
 typedef struct assoc_func_list {
     assoc_load_func* loadFunc;
     assoc_save_func* saveFunc;
-    assoc_load_func_db* loadFuncDB;
-    assoc_save_func_db* saveFuncDB;
     assoc_load_func* newLoadFunc;
 } assoc_func_list;
 
