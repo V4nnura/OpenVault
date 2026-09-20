@@ -2029,8 +2029,6 @@ static int db_init_database(DB_DATABASE* database, const char* datafile, const c
 
     funcs.loadFunc = db_assoc_load_dir_entry;
     funcs.saveFunc = db_assoc_save_dir_entry;
-    funcs.loadFuncDB = NULL;
-    funcs.saveFuncDB = NULL;
 
     for (index = 0; index < database->root.size; index++) {
         if (assoc_init(&(database->entries[index]), 0, sizeof(dir_entry), &funcs) != 0) {
