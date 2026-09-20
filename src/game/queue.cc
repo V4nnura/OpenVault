@@ -33,18 +33,31 @@ static int queue_premature(Object* obj, void* data);
 
 // 0x5076FC
 EventTypeDescription q_func[EVENT_TYPE_COUNT] = {
+    // EVENT_TYPE_DRUG
     { item_d_process, mem_free, item_d_load, item_d_save, true, item_d_clear },
+    // EVENT_TYPE_KNOCKOUT
     { critter_wake_up, NULL, NULL, NULL, true, critter_wake_clear },
+    // EVENT_TYPE_WITHDRAWAL
     { item_wd_process, mem_free, item_wd_load, item_wd_save, true, item_wd_clear },
+    // EVENT_TYPE_SCRIPT
     { script_q_process, mem_free, script_q_load, script_q_save, true, NULL },
+    // EVENT_TYPE_GAME_TIME
     { gtime_q_process, NULL, NULL, NULL, true, NULL },
+    // EVENT_TYPE_POISON
     { critter_check_poison, NULL, NULL, NULL, false, NULL },
+    // EVENT_TYPE_RADIATION
     { critter_process_rads, mem_free, critter_load_rads, critter_save_rads, false, NULL },
+    // EVENT_TYPE_FLARE
     { queue_destroy, NULL, NULL, NULL, true, queue_destroy },
+    // EVENT_TYPE_EXPLOSION
     { queue_explode, NULL, NULL, NULL, true, queue_explode_exit },
+    // EVENT_TYPE_ITEM_TRICKLE
     { item_m_trickle, NULL, NULL, NULL, true, item_m_turn_off_from_queue },
+    // EVENT_TYPE_SNEAK
     { critter_sneak_check, NULL, NULL, NULL, true, critter_sneak_clear },
+    // EVENT_TYPE_EXPLOSION_FAILURE
     { queue_premature, NULL, NULL, NULL, true, queue_explode_exit },
+    // EVENT_TYPE_MAP_UPDATE_EVENT
     { scr_map_q_process, NULL, NULL, NULL, true, NULL },
 };
 
