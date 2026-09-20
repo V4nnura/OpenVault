@@ -246,7 +246,7 @@ void automap(bool isInGame, bool isUsingScanner)
         win_register_button_sound_func(cancelBtn, gsound_red_butt_press, gsound_red_butt_release);
     }
 
-    int switchBtn = win_register_button(window, 457, 340, 42, 74, -1, -1, KEY_LOWERCASE_L, KEY_LOWERCASE_H, frmData[AUTOMAP_FRM_SWITCH_UP], frmData[AUTOMAP_FRM_SWITCH_DOWN], NULL, BUTTON_FLAG_TRANSPARENT | BUTTON_FLAG_0x01);
+    int switchBtn = win_register_button(window, 457, 340, 42, 74, -1, -1, KEY_LOWERCASE_L, KEY_LOWERCASE_H, frmData[AUTOMAP_FRM_SWITCH_UP], frmData[AUTOMAP_FRM_SWITCH_DOWN], NULL, BUTTON_FLAG_TRANSPARENT | BUTTON_FLAG_CHECKABLE);
     if (switchBtn != -1) {
         win_register_button_sound_func(switchBtn, gsound_toggle_butt_press, gsound_toggle_butt_release);
     }
