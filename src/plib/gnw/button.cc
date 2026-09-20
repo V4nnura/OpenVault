@@ -654,13 +654,13 @@ int GNW_check_buttons(Window* w, int* keyCodePtr)
         }
 
         if (button != NULL) {
-            if ((button->flags & BUTTON_FLAG_0x10) != 0
+            if ((button->flags & BUTTON_DRAG_HANDLE) != 0
                 && (mouseEvent & MOUSE_EVENT_ANY_BUTTON_DOWN) != 0
                 && (mouseEvent & MOUSE_EVENT_ANY_BUTTON_REPEAT) == 0) {
                 win_drag(w->id);
                 button_draw(button, w, button->normalImage, true, NULL, true);
             }
-        } else if ((w->flags & WINDOW_FLAG_0x80) != 0) {
+        } else if ((w->flags & WINDOW_DRAGGABLE_BY_BACKGROUND) != 0) {
             v25 |= mouseEvent << 8;
             if ((mouseEvent & MOUSE_EVENT_ANY_BUTTON_DOWN) != 0
                 && (mouseEvent & MOUSE_EVENT_ANY_BUTTON_REPEAT) == 0) {
