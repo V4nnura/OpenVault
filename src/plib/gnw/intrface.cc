@@ -801,7 +801,7 @@ int win_debug(char* string)
 
     char* pch = string;
     while (*pch != '\0') {
-        int characterWidth = text_char_width(*pch);
+        int characterWidth = text_char_width(*pch & 0xFF);
         if (*pch == '\n' || currx + characterWidth > 291) {
             currx = 9;
             curry += lineHeight;
