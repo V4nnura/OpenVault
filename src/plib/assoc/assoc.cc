@@ -4,6 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "memory.h"
 #include "platform_compat.h"
 
 namespace fallout {
@@ -13,41 +14,11 @@ namespace fallout {
 // with a check for this value.
 #define DICTIONARY_MARKER 0xFEBAFEBA
 
-static void* default_malloc(size_t t);
-static void* default_realloc(void* p, size_t t);
-static void default_free(void* p);
 static int assoc_find(assoc_array* a, const char* name, int* position);
 static int assoc_read_long(FILE* fp, long* theLong);
 static int assoc_read_assoc_array(FILE* fp, assoc_array* a);
 static int assoc_write_long(FILE* fp, long theLong);
 static int assoc_write_assoc_array(FILE* fp, assoc_array* a);
-
-// 0x51E408
-static assoc_malloc_func* internal_malloc = default_malloc;
-
-// 0x51E40C
-static assoc_realloc_func* internal_realloc = default_realloc;
-
-// 0x51E410
-static assoc_free_func* internal_free = default_free;
-
-// 0x4D9B90
-static void* default_malloc(size_t t)
-{
-    return malloc(t);
-}
-
-// 0x4D9B98
-static void* default_realloc(void* p, size_t t)
-{
-    return realloc(p, t);
-}
-
-// 0x4D9BA0
-static void default_free(void* p)
-{
-    free(p);
-}
 
 // 0x4D9BA8
 int assoc_init(assoc_array* a, int n, size_t datasize, assoc_func_list* assoc_funcs)
@@ -562,20 +533,6 @@ int assoc_save(FILE* fp, assoc_array* a, int flags)
     }
 
     return 0;
-}
-
-// 0x4DA498
-void assoc_register_mem(assoc_malloc_func* malloc_func, assoc_realloc_func* realloc_func, assoc_free_func* free_func)
-{
-    if (malloc_func != NULL && realloc_func != NULL && free_func != NULL) {
-        internal_malloc = malloc_func;
-        internal_realloc = realloc_func;
-        internal_free = free_func;
-    } else {
-        internal_malloc = default_malloc;
-        internal_realloc = default_realloc;
-        internal_free = default_free;
-    }
 }
 
 } // namespace fallout
