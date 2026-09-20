@@ -3254,7 +3254,7 @@ static void SexWindow()
         grphbmp[EDITOR_GRAPHIC_MALE_OFF],
         grphbmp[EDITOR_GRAPHIC_MALE_ON],
         NULL,
-        BUTTON_FLAG_TRANSPARENT | BUTTON_FLAG_0x04 | BUTTON_FLAG_0x02 | BUTTON_FLAG_0x01);
+        BUTTON_FLAG_TRANSPARENT | BUTTON_FLAG_NO_TOGGLE_OFF | BUTTON_FLAG_CHECK_ON_DOWN | BUTTON_FLAG_CHECKABLE);
     if (btns[0] != -1) {
         win_register_button_sound_func(doneBtn, gsound_red_butt_press, NULL);
     }
@@ -3271,7 +3271,7 @@ static void SexWindow()
         grphbmp[EDITOR_GRAPHIC_FEMALE_OFF],
         grphbmp[EDITOR_GRAPHIC_FEMALE_ON],
         NULL,
-        BUTTON_FLAG_TRANSPARENT | BUTTON_FLAG_0x04 | BUTTON_FLAG_0x02 | BUTTON_FLAG_0x01);
+        BUTTON_FLAG_TRANSPARENT | BUTTON_FLAG_NO_TOGGLE_OFF | BUTTON_FLAG_CHECK_ON_DOWN | BUTTON_FLAG_CHECKABLE);
     if (btns[1] != -1) {
         win_group_radio_buttons(2, btns);
         win_register_button_sound_func(doneBtn, gsound_red_butt_press, NULL);
