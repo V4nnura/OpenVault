@@ -792,17 +792,17 @@ int movieRun(int win, char* filePath)
 }
 
 // 0x479920
-int movieRunRect(int win, char* filePath, int a3, int a4, int a5, int a6)
+int movieRunRect(int win, char* filePath, int x, int y, int w, int h)
 {
     if (running) {
         return 1;
     }
 
-    movieX = a3;
-    movieY = a4;
-    movieOffset = a3 + a4 * win_width(win);
-    movieW = a5;
-    movieH = a6;
+    movieX = x;
+    movieY = y;
+    movieOffset = x + y * win_width(win);
+    movieW = w;
+    movieH = h;
     movieSubRectFlag = 1;
 
     return movieStart(win, filePath);
