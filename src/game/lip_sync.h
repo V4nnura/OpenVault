@@ -11,8 +11,8 @@ namespace fallout {
 #define PHONEME_COUNT (42)
 
 typedef enum LipsFlags {
-    LIPS_FLAG_0x01 = 0x01,
-    LIPS_FLAG_0x02 = 0x02,
+    LIPS_FLAG_LOOPING = 0x01,
+    LIPS_FLAG_PLAYING = 0x02,
 } LipsFlags;
 
 typedef struct SpeechMarker {
@@ -29,7 +29,7 @@ typedef struct LipsData {
     void* field_14;
     unsigned char* phonemes;
     int field_1C;
-    int field_20;
+    int start_offset;
     int phoneme_count;
     int field_28;
     int marker_count;
@@ -42,9 +42,9 @@ typedef struct LipsData {
     int field_48;
     int field_4C;
     char file_name[8];
-    char field_58[4];
-    char field_5C[4];
-    char field_60[4];
+    char audio_ext[4];
+    char text_ext[4];
+    char lip_ext[4];
     char field_64[260];
 } LipsData;
 
