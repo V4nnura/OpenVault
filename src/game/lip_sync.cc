@@ -14,12 +14,12 @@
 namespace fallout {
 
 static char* lips_fix_string(const char* fileName, size_t length);
+static unsigned char lips_get_phoneme(int index);
 static int lips_stop_speech();
 static int lips_read_phoneme_type(unsigned char* phoneme_type, DB_FILE* stream);
 static int lips_read_marker_type(SpeechMarker* marker_type, DB_FILE* stream);
 static int lips_read_lipsynch_info(LipsData* lipsData, DB_FILE* stream);
 static int lips_make_speech();
-static unsigned char lips_get_phoneme(int index);
 
 // 0x5057E4
 unsigned char head_phoneme_current = 0;
