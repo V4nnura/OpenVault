@@ -28,13 +28,13 @@ typedef int(MovieBlitFunc)(int win, unsigned char* data, int width, int height, 
 void initMovie();
 void movieClose();
 void movieStop();
-int movieSetFlags(int a1);
+int movieSetFlags(int flags);
 void movieSetSubtitleFont(int font);
 void movieSetSubtitleColor(float r, float g, float b);
 void movieSetPaletteFunc(MoviePaletteFunc* func);
 void movieSetCallback(MovieUpdateCallbackProc* func);
 int movieRun(int win, char* filePath);
-int movieRunRect(int win, char* filePath, int a3, int a4, int a5, int a6);
+int movieRunRect(int win, char* filePath, int x, int y, int w, int h);
 void movieSetSubtitleFunc(MovieSubtitleFunc* proc);
 void movieSetVolume(int volume);
 void movieUpdate();
