@@ -189,7 +189,7 @@ int lips_play_speech()
         markerIndex++;
     }
 
-    if (markerIndex == lip_info.markerCount) {
+    if (markerIndex == lip_info.marker_count) {
         head_marker_current = 0;
         soundStop(lip_info.sound);
         return -1;
@@ -368,7 +368,7 @@ int lips_load_file(const char* audioFileName, const char* headFileName)
 
     // Check the serialized arrays before allocating or indexing them.
     if (lip_info.phoneme_count <= 0 || lip_info.marker_count <= 0) {
-        debugPrint("lips_load_file: Invalid phoneme or marker count.\n");
+        debug_printf("lips_load_file: Invalid phoneme or marker count.\n");
         db_fclose(stream);
         return -1;
     }
@@ -376,7 +376,7 @@ int lips_load_file(const char* audioFileName, const char* headFileName)
     long remaining = db_filelength(stream) - db_ftell(stream);
     if (remaining < lip_info.phoneme_count
         || lip_info.marker_count > (remaining - lip_info.phoneme_count) / 8) {
-        debugPrint("lips_load_file: Invalid phoneme or marker count.\n");
+        debug_printf("lips_load_file: Invalid phoneme or marker count.\n");
         db_fclose(stream);
         return -1;
     }
