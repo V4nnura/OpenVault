@@ -19,6 +19,7 @@ static int lips_read_phoneme_type(unsigned char* phoneme_type, DB_FILE* stream);
 static int lips_read_marker_type(SpeechMarker* marker_type, DB_FILE* stream);
 static int lips_read_lipsynch_info(LipsData* lipsData, DB_FILE* stream);
 static int lips_make_speech();
+static unsigned char lips_get_phoneme(int index);
 
 // 0x5057E4
 unsigned char head_phoneme_current = 0;
@@ -76,58 +77,76 @@ static char* lips_fix_string(const char* fileName, size_t length)
     return tmp_str;
 }
 
+static unsigned char lips_get_phoneme(int index)
+{
+    // The terminal marker has no corresponding phoneme.
+    if (lip_info.phonemes == NULL || index < 0 || index >= lip_info.phoneme_count) {
+        return 0;
+    }
+
+    unsigned char phoneme = lip_info.phonemes[index];
+    return phoneme < PHONEME_COUNT ? phoneme : 0;
+}
+
 // 0x46CC48
 void lips_bkg_proc()
 {
-    int v0;
+    int markerIndex;
     SpeechMarker* speech_marker;
-    int v5;
+    int wrapCheckMarkerIndex;
 
-    v0 = head_marker_current;
+    markerIndex = head_marker_current;
 
-    if ((lip_info.flags & LIPS_FLAG_0x02) != 0) {
-        int v1 = soundGetPosition(lip_info.sound);
+    if (lip_info.sound == NULL || lip_info.markers == NULL
+        || markerIndex < 0 || markerIndex >= lip_info.marker_count) {
+        lip_info.flags &= ~(LIPS_FLAG_LOOPING | LIPS_FLAG_PLAYING);
+        head_phoneme_current = 0;
+        markerIndex = 0;
+    }
 
-        speech_marker = &(lip_info.markers[v0]);
-        while (v1 > speech_marker->position) {
-            head_phoneme_current = lip_info.phonemes[v0];
-            v0++;
+    if ((lip_info.flags & LIPS_FLAG_PLAYING) != 0) {
+        int audioPosition = soundGetPosition(lip_info.sound);
 
-            if (v0 >= lip_info.marker_count) {
-                v0 = 0;
-                head_phoneme_current = lip_info.phonemes[0];
+        speech_marker = &(lip_info.markers[markerIndex]);
+        while (audioPosition > speech_marker->position) {
+            head_phoneme_current = lips_get_phoneme(markerIndex);
+            markerIndex++;
 
-                if ((lip_info.flags & LIPS_FLAG_0x01) == 0) {
+            if (markerIndex >= lip_info.marker_count) {
+                markerIndex = 0;
+                head_phoneme_current = lips_get_phoneme(0);
+
+                if ((lip_info.flags & LIPS_FLAG_LOOPING) == 0) {
                     // NOTE: Uninline.
                     lips_stop_speech();
-                    v0 = head_marker_current;
+                    markerIndex = head_marker_current;
                 }
 
                 break;
             }
 
-            speech_marker = &(lip_info.markers[v0]);
+            speech_marker = &(lip_info.markers[markerIndex]);
         }
 
-        if (v0 >= lip_info.marker_count - 1) {
-            head_marker_current = v0;
+        if (markerIndex >= lip_info.marker_count - 1) {
+            head_marker_current = markerIndex;
 
-            v5 = 0;
+            wrapCheckMarkerIndex = 0;
             if (lip_info.marker_count <= 5) {
                 debug_printf("Error: Too few markers to stop speech!");
             } else {
-                v5 = 3;
+                wrapCheckMarkerIndex = 3;
             }
 
-            speech_marker = &(lip_info.markers[v5]);
-            if (v1 < speech_marker->position) {
-                v0 = 0;
-                head_phoneme_current = lip_info.phonemes[0];
+            speech_marker = &(lip_info.markers[wrapCheckMarkerIndex]);
+            if (audioPosition < speech_marker->position) {
+                markerIndex = 0;
+                head_phoneme_current = lips_get_phoneme(0);
 
-                if ((lip_info.flags & LIPS_FLAG_0x01) == 0) {
+                if ((lip_info.flags & LIPS_FLAG_LOOPING) == 0) {
                     // NOTE: Uninline.
                     lips_stop_speech();
-                    v0 = head_marker_current;
+                    markerIndex = head_marker_current;
                 }
             }
         }
@@ -138,7 +157,7 @@ void lips_bkg_proc()
         lips_draw_head = true;
     }
 
-    head_marker_current = v0;
+    head_marker_current = markerIndex;
 
     soundUpdate();
 }
@@ -146,26 +165,37 @@ void lips_bkg_proc()
 // 0x46CD9C
 int lips_play_speech()
 {
-    lip_info.flags |= LIPS_FLAG_0x02;
+    lip_info.flags &= ~LIPS_FLAG_PLAYING;
     head_marker_current = 0;
 
-    if (soundSetPosition(lip_info.sound, lip_info.field_20) != 0) {
+    if (lip_info.sound == NULL || lip_info.markers == NULL || lip_info.marker_count <= 0) {
+        return -1;
+    }
+
+    if (soundSetPosition(lip_info.sound, lip_info.start_offset) != 0) {
         debug_printf("Failed set of start_offset!\n");
     }
 
-    int v2 = head_marker_current;
-    while (1) {
-        head_marker_current = v2;
+    int markerIndex = head_marker_current;
+    while (markerIndex < lip_info.marker_count) {
+        head_marker_current = markerIndex;
 
-        SpeechMarker* speechEntry = &(lip_info.markers[v2]);
-        if (lip_info.field_20 <= speechEntry->position) {
+        SpeechMarker* speechEntry = &(lip_info.markers[markerIndex]);
+        if (lip_info.start_offset <= speechEntry->position) {
             break;
         }
 
-        v2++;
-
-        head_phoneme_current = lip_info.phonemes[v2];
+        head_phoneme_current = lips_get_phoneme(markerIndex);
+        markerIndex++;
     }
+
+    if (markerIndex == lip_info.markerCount) {
+        head_marker_current = 0;
+        soundStop(lip_info.sound);
+        return -1;
+    }
+
+    lip_info.flags |= LIPS_FLAG_PLAYING;
 
     int speechVolume = gsound_speech_volume_get();
     soundVolume(lip_info.sound, (int)(speechVolume * 0.69));
@@ -187,7 +217,7 @@ static int lips_stop_speech()
 {
     head_marker_current = 0;
     soundStop(lip_info.sound);
-    lip_info.flags &= ~(LIPS_FLAG_0x01 | LIPS_FLAG_0x02);
+    lip_info.flags &= ~(LIPS_FLAG_LOOPING | LIPS_FLAG_PLAYING);
     return 0;
 }
 
@@ -229,7 +259,7 @@ static int lips_read_lipsynch_info(LipsData* lipsData, DB_FILE* stream)
     if (db_freadInt32(stream, &(field_14)) == -1) return -1;
     if (db_freadInt32(stream, &(phonemes)) == -1) return -1;
     if (db_freadInt32(stream, &(lipsData->field_1C)) == -1) return -1;
-    if (db_freadInt32(stream, &(lipsData->field_20)) == -1) return -1;
+    if (db_freadInt32(stream, &(lipsData->start_offset)) == -1) return -1;
     if (db_freadInt32(stream, &(lipsData->phoneme_count)) == -1) return -1;
     if (db_freadInt32(stream, &(lipsData->field_28)) == -1) return -1;
     if (db_freadInt32(stream, &(lipsData->marker_count)) == -1) return -1;
@@ -242,9 +272,9 @@ static int lips_read_lipsynch_info(LipsData* lipsData, DB_FILE* stream)
     if (db_freadInt32(stream, &(lipsData->field_48)) == -1) return -1;
     if (db_freadInt32(stream, &(lipsData->field_4C)) == -1) return -1;
     if (db_freadInt8List(stream, lipsData->file_name, 8) == -1) return -1;
-    if (db_freadInt8List(stream, lipsData->field_58, 4) == -1) return -1;
-    if (db_freadInt8List(stream, lipsData->field_5C, 4) == -1) return -1;
-    if (db_freadInt8List(stream, lipsData->field_60, 4) == -1) return -1;
+    if (db_freadInt8List(stream, lipsData->audio_ext, 4) == -1) return -1;
+    if (db_freadInt8List(stream, lipsData->text_ext, 4) == -1) return -1;
+    if (db_freadInt8List(stream, lipsData->lip_ext, 4) == -1) return -1;
     if (db_freadInt8List(stream, lipsData->field_64, 260) == -1) return -1;
 
     // NOTE: Original code is different. For unknown reason it assigns values
@@ -293,12 +323,15 @@ int lips_load_file(const char* audioFileName, const char* headFileName)
 
     strcat(path, lips_fix_string(lip_info.file_name, sizeof(lip_info.file_name)));
     strcat(path, ".");
-    strcat(path, lip_info.field_60);
+    strcat(path, lip_info.lip_ext);
 
     lips_free_speech();
 
     // FIXME: stream is not closed if any error is encountered during reading.
     DB_FILE* stream = db_fopen(path, "rb");
+    if (stream == NULL) {
+        return -1;
+    }
     if (stream != NULL) {
         if (db_freadInt32(stream, &(lip_info.version)) == -1) {
             return -1;
@@ -325,10 +358,27 @@ int lips_load_file(const char* audioFileName, const char* headFileName)
             if (db_freadInt32(stream, &(lip_info.field_28)) == -1) return -1;
             if (db_freadInt32(stream, &(lip_info.marker_count)) == -1) return -1;
             if (db_freadInt8List(stream, lip_info.file_name, 8) == -1) return -1;
-            if (db_freadInt8List(stream, lip_info.field_58, 4) == -1) return -1;
+            if (db_freadInt8List(stream, lip_info.audio_ext, 4) == -1) return -1;
         } else {
             debug_printf("\nError: Lips file WRONG version!");
+            db_fclose(stream);
+            return -1;
         }
+    }
+
+    // Check the serialized arrays before allocating or indexing them.
+    if (lip_info.phoneme_count <= 0 || lip_info.marker_count <= 0) {
+        debugPrint("lips_load_file: Invalid phoneme or marker count.\n");
+        db_fclose(stream);
+        return -1;
+    }
+
+    long remaining = db_filelength(stream) - db_ftell(stream);
+    if (remaining < lip_info.phoneme_count
+        || lip_info.marker_count > (remaining - lip_info.phoneme_count) / 8) {
+        debugPrint("lips_load_file: Invalid phoneme or marker count.\n");
+        db_fclose(stream);
+        return -1;
     }
 
     lip_info.phonemes = (unsigned char*)mem_malloc(lip_info.phoneme_count);
@@ -399,7 +449,7 @@ int lips_load_file(const char* audioFileName, const char* headFileName)
     lip_info.field_38 = 0;
     lip_info.field_34 = 0;
     lip_info.field_48 = 0;
-    lip_info.field_20 = 0;
+    lip_info.start_offset = 0;
     lip_info.field_3C = 50;
     lip_info.field_40 = 100;
 
@@ -407,15 +457,15 @@ int lips_load_file(const char* audioFileName, const char* headFileName)
         lip_info.field_4 = 22528;
     }
 
-    strcpy(lip_info.field_58, "VOC");
-    strcpy(lip_info.field_58, "ACM");
-    strcpy(lip_info.field_5C, "TXT");
-    strcpy(lip_info.field_60, "LIP");
+    strcpy(lip_info.audio_ext, "VOC");
+    strcpy(lip_info.audio_ext, "ACM");
+    strcpy(lip_info.text_ext, "TXT");
+    strcpy(lip_info.lip_ext, "LIP");
 
-    lips_make_speech();
+    if (lips_make_speech() == -1) return -1;
 
     head_marker_current = 0;
-    head_phoneme_current = lip_info.phonemes[0];
+    head_phoneme_current = lips_get_phoneme(0);
 
     return 0;
 }
@@ -429,8 +479,8 @@ static int lips_make_speech()
     }
 
     char path[COMPAT_MAX_PATH];
-    char* v1 = lips_fix_string(lip_info.file_name, sizeof(lip_info.file_name));
-    snprintf(path, sizeof(path), "%s%s\\%s.%s", "SOUND\\SPEECH\\", lips_subdir_name, v1, "ACM");
+    char* audioBaseName = lips_fix_string(lip_info.file_name, sizeof(lip_info.file_name));
+    snprintf(path, sizeof(path), "%s%s\\%s.%s", "SOUND\\SPEECH\\", lips_subdir_name, audioBaseName, "ACM");
 
     if (lip_info.sound != NULL) {
         soundDelete(lip_info.sound);
@@ -457,14 +507,18 @@ static int lips_make_speech()
         return -1;
     }
 
-    lip_info.field_34 = 8 * (lip_info.field_1C / lip_info.marker_count);
-
     return 0;
 }
 
 // 0x46D8A0
 int lips_free_speech()
 {
+    head_marker_current = 0;
+    lip_info.flags &= ~(LIPS_FLAG_LOOPING | LIPS_FLAG_PLAYING);
+    head_phoneme_current = 0;
+    head_phoneme_drawn = 0;
+    lips_draw_head = true;
+
     if (lip_info.field_14 != NULL) {
         mem_free(lip_info.field_14);
         lip_info.field_14 = NULL;
