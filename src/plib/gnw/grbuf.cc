@@ -298,7 +298,9 @@ void buf_outline(unsigned char* buf, int width, int height, int pitch, int color
 
         for (int x = 0; x < width; x++) {
             if (*ptr != 0 && cycle) {
-                *(ptr - 1) = color & 0xFF;
+                if (x != 0) {
+                    *(ptr - 1) = color & 0xFF;
+                }
                 cycle = false;
             } else if (*ptr == 0 && !cycle) {
                 *ptr = color & 0xFF;
@@ -317,8 +319,9 @@ void buf_outline(unsigned char* buf, int width, int height, int pitch, int color
 
         for (int y = 0; y < height; y++) {
             if (*ptr != 0 && cycle) {
-                // TODO: Check in debugger, might be a bug.
-                *(ptr - pitch) = color & 0xFF;
+                if (y != 0) {
+                    *(ptr - pitch) = color & 0xFF;
+                }
                 cycle = false;
             } else if (*ptr == 0 && !cycle) {
                 *ptr = color & 0xFF;
