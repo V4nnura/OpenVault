@@ -1855,10 +1855,10 @@ int gmouse_3d_build_pick_frame(int x, int y, int menuItem, int width, int height
 }
 
 // 0x444C94
-int gmouse_3d_pick_frame_hot(int* a1, int* a2)
+int gmouse_3d_pick_frame_hot(int* x, int* y)
 {
-    *a1 = gmouse_3d_pick_frame_hot_x;
-    *a2 = gmouse_3d_pick_frame_hot_y;
+    *x = gmouse_3d_pick_frame_hot_x;
+    *y = gmouse_3d_pick_frame_hot_y;
     return 0;
 }
 
