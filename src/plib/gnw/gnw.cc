@@ -117,7 +117,7 @@ int win_init(VideoOptions* video_options, int flags)
         return WINDOW_MANAGER_ERR_INITIALIZING_VIDEO_MODE;
     }
 
-    if ((flags & 1) != 0) {
+    if ((flags & WINDOW_MANAGER_INIT_FLAG_BUFFERED) != 0) {
         screen_buffer = (unsigned char*)mem_malloc((scr_size.lry - scr_size.uly + 1) * (scr_size.lrx - scr_size.ulx + 1));
         if (screen_buffer == NULL) {
             svga_exit();
