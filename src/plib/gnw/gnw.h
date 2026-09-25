@@ -30,6 +30,11 @@ typedef enum WindowManagerErr {
     WINDOW_MANAGER_ERR_INITIALIZING_INPUT = 11,
 } WindowManagerErr;
 
+typedef enum WindowManagerInitFlags {
+    WINDOW_MANAGER_INIT_FLAG_NONE = 0x0,
+    WINDOW_MANAGER_INIT_FLAG_BUFFERED = 0x1,
+} WindowManagerInitFlags;
+
 extern bool GNW_win_init_flag;
 extern int GNW_wcolor[6];
 
