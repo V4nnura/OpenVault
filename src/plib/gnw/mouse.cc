@@ -345,7 +345,7 @@ void mouse_show()
             for (int y = 0; y < mouse_length; y++) {
                 for (int x = 0; x < mouse_width; x++) {
                     unsigned char pixel = mouse_shape[y * mouse_full + x];
-                    if (v6 != mouse_trans) {
+                    if (pixel != mouse_trans) {
                         cursorData[cursorDataIndex] = pixel;
                     }
                     cursorDataIndex++;
