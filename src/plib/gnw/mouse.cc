@@ -328,69 +328,68 @@ static void mouse_anim()
 // 0x4B4B88
 void mouse_show()
 {
-    int i;
-    unsigned char* v2;
-    int v7, v8;
-    int v9, v10;
-    int v4;
-    unsigned char v6;
-    int v3;
+    unsigned char* cursorData;
+    int clipX;
+    int clipWidth;
+    int clipY;
+    int clipHeight;
+    int cursorDataIndex;
 
-    v2 = mouse_buf;
+    cursorData = mouse_buf;
     if (have_mouse) {
         if (!mouse_blit_trans || !mouse_is_hidden) {
             win_get_mouse_buf(mouse_buf);
-            v2 = mouse_buf;
-            v3 = 0;
+            cursorData = mouse_buf;
+            cursorDataIndex = 0;
 
-            for (i = 0; i < mouse_length; i++) {
-                for (v4 = 0; v4 < mouse_width; v4++) {
-                    v6 = mouse_shape[i * mouse_full + v4];
+            for (int y = 0; y < mouse_length; y++) {
+                for (int x = 0; x < mouse_width; x++) {
+                    unsigned char pixel = mouse_shape[y * mouse_full + x];
                     if (v6 != mouse_trans) {
-                        v2[v3] = v6;
+                        cursorData[cursorDataIndex] = pixel;
                     }
-                    v3++;
+                    cursorDataIndex++;
                 }
             }
         }
 
         if (mouse_x >= scr_size.ulx) {
             if (mouse_width + mouse_x - 1 <= scr_size.lrx) {
-                v8 = mouse_width;
-                v7 = 0;
+                clipWidth = mouse_width;
+                clipX = 0;
             } else {
-                v7 = 0;
-                v8 = scr_size.lrx - mouse_x + 1;
+                clipX = 0;
+                clipWidth = scr_size.lrx - mouse_x + 1;
             }
         } else {
-            v7 = scr_size.ulx - mouse_x;
-            v8 = mouse_width - (scr_size.ulx - mouse_x);
+            clipX = scr_size.ulx - mouse_x;
+            clipWidth = mouse_width - (scr_size.ulx - mouse_x);
         }
 
         if (mouse_y >= scr_size.uly) {
             if (mouse_length + mouse_y - 1 <= scr_size.lry) {
-                v9 = 0;
-                v10 = mouse_length;
+                clipY = 0;
+                clipHeight = mouse_length;
             } else {
-                v9 = 0;
-                v10 = scr_size.lry - mouse_y + 1;
+                clipY = 0;
+                clipHeight = scr_size.lry - mouse_y + 1;
             }
         } else {
-            v9 = scr_size.uly - mouse_y;
-            v10 = mouse_length - (scr_size.uly - mouse_y);
+            clipY = scr_size.uly - mouse_y;
+            clipHeight = mouse_length - (scr_size.uly - mouse_y);
         }
 
-        mouse_buf = v2;
+        mouse_buf = cursorData;
         if (mouse_blit_trans && mouse_is_hidden) {
-            mouse_blit_trans(mouse_shape, mouse_full, mouse_length, v7, v9, v8, v10, v7 + mouse_x, v9 + mouse_y, mouse_trans);
+            mouse_blit_trans(mouse_shape, mouse_full, mouse_length, clipX, clipY, clipWidth, clipHeight, clipX + mouse_x, clipY + mouse_y, mouse_trans);
         } else {
-            mouse_blit(mouse_buf, mouse_width, mouse_length, v7, v9, v8, v10, v7 + mouse_x, v9 + mouse_y);
+            mouse_blit(mouse_buf, mouse_width, mouse_length, clipX, clipY, clipWidth, clipHeight, clipX + mouse_x, clipY + mouse_y);
         }
 
-        v2 = mouse_buf;
+        cursorData = mouse_buf;
         mouse_is_hidden = false;
     }
-    mouse_buf = v2;
+    mouse_buf = cursorData;
 }
 
 // 0x4B4D70
