@@ -9,17 +9,19 @@
 
 namespace fallout {
 
-#define SCRIPT_FLAG_0x01 0x01
-#define SCRIPT_FLAG_0x02 0x02
-#define SCRIPT_FLAG_0x04 0x04
-#define SCRIPT_FLAG_0x08 0x08
-#define SCRIPT_FLAG_0x10 0x10
-
 #define GAME_TIME_TICKS_PER_HOUR (60 * 60 * 10)
 #define GAME_TIME_TICKS_PER_DAY (24 * 60 * 60 * 10)
 #define GAME_TIME_TICKS_PER_YEAR (365 * 24 * 60 * 60 * 10)
 
 #define SCRIPT_DIALOG_MESSAGE_LIST_CAPACITY 1000
+
+typedef enum ScriptFlags {
+    SCRIPT_FLAG_0x01 = 0x01,
+    SCRIPT_FLAG_0x02 = 0x02,
+    SCRIPT_FLAG_0x04 = 0x04,
+    SCRIPT_FLAG_0x08 = 0x08,
+    SCRIPT_FLAG_0x10 = 0x10,
+}
 
 typedef enum ScriptRequests {
     SCRIPT_REQUEST_COMBAT = 0x01,
