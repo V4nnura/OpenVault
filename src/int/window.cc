@@ -66,15 +66,15 @@ typedef struct ManagedWindow {
     Region** regions;
     int currentRegionIndex;
     int regionsLength;
-    int field_38;
+    int regionsVersion;
     ManagedButton* buttons;
     int buttonsLength;
-    int field_44;
-    int field_48;
-    int field_4C;
-    int field_50;
-    float field_54;
-    float field_58;
+    int cursorX;
+    int cursorY;
+    int field_4C; // Unused, probably color.
+    int field_50; // Unused, probably flags.
+    float scaleX;
+    float scaleY;
 } ManagedWindow;
 
 static bool checkRegion(int windowIndex, int mouseX, int mouseY, int mouseEvent);
@@ -253,7 +253,7 @@ bool windowCheckRegion(int windowIndex, int mouseX, int mouseY, int mouseEvent)
     bool rc = checkRegion(windowIndex, mouseX, mouseY, mouseEvent);
 
     ManagedWindow* managedWindow = &(windows[windowIndex]);
-    int v1 = managedWindow->field_38;
+    int v1 = managedWindow->regionsVersion;
 
     for (int index = 0; index < managedWindow->regionsLength; index++) {
         Region* region = managedWindow->regions[index];
@@ -264,21 +264,21 @@ bool windowCheckRegion(int windowIndex, int mouseX, int mouseY, int mouseEvent)
 
                 if (region->mouseEventCallback != NULL) {
                     region->mouseEventCallback(region, region->mouseEventCallbackUserData, 2);
-                    if (v1 != managedWindow->field_38) {
+                    if (v1 != managedWindow->regionsVersion) {
                         return true;
                     }
                 }
 
                 if (region->rightMouseEventCallback != NULL) {
                     region->rightMouseEventCallback(region, region->rightMouseEventCallbackUserData, 2);
-                    if (v1 != managedWindow->field_38) {
+                    if (v1 != managedWindow->regionsVersion) {
                         return true;
                     }
                 }
 
                 if (region->program != NULL && region->procs[2] != 0) {
                     executeProc(region->program, region->procs[2]);
-                    if (v1 != managedWindow->field_38) {
+                    if (v1 != managedWindow->regionsVersion) {
                         return true;
                     }
                 }
@@ -336,7 +336,7 @@ static bool checkAllRegions()
         if (managedWindow->window != -1 && managedWindow->window == win) {
             if (lastWin != -1 && lastWin != windowIndex && windows[lastWin].window != -1) {
                 ManagedWindow* managedWindow = &(windows[lastWin]);
-                int v1 = managedWindow->field_38;
+                int v1 = managedWindow->regionsVersion;
 
                 for (int regionIndex = 0; regionIndex < managedWindow->regionsLength; regionIndex++) {
                     Region* region = managedWindow->regions[regionIndex];
@@ -344,21 +344,21 @@ static bool checkAllRegions()
                         region->rightProcs[3] = 0;
                         if (region->mouseEventCallback != NULL) {
                             region->mouseEventCallback(region, region->mouseEventCallbackUserData, 3);
-                            if (v1 != managedWindow->field_38) {
+                            if (v1 != managedWindow->regionsVersion) {
                                 return true;
                             }
                         }
 
                         if (region->rightMouseEventCallback != NULL) {
                             region->rightMouseEventCallback(region, region->rightMouseEventCallbackUserData, 3);
-                            if (v1 != managedWindow->field_38) {
+                            if (v1 != managedWindow->regionsVersion) {
                                 return true;
                             }
                         }
 
                         if (region->program != NULL && region->procs[3] != 0) {
                             executeProc(region->program, region->procs[3]);
-                            if (v1 != managedWindow->field_38) {
+                            if (v1 != managedWindow->regionsVersion) {
                                 return 1;
                             }
                         }
@@ -401,10 +401,10 @@ void windowAddInputFunc(WindowInputHandler* handler)
 // 0x4A3810
 static void doRegionRightFunc(Region* region, int a2)
 {
-    int v1 = windows[currentWindow].field_38;
+    int v1 = windows[currentWindow].regionsVersion;
     if (region->rightMouseEventCallback != NULL) {
         region->rightMouseEventCallback(region, region->rightMouseEventCallbackUserData, a2);
-        if (v1 != windows[currentWindow].field_38) {
+        if (v1 != windows[currentWindow].regionsVersion) {
             return;
         }
     }
@@ -419,10 +419,10 @@ static void doRegionRightFunc(Region* region, int a2)
 // 0x4A3890
 static void doRegionFunc(Region* region, int a2)
 {
-    int v1 = windows[currentWindow].field_38;
+    int v1 = windows[currentWindow].regionsVersion;
     if (region->mouseEventCallback != NULL) {
         region->mouseEventCallback(region, region->mouseEventCallbackUserData, a2);
-        if (v1 != windows[currentWindow].field_38) {
+        if (v1 != windows[currentWindow].regionsVersion) {
             return;
         }
     }
@@ -881,9 +881,9 @@ int createWindow(const char* windowName, int x, int y, int width, int height, in
 
     ManagedWindow* managedWindow = &(windows[windowIndex]);
     strncpy(managedWindow->name, windowName, 32);
-    managedWindow->field_54 = 1.0;
-    managedWindow->field_58 = 1.0;
-    managedWindow->field_38 = 0;
+    managedWindow->scaleX = 1.0;
+    managedWindow->scaleY = 1.0;
+    managedWindow->regionsVersion = 0;
     managedWindow->regions = NULL;
     managedWindow->regionsLength = 0;
     managedWindow->width = width;
@@ -897,8 +897,8 @@ int createWindow(const char* windowName, int x, int y, int width, int height, in
     }
 
     managedWindow->window = win_add(x, y, width, height, a6, flags);
-    managedWindow->field_48 = 0;
-    managedWindow->field_44 = 0;
+    managedWindow->cursorY = 0;
+    managedWindow->cursorX = 0;
     managedWindow->field_4C = a6;
     managedWindow->field_50 = flags;
 
@@ -914,8 +914,8 @@ int windowOutput(char* string)
 
     ManagedWindow* managedWindow = &(windows[currentWindow]);
 
-    int x = (int)(managedWindow->field_44 * managedWindow->field_54);
-    int y = (int)(managedWindow->field_48 * managedWindow->field_58);
+    int x = (int)(managedWindow->cursorX * managedWindow->scaleX);
+    int y = (int)(managedWindow->cursorY * managedWindow->scaleY);
     // NOTE: Uses `add` at 0x4B810E, not bitwise `or`.
     int flags = windowGetTextColor() + windowGetTextFlags();
     win_print(managedWindow->window, string, 0, x, y, flags);
@@ -931,8 +931,8 @@ bool windowGotoXY(int x, int y)
     }
 
     ManagedWindow* managedWindow = &(windows[currentWindow]);
-    managedWindow->field_44 = (int)(x * managedWindow->field_54);
-    managedWindow->field_48 = (int)(y * managedWindow->field_58);
+    managedWindow->cursorX = (int)(x * managedWindow->scaleX);
+    managedWindow->cursorY = (int)(y * managedWindow->scaleY);
 
     return true;
 }
@@ -1254,10 +1254,10 @@ bool windowPrintRect(char* string, int a2, int textAlignment)
     }
 
     ManagedWindow* managedWindow = &(windows[currentWindow]);
-    int width = (int)(a2 * managedWindow->field_54);
+    int width = (int)(a2 * managedWindow->scaleX);
     int height = win_height(managedWindow->window);
-    int x = managedWindow->field_44;
-    int y = managedWindow->field_48;
+    int x = managedWindow->cursorX;
+    int y = managedWindow->cursorY;
     int flags = windowGetTextColor() | 0x2000000;
 
     // NOTE: Uninline.
@@ -1290,8 +1290,8 @@ int windowFormatMessageColor(char* string, int x, int y, int width, int height, 
 bool windowPrint(char* string, int a2, int x, int y, int a5)
 {
     ManagedWindow* managedWindow = &(windows[currentWindow]);
-    x = (int)(x * managedWindow->field_54);
-    y = (int)(y * managedWindow->field_58);
+    x = (int)(x * managedWindow->scaleX);
+    y = (int)(y * managedWindow->scaleY);
 
     win_print(managedWindow->window, string, a2, x, y, a5);
 
@@ -1884,10 +1884,10 @@ bool windowAddButton(const char* buttonName, int x, int y, int width, int height
         managedWindow->buttonsLength += 1;
     }
 
-    x = (int)(x * managedWindow->field_54);
-    y = (int)(y * managedWindow->field_58);
-    width = (int)(width * managedWindow->field_54);
-    height = (int)(height * managedWindow->field_58);
+    x = (int)(x * managedWindow->scaleX);
+    y = (int)(y * managedWindow->scaleY);
+    width = (int)(width * managedWindow->scaleX);
+    height = (int)(height * managedWindow->scaleY);
 
     ManagedButton* managedButton = &(managedWindow->buttons[index]);
     strncpy(managedButton->name, buttonName, 31);
@@ -2344,10 +2344,10 @@ bool windowFillRect(int x, int y, int width, int height, float r, float g, float
     int wid;
 
     managedWindow = &(windows[currentWindow]);
-    x = (int)(x * managedWindow->field_54);
-    y = (int)(y * managedWindow->field_58);
-    width = (int)(width * managedWindow->field_54);
-    height = (int)(height * managedWindow->field_58);
+    x = (int)(x * managedWindow->scaleX);
+    y = (int)(y * managedWindow->scaleY);
+    width = (int)(width * managedWindow->scaleX);
+    height = (int)(height * managedWindow->scaleY);
 
     colorIndex = ((int)(r * 31.0) << 10) | ((int)(g * 31.0) << 5) | (int)(b * 31.0);
 
@@ -2496,8 +2496,8 @@ bool windowAddRegionPoint(int x, int y, bool a3)
     }
 
     if (a3) {
-        x = (int)(x * managedWindow->field_54);
-        y = (int)(y * managedWindow->field_58);
+        x = (int)(x * managedWindow->scaleX);
+        y = (int)(y * managedWindow->scaleY);
     }
 
     regionAddPoint(region, x, y);
@@ -2679,7 +2679,7 @@ bool windowDeleteRegion(const char* regionName)
                 if (compat_stricmp(regionGetName(region), regionName) == 0) {
                     regionDelete(region);
                     managedWindow->regions[index] = NULL;
-                    managedWindow->field_38++;
+                    managedWindow->regionsVersion++;
                     return true;
                 }
             }
@@ -2687,7 +2687,7 @@ bool windowDeleteRegion(const char* regionName)
         return false;
     }
 
-    managedWindow->field_38++;
+    managedWindow->regionsVersion++;
 
     if (managedWindow->regions != NULL) {
         for (int index = 0; index < managedWindow->regionsLength; index++) {
