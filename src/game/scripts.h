@@ -21,7 +21,7 @@ typedef enum ScriptFlags {
     SCRIPT_FLAG_0x04 = 0x04,
     SCRIPT_FLAG_0x08 = 0x08,
     SCRIPT_FLAG_0x10 = 0x10,
-}
+} ScriptFlags;
 
 typedef enum ScriptRequests {
     SCRIPT_REQUEST_COMBAT = 0x01,
