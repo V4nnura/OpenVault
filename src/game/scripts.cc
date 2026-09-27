@@ -83,7 +83,7 @@ static int scr_header_load();
 static int scr_write_ScriptSubNode(Script* scr, DB_FILE* stream);
 static int scr_write_ScriptNode(ScriptListExtent* a1, DB_FILE* stream);
 static int scr_read_ScriptSubNode(Script* scr, DB_FILE* stream);
-static int scr_read_ScriptNode(ScriptListExtent* a1, DB_FILE* stream);
+static int scr_read_ScriptNode(ScriptListExtent* scriptExtent, DB_FILE* stream);
 static int scr_new_id(int scriptType);
 static void scrExecMapProcScripts(int a1);
 
@@ -1866,9 +1866,9 @@ int scr_load(DB_FILE* stream)
         }
 
         if (scriptsCount != 0) {
-            scriptList->length = scriptsCount / 16;
+            scriptList->length = scriptsCount / SCRIPT_LIST_EXTENT_SIZE;
 
-            if (scriptsCount % 16 != 0) {
+            if (scriptsCount % SCRIPT_LIST_EXTENT_SIZE != 0) {
                 scriptList->length++;
             }
 
@@ -2666,10 +2666,7 @@ bool scr_end_combat()
         return false;
     }
 
-    Script* before;
-    if (scr_ptr(map_script_id, &before) != -1) {
-        before->fixedParam = team;
-    }
+    scr_set_ext_param(map_script_id, team);
 
     exec_script_proc(map_script_id, SCRIPT_PROC_COMBAT);
 
