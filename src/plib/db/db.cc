@@ -723,8 +723,8 @@ int db_fclose(DB_FILE* stream)
 // 0x4AFD50
 size_t db_fread(void* ptr, size_t size, size_t count, DB_FILE* stream)
 {
-    int remaining_size;
-    int chunk_size;
+    long remaining_size;
+    long chunk_size;
     size_t bytes_read;
     unsigned char* buf;
     size_t elements_read;
