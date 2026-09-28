@@ -6,12 +6,12 @@ namespace fallout {
 typedef bool(AudioFileQueryCompressedFunc)(char* filePath);
 
 int audiofOpen(const char* fname, int* sampleRate);
-int audiofCloseFile(int a1);
-int audiofRead(int a1, void* buf, unsigned int size);
-long audiofSeek(int handle, long offset, int origin);
-long audiofFileSize(int a1);
-long audiofTell(int a1);
-int audiofWrite(int handle, const void* buf, unsigned int size);
+int audiofCloseFile(int fileHandle);
+int audiofRead(int fileHandle, void* buf, unsigned int size);
+long audiofSeek(int fileHandle, long offset, int origin);
+long audiofFileSize(int fileHandle);
+long audiofTell(int fileHandle);
+int audiofWrite(int fileHandle, const void* buf, unsigned int size);
 int initAudiof(AudioFileQueryCompressedFunc* isCompressedProc);
 void audiofClose();
 
