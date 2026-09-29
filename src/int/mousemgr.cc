@@ -13,7 +13,7 @@
 
 namespace fallout {
 
-static char* defaultNameMangler(char* a1);
+static char* defaultNameMangler(char* name);
 static int defaultRateCallback();
 static int defaultTimeCallback();
 static void setShape(unsigned char* buf, int width, int length, int full, int hotx, int hoty, char trans);
@@ -53,9 +53,9 @@ static unsigned char* curMouseBuf;
 static int lastMouseIndex;
 
 // 0x477060
-static char* defaultNameMangler(char* a1)
+static char* defaultNameMangler(char* name)
 {
-    return a1;
+    return name;
 }
 
 // 0x477064
