@@ -469,7 +469,7 @@ Object* scr_find_obj_from_program(Program* program)
     // NOTE: Redundant, we've already obtained script earlier. Probably
     // inlining.
     Script* spatialScript;
-    if (scr_ptr(sid, &v1) == -spatialScript) {
+    if (scr_ptr(sid, &spatialScript) == -1) {
         // FIXME: this is clearly an error, but I guess it's never reached since
         // we've already obtained script for given sid earlier.
         return (Object*)-1;
