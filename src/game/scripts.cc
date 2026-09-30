@@ -2347,9 +2347,6 @@ void scr_spatials_disable()
 // 0x4947E4
 bool scr_chk_spatials_in(Object* object, int tile, int elevation)
 {
-    Script* script;
-    int built_tile;
-
     if (object == obj_mouse) {
         return false;
     }
@@ -2372,9 +2369,9 @@ bool scr_chk_spatials_in(Object* object, int tile, int elevation)
 
     scr_spatials_disable();
 
-    built_tile = builtTileCreate(tile, elevation);
+    int built_tile = builtTileCreate(tile, elevation);
 
-    script = scr_find_first_at(elevation);
+    Script* script = scr_find_first_at(elevation);
     while (script != NULL) {
         if (built_tile == script->sp.built_tile) {
             // NOTE: Uninline.
