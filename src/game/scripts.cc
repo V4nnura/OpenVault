@@ -284,9 +284,8 @@ void inc_game_time_in_seconds(int inc)
 // 0x491900
 int gtime_q_add()
 {
-    int delay;
-
-    delay = 10 * (60 * (60 - (fallout_game_time / 600) % 60 - 1) + 3600 * (24 - (fallout_game_time / 600) / 60 % 24 - 1) + 60);
+    // Ticks until midnight.
+    int delay = 10 * (60 * (60 - (fallout_game_time / 600) % 60 - 1) + 3600 * (24 - (fallout_game_time / 600) / 60 % 24 - 1) + 60);
     if (queue_add(delay, NULL, NULL, EVENT_TYPE_GAME_TIME) == -1) {
         return -1;
     }
@@ -469,25 +468,25 @@ Object* scr_find_obj_from_program(Program* program)
 
     // NOTE: Redundant, we've already obtained script earlier. Probably
     // inlining.
-    Script* v1;
-    if (scr_ptr(sid, &v1) == -1) {
+    Script* spatialScript;
+    if (scr_ptr(sid, &v1) == -spatialScript) {
         // FIXME: this is clearly an error, but I guess it's never reached since
         // we've already obtained script for given sid earlier.
         return (Object*)-1;
     }
 
     object->id = new_obj_id();
-    v1->scr_oid = object->id;
-    v1->owner = object;
+    spatialScript->scr_oid = object->id;
+    spatialScript->owner = object;
 
     for (int elevation = 0; elevation < ELEVATION_COUNT; elevation++) {
-        Script* spatialScript = scr_find_first_at(elevation);
-        while (spatialScript != NULL) {
-            if (spatialScript == script) {
+        Script* spatialIter = scr_find_first_at(elevation);
+        while (spatialIter != NULL) {
+            if (spatialIter == script) {
                 obj_move_to_tile(object, builtTileGetTile(script->sp.built_tile), elevation, NULL);
                 return object;
             }
-            spatialScript = scr_find_next_at();
+            spatialIter = scr_find_next_at();
         }
     }
 
@@ -558,9 +557,9 @@ static void doBkProcesses()
         set = 1;
     }
 
-    int v0 = get_bk_time();
+    int now = get_bk_time();
     if (script_engine_running) {
-        lasttime = v0;
+        lasttime = now;
 
         // NOTE: There is a loop at 0x4A3C64, consisting of one iteration, going
         // downwards from 1.
@@ -634,12 +633,9 @@ static void script_chk_timed_events()
     // 0x51C7E4
     static int last_light_time = 0;
 
-    int now;
-    bool should_process_queue;
+    int now = get_bk_time();
 
-    now = get_bk_time();
-    should_process_queue = false;
-
+    bool should_process_queue = false;
     if (!isInCombat()) {
         should_process_queue = true;
     }
