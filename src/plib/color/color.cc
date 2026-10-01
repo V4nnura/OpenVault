@@ -16,7 +16,7 @@ static int colorClose(void* handle);
 static void* defaultMalloc(size_t size);
 static void* defaultRealloc(void* ptr, size_t size);
 static void defaultFree(void* ptr);
-static void setIntensityTableColor(int a1);
+static void setIntensityTableColor(int cc);
 static void setIntensityTables();
 static void setMixTableColor(int color);
 static void setMixTable();
