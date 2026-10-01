@@ -4047,8 +4047,8 @@ int loot_container(Object* a1, Object* a2)
         if (!isCaughtStealing) {
             if (stealingXp > 0) {
                 if (!isPartyMember(a2)) {
-                    stealingXp = std::min(300 - skill_level(a1, SKILL_STEAL), stealingXp);
-                    debug_printf("\n[[[%d]]]", 300 - skill_level(a1, SKILL_STEAL));
+                    stealingXp = std::min(skill_level(a1, SKILL_STEAL), stealingXp);
+                    debug_printf("\n[[[%d]]]", skill_level(a1, SKILL_STEAL));
 
                     // You gain %d experience points for successfully using your Steal skill.
                     messageListItem.num = 29;
