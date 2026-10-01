@@ -51,8 +51,16 @@ typedef struct MouseManagerCacheEntry {
     char field_32C[32];
 } MouseManagerCacheEntry;
 
+char* defaultNameMangler(char* name);
+int defaultRateCallback();
+int defaultTimeCallback();
+void setShape(unsigned char* buf, int width, int length, int full, int hotx, int hoty, char trans);
 void mousemgrSetNameMangler(MouseManagerNameMangler* func);
 void mousemgrSetTimeCallback(MouseManagerRateProvider* rateFunc, MouseManagerTimeProvider* currentTimeFunc);
+void freeCacheEntry(MouseManagerCacheEntry* entry);
+int cacheInsert(void** data, int type, unsigned char* palette, const char* fileName);
+void cacheFlush();
+MouseManagerCacheEntry* cacheFind(const char* fileName, unsigned char** palettePtr, int* a3, int* a4, int* widthPtr, int* heightPtr, int* typePtr);
 void initMousemgr();
 void mousemgrClose();
 void mousemgrUpdate();
