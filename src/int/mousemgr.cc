@@ -11,15 +11,6 @@
 
 namespace fallout {
 
-static char* defaultNameMangler(char* name);
-static int defaultRateCallback();
-static int defaultTimeCallback();
-static void setShape(unsigned char* buf, int width, int length, int full, int hotx, int hoty, char trans);
-static void freeCacheEntry(MouseManagerCacheEntry* entry);
-static int cacheInsert(void** data, int type, unsigned char* palette, const char* fileName);
-static void cacheFlush();
-static MouseManagerCacheEntry* cacheFind(const char* fileName, unsigned char** palettePtr, int* a3, int* a4, int* widthPtr, int* heightPtr, int* typePtr);
-
 // 0x505B20
 static MouseManagerNameMangler* mouseNameMangler = defaultNameMangler;
 
@@ -51,25 +42,25 @@ static unsigned char* curMouseBuf;
 static int lastMouseIndex;
 
 // 0x477060
-static char* defaultNameMangler(char* name)
+char* defaultNameMangler(char* name)
 {
     return name;
 }
 
 // 0x477064
-static int defaultRateCallback()
+int defaultRateCallback()
 {
     return 1000;
 }
 
 // 0x47706C
-static int defaultTimeCallback()
+int defaultTimeCallback()
 {
     return get_time();
 }
 
 // 0x477074
-static void setShape(unsigned char* buf, int width, int length, int full, int hotx, int hoty, char trans)
+void setShape(unsigned char* buf, int width, int length, int full, int hotx, int hoty, char trans)
 {
     mouse_set_shape(buf, width, length, full, hotx, hoty, trans);
 }
@@ -97,7 +88,7 @@ void mousemgrSetTimeCallback(MouseManagerRateProvider* rateFunc, MouseManagerTim
 }
 
 // 0x4770C8
-static void freeCacheEntry(MouseManagerCacheEntry* entry)
+void freeCacheEntry(MouseManagerCacheEntry* entry)
 {
     switch (entry->type) {
     case MOUSE_MANAGER_MOUSE_TYPE_STATIC:
@@ -133,7 +124,7 @@ static void freeCacheEntry(MouseManagerCacheEntry* entry)
 }
 
 // 0x477208
-static int cacheInsert(void** data, int type, unsigned char* palette, const char* fileName)
+int cacheInsert(void** data, int type, unsigned char* palette, const char* fileName)
 {
     int foundIndex = -1;
     int index;
@@ -186,7 +177,7 @@ static int cacheInsert(void** data, int type, unsigned char* palette, const char
 }
 
 // 0x4771E4
-static void cacheFlush()
+void cacheFlush()
 {
     for (int index = 0; index < MOUSE_MGR_CACHE_CAPACITY; index++) {
         freeCacheEntry(&(Cache[index]));
@@ -194,7 +185,7 @@ static void cacheFlush()
 }
 
 // 0x47735C
-static MouseManagerCacheEntry* cacheFind(const char* fileName, unsigned char** palettePtr, int* a3, int* a4, int* widthPtr, int* heightPtr, int* typePtr)
+MouseManagerCacheEntry* cacheFind(const char* fileName, unsigned char** palettePtr, int* a3, int* a4, int* widthPtr, int* heightPtr, int* typePtr)
 {
     for (int index = 0; index < MOUSE_MGR_CACHE_CAPACITY; index++) {
         MouseManagerCacheEntry* cacheEntry = &(Cache[index]);
