@@ -578,6 +578,8 @@ int map_malloc_local_var(int a1)
     int* vars = (int*)mem_realloc(map_local_vars, sizeof(*vars) * num_map_local_vars);
     if (vars == NULL) {
         debug_printf("\nError: Ran out of memory!");
+        num_map_local_vars = oldMapLocalVarsLength;
+        return -1;
     }
 
     map_local_vars = vars;
