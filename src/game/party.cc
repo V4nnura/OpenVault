@@ -775,23 +775,14 @@ static int partyMemberClearItemList()
 // 0x485FC8
 static int partyFixMultipleMembers()
 {
-    Object* object;
-    int critterCount;
-    bool v1;
-    bool v2;
-    Object* candidate;
-    int index;
-    Script* script;
-
     debug_printf("\n\n\n[Party Members]:");
 
-    critterCount = 0;
-
-    // TODO: This loop is wrong. Looks like it can restart itself from the
-    // beginning. Probably was implemented with two nested loops.
-    object = obj_find_first();
+    // TODO: This loop is wrong. Looks like it can restart itself from
+    // the beginning. Probably was implemented with two nested loops.
+    int critterCount = 0;
+    Object* object = obj_find_first();
     while (object != NULL) {
-        v1 = false;
+        bool isPartyMember = false;
 
         if (PID_TYPE(object->pid) == OBJ_TYPE_CRITTER) {
             critterCount++;
@@ -803,29 +794,30 @@ static int partyFixMultipleMembers()
         case 0x10000D2:
         case 0x100003F:
         case 0x100012E:
-            v1 = true;
+            isPartyMember = true;
             break;
         }
 
-        if (v1) {
+        if (isPartyMember) {
             debug_printf("\n   PM: %s", critter_name(object));
 
-            v2 = false;
+            bool remove = false;
             if (object->sid != -1) {
-                candidate = partyMemberFindObjFromPid(object->pid);
+                // NOTE: Uninline.
+                Object* candidate = partyMemberFindObjFromPid(object->pid);
                 if (candidate != NULL && candidate != object) {
                     if (candidate->sid != object->sid) {
                         object->sid = -1;
                     }
-                    v2 = true;
+                    remove = true;
                 }
             } else {
-                v2 = true;
+                remove = true;
             }
 
-            if (v2) {
-                candidate = partyMemberFindObjFromPid(object->pid);
-                if (candidate != object) {
+            if (remove) {
+                // NOTE: Uninline.
+                if (object != partyMemberFindObjFromPid(object->pid)) {
                     debug_printf("\nDestroying evil critter doppleganger!");
 
                     if (object->sid != -1) {
@@ -847,9 +839,10 @@ static int partyFixMultipleMembers()
         object = obj_find_next();
     }
 
-    for (index = 0; index < partyMemberCount; index++) {
+    for (int index = 0; index < partyMemberCount; index++) {
         object = partyMemberList[index].object;
 
+        Script* script;
         if (scr_ptr(object->sid, &script) != -1) {
             script->owner = object;
         } else {
