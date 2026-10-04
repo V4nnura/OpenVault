@@ -1766,9 +1766,7 @@ static void map_place_dude_and_mouse()
 // 0x475F58
 static void square_init()
 {
-    int elevation;
-
-    for (elevation = 0; elevation < ELEVATION_COUNT; elevation++) {
+    for (int elevation = 0; elevation < ELEVATION_COUNT; elevation++) {
         square[elevation] = &(square_data[elevation]);
     }
 }
