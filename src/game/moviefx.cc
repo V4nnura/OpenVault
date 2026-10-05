@@ -95,6 +95,8 @@ void moviefx_exit()
     inside_fade = false;
 
     memset(source_palette, 0, sizeof(source_palette));
+
+    moviefx_initialized = false;
 }
 
 // 0x479B8C
@@ -137,8 +139,6 @@ int moviefx_start(const char* filePath)
         goto out;
     }
 
-    int* movieEffectFrameList;
-
     if (!config_load(&config, path, true)) {
         goto out;
     }
@@ -148,7 +148,11 @@ int moviefx_start(const char* filePath)
         goto out;
     }
 
-    movieEffectFrameList = (int*)mem_malloc(sizeof(*movieEffectFrameList) * movieEffectsLength);
+    if (movieEffectsLength <= 0) {
+        return -1;
+    }
+
+    int* movieEffectFrameList = (int*)mem_malloc(sizeof(*movieEffectFrameList) * movieEffectsLength);
     if (movieEffectFrameList == NULL) {
         goto out;
     }
