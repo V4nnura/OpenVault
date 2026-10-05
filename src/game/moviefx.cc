@@ -139,6 +139,8 @@ int moviefx_start(const char* filePath)
         goto out;
     }
 
+    int* movieEffectFrameList;
+
     if (!config_load(&config, path, true)) {
         goto out;
     }
@@ -152,7 +154,7 @@ int moviefx_start(const char* filePath)
         return -1;
     }
 
-    int* movieEffectFrameList = (int*)mem_malloc(sizeof(*movieEffectFrameList) * movieEffectsLength);
+    movieEffectFrameList = (int*)mem_malloc(sizeof(*movieEffectFrameList) * movieEffectsLength);
     if (movieEffectFrameList == NULL) {
         goto out;
     }
