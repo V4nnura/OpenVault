@@ -30,7 +30,7 @@ int gDialogDisableBK();
 int scr_dialogue_init(int headFid, int reaction);
 int scr_dialogue_exit();
 void gdialog_set_background(int a1);
-void gdialog_display_msg(char* msg);
+void gdialog_display_msg(const char* msg);
 int gDialogStart();
 int gDialogSayMessage();
 int gDialogOption(int messageListId, int messageId, const char* proc, int reaction);
