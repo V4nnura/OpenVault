@@ -6,7 +6,7 @@ namespace fallout {
 int display_init();
 int display_reset();
 void display_exit();
-void display_print(char* string);
+void display_print(const char* string);
 void display_clear();
 void display_redraw();
 void display_scroll_up(int btn, int keyCode);
