@@ -2561,7 +2561,7 @@ static int text_to_rect_wrapped(unsigned char* buffer, Rect* rect, const char* s
 }
 
 // 0x440768
-static int text_to_rect_func(unsigned char* buffer, Rect* rect, char* string, int* textOffset, int height, int pitch, int color, int draw)
+static int text_to_rect_func(unsigned char* buffer, Rect* rect, const char* string, int* textOffset, int height, int pitch, int color, int draw)
 {
     if (string == NULL) {
         if (textOffset != NULL) {
