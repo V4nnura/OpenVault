@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include <string>
+
 #include "game/actions.h"
 #include "game/combat.h"
 #include "game/combatai.h"
@@ -158,8 +160,8 @@ static int gdialog_review();
 static int gdialog_review_init(int* win);
 static int gdialog_review_exit(int* win);
 static void gdialog_review_display(int win, int origin);
-static int text_to_rect_wrapped(unsigned char* buffer, Rect* rect, char* string, int* a4, int height, int pitch, int color);
-static int text_to_rect_func(unsigned char* buffer, Rect* rect, char* string, int* a4, int height, int pitch, int color, int a7);
+static int text_to_rect_wrapped(unsigned char* buffer, Rect* rect, const char* string, int* textOffset, int height, int pitch, int color);
+static int text_to_rect_func(unsigned char* buffer, Rect* rect, const char* string, int* textOffset, int height, int pitch, int color, int draw);
 static int talk_to_create_barter_win();
 static void talk_to_destroy_barter_win();
 static void dialogue_barter_cleanup_tables();
@@ -2553,19 +2555,29 @@ static void gdialog_review_display(int win, int origin)
 }
 
 // 0x440748
-static int text_to_rect_wrapped(unsigned char* buffer, Rect* rect, char* string, int* a4, int height, int pitch, int color)
+static int text_to_rect_wrapped(unsigned char* buffer, Rect* rect, const char* string, int* textOffset, int height, int pitch, int color)
 {
-    return text_to_rect_func(buffer, rect, string, a4, height, pitch, color, 1);
+    return text_to_rect_func(buffer, rect, string, textOffset, height, pitch, color, 1);
 }
 
 // 0x440768
-static int text_to_rect_func(unsigned char* buffer, Rect* rect, char* string, int* a4, int height, int pitch, int color, int a7)
+static int text_to_rect_func(unsigned char* buffer, Rect* rect, char* string, int* textOffset, int height, int pitch, int color, int draw)
 {
+    if (string == NULL) {
+        if (textOffset != NULL) {
+            *textOffset = 0;
+        }
+        return rect->uly;
+    }
+
+    std::string mutableString(string);
+    char* mutableText = mutableString.data();
+
     char* start;
-    if (a4 != NULL) {
-        start = string + *a4;
+    if (textOffset != NULL) {
+        start = mutableText + *textOffset;
     } else {
-        start = string;
+        start = mutableText;
     }
 
     int maxWidth = rect->lrx - rect->ulx;
@@ -2607,14 +2619,14 @@ static int text_to_rect_func(unsigned char* buffer, Rect* rect, char* string, in
                     return rect->uly;
                 }
 
-                if (a7 != 1 || start == string) {
+                if (draw != 1 || start == mutableText) {
                     text_to_buf(buffer + pitch * rect->uly + 10, start, maxWidth, pitch, color);
                 } else {
                     text_to_buf(buffer + pitch * rect->uly, start, maxWidth, pitch, color);
                 }
 
-                if (a4 != NULL) {
-                    *a4 += strlen(start) + 1;
+                if (textOffset != NULL) {
+                    *textOffset += strlen(start) + 1;
                 }
 
                 rect->uly += height;
@@ -2627,7 +2639,7 @@ static int text_to_rect_func(unsigned char* buffer, Rect* rect, char* string, in
             break;
         }
 
-        if (a7 != 0) {
+        if (draw != 0) {
             if (rect->lry - text_height() < rect->uly) {
                 if (end != NULL && *end == '\0') {
                     *end = ' ';
@@ -2636,7 +2648,7 @@ static int text_to_rect_func(unsigned char* buffer, Rect* rect, char* string, in
             }
 
             unsigned char* dest;
-            if (a7 != 1 || start == string) {
+            if (draw != 1 || start == mutableText) {
                 dest = buffer + 10;
             } else {
                 dest = buffer;
@@ -2644,8 +2656,8 @@ static int text_to_rect_func(unsigned char* buffer, Rect* rect, char* string, in
             text_to_buf(dest + pitch * rect->uly, start, maxWidth, pitch, color);
         }
 
-        if (a4 != NULL && end != NULL) {
-            *a4 += strlen(start) + 1;
+        if (textOffset != NULL && end != NULL) {
+            *textOffset += strlen(start) + 1;
         }
 
         rect->uly += height;
@@ -2661,8 +2673,8 @@ static int text_to_rect_func(unsigned char* buffer, Rect* rect, char* string, in
         }
     }
 
-    if (a4 != NULL) {
-        *a4 = 0;
+    if (textOffset != NULL) {
+        *textOffset = 0;
     }
 
     return rect->uly;
