@@ -156,7 +156,7 @@ int obj_look_at(Object* a1, Object* a2)
 }
 
 // 0x48A20C
-int obj_look_at_func(Object* a1, Object* a2, void (*a3)(char* string))
+int obj_look_at_func(Object* critter, Object* target, void (*fn)(const char* string))
 {
     int sid = -1;
     bool scriptOverrides = false;
@@ -218,10 +218,10 @@ int obj_examine(Object* a1, Object* a2)
 // to given callback.
 //
 // [critter] is a critter who's performing an action. Can be NULL.
-// [fn] can be called up to three times when [a2] is an ammo.
+// [fn] can be called up to three times when [target] is an ammo.
 //
 // 0x48A348
-int obj_examine_func(Object* critter, Object* target, void (*fn)(char* string))
+int obj_examine_func(Object* critter, Object* target, void (*fn)(const char* string))
 {
     int sid = -1;
     bool scriptOverrides = false;
