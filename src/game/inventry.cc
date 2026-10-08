@@ -178,7 +178,7 @@ namespace fallout {
 
 #define INVENTORY_MAX_MOVE_ITEMS (999)
 
-typedef void(InventoryPrintItemDescriptionHandler)(char* string);
+typedef void(InventoryPrintItemDescriptionHandler)(const char* string);
 
 typedef enum InventoryArrowFrm {
     INVENTORY_ARROW_FRM_LEFT_ARROW_UP,
