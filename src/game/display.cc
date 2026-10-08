@@ -2,6 +2,8 @@
 
 #include <string.h>
 
+#include <string>
+
 #include "game/art.h"
 #include "game/combat.h"
 #include "game/gmouse.h"
@@ -182,12 +184,12 @@ void display_exit()
 }
 
 // 0x42BE3C
-void display_print(char* str)
+void display_print(const char* str)
 {
     // 0x56E2E8
     static unsigned int lastTime;
 
-    if (!disp_init) {
+    if (!disp_init || str == NULL) {
         return;
     }
 
@@ -209,10 +211,13 @@ void display_print(char* str)
         }
     }
 
+    std::string mutableMessage(str);
+    char* mutableStr = mutableMessage.data();
+
     // TODO: Refactor these two loops.
     char* split_pos = NULL;
     while (true) {
-        while (text_width(str) < DISPLAY_MONITOR_WIDTH - max_disp_ptr - knobWidth) {
+        while (text_width(mutableStr) < DISPLAY_MONITOR_WIDTH - max_disp_ptr - knobWidth) {
             char* temp = disp_str[disp_start];
             int length;
             if (knob != '\0') {
@@ -223,7 +228,7 @@ void display_print(char* str)
             } else {
                 length = DISPLAY_MONITOR_LINE_LENGTH - 1;
             }
-            strncpy(temp, str, length);
+            strncpy(temp, mutableStr, length);
             disp_str[disp_start][DISPLAY_MONITOR_LINE_LENGTH - 1] = '\0';
             disp_start = (disp_start + 1) % max_ptr;
 
@@ -234,12 +239,12 @@ void display_print(char* str)
                 return;
             }
 
-            str = split_pos + 1;
+            mutableStr = split_pos + 1;
             *split_pos = ' ';
             split_pos = NULL;
         }
 
-        char* space = strrchr(str, ' ');
+        char* space = strrchr(mutableStr, ' ');
         if (space == NULL) {
             break;
         }
@@ -262,7 +267,7 @@ void display_print(char* str)
     } else {
         length = DISPLAY_MONITOR_LINE_LENGTH - 1;
     }
-    strncpy(temp, str, length);
+    strncpy(temp, mutableStr, length);
 
     disp_str[disp_start][DISPLAY_MONITOR_LINE_LENGTH - 1] = '\0';
     disp_start = (disp_start + 1) % max_ptr;
