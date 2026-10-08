@@ -16,7 +16,7 @@ int partyMemberRecoverLoad();
 int partyMemberLoad(DB_FILE* stream);
 void partyMemberClear();
 int partyMemberSyncPosition();
-int partyMemberRestingHeal(int a1);
+int partyMemberRestingHeal(int hours);
 Object* partyMemberFindObjFromPid(int pid);
 bool isPartyMember(Object* object);
 int getPartyMemberCount();
