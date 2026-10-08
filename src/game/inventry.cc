@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include <algorithm>
+#include <string>
 
 #include "game/actions.h"
 #include "game/anim.h"
@@ -3104,24 +3105,28 @@ int inven_from_button(int keyCode, Object** a2, Object*** a3, Object** a4)
 
 // Displays item description.
 //
-// The [string] is mutated in the process replacing spaces back and forth
-// for word wrapping purposes.
-//
 // 0x465F74
-void inven_display_msg(char* string)
+void inven_display_msg(const char* string)
 {
     int oldFont = text_curr();
     text_font(101);
 
-    unsigned char* windowBuffer = win_get_buf(i_wid);
-    windowBuffer += 499 * 44 + 297;
+    if (string == NULL) {
+        text_font(oldFont);
+        return;
+    }
 
-    char* c = string;
+    unsigned char* windowBuffer = win_get_buf(i_wid);
+    windowBuffer += INVENTORY_WINDOW_WIDTH * INVENTORY_SUMMARY_Y + INVENTORY_SUMMARY_X;
+
+    std::string mutableString(string);
+
+    char* c = mutableString.data();
     while (c != NULL && *c != '\0') {
         inven_display_msg_line += 1;
         if (inven_display_msg_line > 17) {
             debug_printf("\nError: inven_display_msg: out of bounds!");
-            return;
+            goto end;
         }
 
         char* space = NULL;
@@ -3137,7 +3142,7 @@ void inven_display_msg(char* string)
                 // drawing routine will silently truncate it after reaching
                 // desired length.
                 text_to_buf(windowBuffer + 499 * inven_display_msg_line * text_height(), c, 152, 499, colorTable[992]);
-                return;
+                goto end;
             }
 
             char* nextSpace = space + 1;
@@ -3174,10 +3179,10 @@ void inven_display_msg(char* string)
 
         if (text_width(c) > 152) {
             debug_printf("\nError: inven_display_msg: word too long!");
-            return;
+            goto end;
         }
 
-        text_to_buf(windowBuffer + 499 * inven_display_msg_line * text_height(), c, 152, 499, colorTable[992]);
+        text_to_buf(windowBuffer + INVENTORY_WINDOW_WIDTH * inven_display_msg_line * text_height(), c, 152, INVENTORY_WINDOW_WIDTH, colorTable[992]);
 
         if (space != NULL) {
             c = space + 1;
@@ -3189,6 +3194,7 @@ void inven_display_msg(char* string)
         }
     }
 
+end:
     text_font(oldFont);
 }
 
