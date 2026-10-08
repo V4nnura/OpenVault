@@ -161,21 +161,21 @@ int obj_look_at_func(Object* critter, Object* target, void (*fn)(const char* str
     int sid = -1;
     bool scriptOverrides = false;
 
-    if (critter_is_dead(a1)) {
+    if (critter_is_dead(critter)) {
         return -1;
     }
 
-    if (FID_TYPE(a2->fid) == OBJ_TYPE_TILE) {
+    if (FID_TYPE(target->fid) == OBJ_TYPE_TILE) {
         return -1;
     }
 
     Proto* proto;
-    if (proto_ptr(a2->pid, &proto) == -1) {
+    if (proto_ptr(target->pid, &proto) == -1) {
         return -1;
     }
 
-    if (obj_sid(a2, &sid) != -1) {
-        scr_set_objs(sid, a1, a2);
+    if (obj_sid(target, &sid) != -1) {
+        scr_set_objs(sid, critter, target);
         exec_script_proc(sid, SCRIPT_PROC_LOOK_AT);
 
         Script* script;
@@ -189,19 +189,19 @@ int obj_look_at_func(Object* critter, Object* target, void (*fn)(const char* str
     if (!scriptOverrides) {
         MessageListItem messageListItem;
 
-        if (PID_TYPE(a2->pid) == OBJ_TYPE_CRITTER && critter_is_dead(a2)) {
+        if (PID_TYPE(target->pid) == OBJ_TYPE_CRITTER && critter_is_dead(target)) {
             messageListItem.num = 491 + roll_random(0, 1);
         } else {
             messageListItem.num = 490;
         }
 
         if (message_search(&proto_main_msg_file, &messageListItem)) {
-            const char* objectName = object_name(a2);
+            const char* objectName = object_name(target);
 
             char formattedText[260];
             snprintf(formattedText, sizeof(formattedText), messageListItem.text, objectName);
 
-            a3(formattedText);
+            fn(formattedText);
         }
     }
 
