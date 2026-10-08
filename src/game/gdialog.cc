@@ -961,7 +961,7 @@ static int gdialog_unhide_reply()
 // Renders supplementary message in reply area of the dialog.
 //
 // 0x43E524
-void gdialog_display_msg(char* msg)
+void gdialog_display_msg(const char* msg)
 {
     if (gd_replyWin == -1) {
         debug_printf("\nError: Reply window doesn't exist!");
