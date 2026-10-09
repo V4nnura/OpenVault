@@ -77,7 +77,7 @@ static void nevs_removeprogramreferences(Program* program)
 {
     if (nevs != NULL) {
         for (int i = 0; i < NEVS_COUNT; i++) {
-            Nevs* entry = &(nevs[index]);
+            Nevs* entry = &(nevs[i]);
             if (entry->used && entry->program == program) {
                 // NOTE: Uninline.
                 nevs_free(entry);
