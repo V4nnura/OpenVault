@@ -1154,7 +1154,7 @@ int soundSetReadLimit(Sound* sound, int readLimit)
     }
 
     if (sound == NULL) {
-        soundErrorno = SOUND_NO_DEVICE;
+        soundErrorno = SOUND_NO_SOUND;
         return soundErrorno;
     }
 
@@ -1318,6 +1318,7 @@ void soundMgrDelete(Sound* sound)
 
         if (sound->callback != NULL) {
             sound->callback(sound->callbackUserData, 1);
+            sound->callback = NULL;
         }
 
         audioEngineSoundBufferRelease(sound->soundBuffer);
@@ -1408,11 +1409,15 @@ int soundGetPosition(Sound* sound)
     audioEngineSoundBufferGetCurrentPosition(sound->soundBuffer, &readPos, &writePos);
 
     if ((sound->type & SOUND_TYPE_STREAMING) != 0) {
+        int offset;
+        // Original code uses <=, but equality can also mean the cursor has not
+        // advanced. Match refreshSoundBuffers by treating only < as wrap.
         if (readPos < sound->lastPosition) {
-            readPos += sound->numBytesRead + sound->numBuffers * sound->dataSize - sound->lastPosition;
+            offset = readPos + sound->numBuffers * sound->dataSize - sound->lastPosition;
         } else {
-            readPos -= sound->lastPosition + sound->numBytesRead;
+            offset = readPos - sound->lastPosition;
         }
+        return sound->numBytesRead + offset;
     }
 
     return readPos;
