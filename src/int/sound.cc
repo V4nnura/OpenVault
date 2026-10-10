@@ -17,8 +17,6 @@
 #include "audio_engine.h"
 #include "platform_compat.h"
 #include "plib/gnw/debug.h"
-#include "plib/gnw/memory.h"
-#include "plib/gnw/winmain.h"
 
 namespace fallout {
 
