@@ -577,9 +577,9 @@ char* art_get_name(int fid)
 
     switch (type) {
     case OBJ_TYPE_CRITTER:
-        char code1;
-        char code2;
-        if (art_get_code(anim, weapon_anim, &code1, &code2) == -1) {
+        char crit_weapon;
+        char crit_anim;
+        if (art_get_code(anim, weapon_anim, &crit_weapon, &crit_anim) == -1) {
             return NULL;
         }
 
@@ -590,8 +590,8 @@ char* art_get_name(int fid)
                 "art\\",
                 art[OBJ_TYPE_CRITTER].dir,
                 art[OBJ_TYPE_CRITTER].fileNames + index * 13,
-                code1,
-                code2,
+                crit_weapon,
+                crit_anim,
                 rotation + 47);
         } else {
             snprintf(art_name, sizeof(art_name),
@@ -600,8 +600,8 @@ char* art_get_name(int fid)
                 "art\\",
                 art[OBJ_TYPE_CRITTER].dir,
                 art[OBJ_TYPE_CRITTER].fileNames + index * 13,
-                code1,
-                code2);
+                crit_weapon,
+                crit_anim);
         }
         break;
     case OBJ_TYPE_HEAD:
