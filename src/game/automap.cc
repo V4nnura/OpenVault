@@ -869,7 +869,7 @@ static int AM_ReadEntry(int map, int elevation)
             goto out;
         }
 
-        if (DecodeLZS(cmpbuf, gAutomapEntry.dataSize, ambuf, 10000) == -1) {
+        if (DecodeLZS(cmpbuf, amdbsubhead.dataSize, ambuf, 10000) == -1) {
             debug_printf("\nAUTOMAP: Error decompressing DB entry!\n");
             db_fclose(stream);
             return -1;
