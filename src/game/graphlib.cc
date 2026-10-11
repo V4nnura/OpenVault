@@ -383,8 +383,12 @@ static void DeleteNode(int a1)
 }
 
 // 0x44725C
-int DecodeLZS(unsigned char* src, unsigned char* dest, int length)
+int DecodeLZS(const unsigned char* src, int src_size, unsigned char* dest, int dest_size)
 {
+    if (src == NULL || src_size <= 0 || dest == NULL || dest_size < 0) {
+        return -1;
+    }
+
     text_buf = (unsigned char*)mem_malloc(sizeof(*text_buf) * 4122);
     if (text_buf == NULL) {
         debug_printf("\nGRAPHLIB: Error allocating decompression buffer!\n");
@@ -394,18 +398,29 @@ int DecodeLZS(unsigned char* src, unsigned char* dest, int length)
     int v8 = 4078;
     memset(text_buf, ' ', v8);
 
-    int v21 = 0;
-    int index = 0;
-    while (index < length) {
-        v21 >>= 1;
-        if ((v21 & 0x100) == 0) {
-            v21 = *src++;
-            v21 |= 0xFF00;
+    int flags = 0;
+    int src_index = 0;
+    int dest_index = 0;
+    while (dest_index < dest_size) {
+        flags >>= 1;
+        if ((flags & 0x100) == 0) {
+            if (src_index >= src_size) {
+                mem_free(text_buf);
+                return -1;
+            }
+
+            flags = src[src_index++];
+            flags |= 0xFF00;
         }
 
-        if ((v21 & 0x01) == 0) {
-            int v10 = *src++;
-            int v11 = *src++;
+        if ((flags & 0x01) == 0) {
+            if (src_size - src_index < 2) {
+                mem_free(text_buf);
+                return -1;
+            }
+
+            int v10 = src[src_index++];
+            int v11 = src[src_index++];
 
             v10 |= (v11 & 0xF0) << 4;
             v11 &= 0x0F;
@@ -416,23 +431,26 @@ int DecodeLZS(unsigned char* src, unsigned char* dest, int length)
 
                 unsigned char ch = text_buf[v17];
                 text_buf[v8] = ch;
-                *dest++ = ch;
+                dest[dest_index++] = ch;
 
                 v8 = (v8 + 1) & 0xFFF;
 
-                index++;
-                if (index >= length) {
+                dest_index++;
+                if (dest_index >= dest_size) {
                     break;
                 }
             }
         } else {
-            unsigned char ch = *src++;
+            if (src_index >= src_size) {
+                mem_free(text_buf);
+                return -1;
+            }
+            
+            unsigned char ch = src[src_index++];
             text_buf[v8] = ch;
-            *dest++ = ch;
+            dest[dest_index++] = ch;
 
             v8 = (v8 + 1) & 0xFFF;
-
-            index++;
         }
     }
 
