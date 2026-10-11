@@ -1102,6 +1102,10 @@ int gDialogReply(Program* program, int messageListId, int messageId)
 // 0x43E81C
 int gDialogReplyStr(Program* program, int messageListId, const char* text)
 {
+    if (text == NULL) {
+        text = "";
+    }
+
     gdAddReviewReplyStr(text);
 
     dialogBlock.program = program;
@@ -1109,7 +1113,7 @@ int gDialogReplyStr(Program* program, int messageListId, const char* text)
     dialogBlock.replyMessageListId = -4;
     dialogBlock.replyMessageId = -4;
 
-    strcpy(dialogBlock.replyText, text);
+    snprintf(dialogBlock.replyText, sizeof(dialogBlock.replyText), "%s", text);
 
     gdNumOptions = 0;
 
