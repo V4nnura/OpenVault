@@ -15,7 +15,7 @@ extern int match_position;
 unsigned char HighRGB(unsigned char color);
 void bit1exbit8(int ulx, int uly, int lrx, int lry, int offset_x, int offset_y, unsigned char* src, unsigned char* dest, int src_pitch, int dest_pitch, unsigned char color);
 int CompLZS(unsigned char* a1, unsigned char* a2, int a3);
-int DecodeLZS(unsigned char* a1, unsigned char* a2, int a3);
+int DecodeLZS(const unsigned char* src, int src_size, unsigned char* dest, int dest_size);
 void InitGreyTable(int a1, int a2);
 void grey_buf(unsigned char* surface, int width, int height, int pitch);
 
