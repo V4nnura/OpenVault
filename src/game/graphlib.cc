@@ -431,7 +431,7 @@ int DecodeLZS(const unsigned char* src, int src_size, unsigned char* dest, int d
 
                 unsigned char ch = text_buf[v17];
                 text_buf[v8] = ch;
-                dest[dest_index++] = ch;
+                dest[dest_index] = ch;
 
                 v8 = (v8 + 1) & 0xFFF;
 
