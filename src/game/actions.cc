@@ -44,7 +44,7 @@ static int action_melee(Attack* attack, int anim);
 static int action_ranged(Attack* attack, int anim);
 static int is_next_to(Object* obj1, Object* obj2);
 static int action_climb_ladder(Object* critter, Object* ladder);
-static int report_explosion(Attack* attack, Object* a2);
+static int report_explosion(Attack* attack, Object* sourceObj);
 static int finished_explosion(Object* a1, Object* a2);
 static int compute_explosion_damage(int min, int max, Object* def, int* knockback_distance);
 static int can_talk_to(Object* obj, Object* critter);
@@ -1532,7 +1532,7 @@ int pick_fall(Object* obj, int anim)
 }
 
 // 0x412A6C
-int action_explode(int tile, int elevation, int minDamage, int maxDamage, Object* a5, bool premature)
+int action_explode(int tile, int elevation, int minDamage, int maxDamage, Object* sourceObj, bool premature)
 {
     if (premature && action_in_explode) {
         return -2;
@@ -1631,7 +1631,7 @@ int action_explode(int tile, int elevation, int minDamage, int maxDamage, Object
             register_object_must_erase(adjacentExplosions[rotation]);
         }
 
-        register_object_must_call(attack, a5, (AnimationCallback*)report_explosion, -1);
+        register_object_must_call(attack, sourceObj, (AnimationCallback*)report_explosion, -1);
         register_object_must_call(NULL, NULL, (AnimationCallback*)finished_explosion, -1);
         if (register_end() == -1) {
             action_in_explode = false;
@@ -1662,7 +1662,7 @@ int action_explode(int tile, int elevation, int minDamage, int maxDamage, Object
             }
         }
 
-        report_explosion(attack, a5);
+        report_explosion(attack, sourceObj);
 
         combat_explode_scenery(explosion, NULL);
 
@@ -1677,7 +1677,7 @@ int action_explode(int tile, int elevation, int minDamage, int maxDamage, Object
 }
 
 // 0x412EBC
-static int report_explosion(Attack* attack, Object* a2)
+static int report_explosion(Attack* attack, Object* sourceObj)
 {
     bool mainTargetWasDead;
     if (attack->defender != NULL) {
@@ -1697,27 +1697,27 @@ static int report_explosion(Attack* attack, Object* a2)
 
     Object* anyDefender = NULL;
     int xp = 0;
-    if (a2 != NULL) {
-        if (attack->defender != NULL && attack->defender != a2) {
+    if (sourceObj != NULL) {
+        if (attack->defender != NULL && attack->defender != sourceObj) {
             if ((attack->defender->data.critter.combat.results & DAM_DEAD) != 0) {
-                if (a2 == obj_dude && !mainTargetWasDead) {
+                if (sourceObj == obj_dude && !mainTargetWasDead) {
                     xp += critter_kill_exps(attack->defender);
                 }
             } else {
-                critter_set_who_hit_me(attack->defender, a2);
+                critter_set_who_hit_me(attack->defender, sourceObj);
                 anyDefender = attack->defender;
             }
         }
 
         for (int index = 0; index < attack->extrasLength; index++) {
             Object* critter = attack->extras[index];
-            if (critter != a2) {
+            if (critter != sourceObj) {
                 if ((critter->data.critter.combat.results & DAM_DEAD) != 0) {
-                    if (a2 == obj_dude && !extrasWasDead[index]) {
+                    if (sourceObj == obj_dude && !extrasWasDead[index]) {
                         xp += critter_kill_exps(critter);
                     }
                 } else {
-                    critter_set_who_hit_me(critter, a2);
+                    critter_set_who_hit_me(critter, sourceObj);
 
                     if (anyDefender == NULL) {
                         anyDefender = critter;
@@ -1730,7 +1730,7 @@ static int report_explosion(Attack* attack, Object* a2)
             if (!isInCombat()) {
                 CombatStartData combat;
                 combat.attacker = anyDefender;
-                combat.defender = a2;
+                combat.defender = sourceObj;
                 combat.actionPointsBonus = 0;
                 combat.accuracyBonus = 0;
                 combat.damageBonus = 0;
@@ -1745,7 +1745,7 @@ static int report_explosion(Attack* attack, Object* a2)
     mem_free(attack);
     game_ui_enable();
 
-    if (a2 == obj_dude) {
+    if (sourceObj == obj_dude) {
         combat_give_exps(xp);
     }
 
