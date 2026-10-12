@@ -244,9 +244,7 @@ void combat_ai_reset()
 // 0x424A10
 int combat_ai_exit()
 {
-    int index;
-
-    for (index = 0; index < num_caps; index++) {
+    for (int index = 0; index < num_caps; index++) {
         AiPacket* ai = &(cap[index]);
 
         if (ai->name != NULL) {
@@ -403,8 +401,8 @@ static void ai_run_away(Object* critter)
         int rotation = tile_dir(obj_dude->tile, critter->tile);
 
         int destination = critter->tile;
-        int action_points = combatData->ap;
-        for (action_points > 0; action_points -= 1;) {
+        int action_points;
+        for (action_points = combatData->ap; action_points > 0; action_points -= 1) {
             destination = tile_num_in_direction(critter->tile, rotation, action_points);
             if (make_path(critter, critter->tile, destination, NULL, 1) > 0) {
                 break;
