@@ -39,26 +39,26 @@ static ExternalVariable varHashTable[1013];
 // 0x439A10
 static unsigned int hashName(const char* identifier)
 {
-    unsigned int v1 = 0;
-    const char* pch = identifier;
-    while (*pch != '\0') {
-        int ch = *pch & 0xFF;
-        v1 += (tolower(ch) & 0xFF) + (v1 * 8) + (v1 >> 29);
-        pch++;
+    unsigned int h = 0;
+    const char* p = identifier;
+    while (*p != '\0') {
+        int ch = *p & 0xFF;
+        h += (tolower(ch) & 0xFF) + (h * 8) + (h >> 29);
+        p++;
     }
 
-    v1 = v1 % 1013;
-    return v1;
+    h = h % 1013;
+    return h;
 }
 
 // 0x439A58
 static ExternalProcedure* findProc(const char* identifier)
 {
     // NOTE: Uninline.
-    unsigned int v1 = hashName(identifier);
-    unsigned int v2 = v1;
+    unsigned int idx = hashName(identifier);
+    unsigned int start = idx;
 
-    ExternalProcedure* externalProcedure = &(procHashTable[v1]);
+    ExternalProcedure* externalProcedure = &(procHashTable[idx]);
     if (externalProcedure->program != NULL) {
         if (compat_stricmp(externalProcedure->name, identifier) == 0) {
             return externalProcedure;
@@ -66,18 +66,18 @@ static ExternalProcedure* findProc(const char* identifier)
     }
 
     do {
-        v1 += 7;
-        if (v1 >= 1013) {
-            v1 -= 1013;
+        idx += 7;
+        if (idx >= 1013) {
+            idx -= 1013;
         }
 
-        externalProcedure = &(procHashTable[v1]);
+        externalProcedure = &(procHashTable[idx]);
         if (externalProcedure->program != NULL) {
             if (compat_stricmp(externalProcedure->name, identifier) == 0) {
                 return externalProcedure;
             }
         }
-    } while (v1 != v2);
+    } while (idx != start);
 
     return NULL;
 }
@@ -86,25 +86,25 @@ static ExternalProcedure* findProc(const char* identifier)
 static ExternalProcedure* findEmptyProc(const char* identifier)
 {
     // NOTE: Uninline.
-    unsigned int v1 = hashName(identifier);
-    unsigned int a2 = v1;
+    unsigned int idx = hashName(identifier);
+    unsigned int start = idx;
 
-    ExternalProcedure* externalProcedure = &(procHashTable[v1]);
+    ExternalProcedure* externalProcedure = &(procHashTable[idx]);
     if (externalProcedure->name[0] == '\0') {
         return externalProcedure;
     }
 
     do {
-        v1 += 7;
-        if (v1 >= 1013) {
-            v1 -= 1013;
+        idx += 7;
+        if (idx >= 1013) {
+            idx -= 1013;
         }
 
-        externalProcedure = &(procHashTable[v1]);
+        externalProcedure = &(procHashTable[idx]);
         if (externalProcedure->name[0] == '\0') {
             return externalProcedure;
         }
-    } while (v1 != a2);
+    } while (idx != start);
 
     return NULL;
 }
@@ -113,30 +113,30 @@ static ExternalProcedure* findEmptyProc(const char* identifier)
 static ExternalVariable* findVar(const char* identifier)
 {
     // NOTE: Uninline.
-    unsigned int v1 = hashName(identifier);
-    unsigned int v2 = v1;
+    unsigned int idx = hashName(identifier);
+    unsigned int start = idx;
 
-    ExternalVariable* exportedVariable = &(varHashTable[v1]);
+    ExternalVariable* exportedVariable = &(varHashTable[idx]);
     if (compat_stricmp(exportedVariable->name, identifier) == 0) {
         return exportedVariable;
     }
 
     do {
-        exportedVariable = &(varHashTable[v1]);
+        exportedVariable = &(varHashTable[idx]);
         if (exportedVariable->name[0] == '\0') {
             break;
         }
 
-        v1 += 7;
-        if (v1 >= 1013) {
-            v1 -= 1013;
+        idx += 7;
+        if (idx >= 1013) {
+            idx -= 1013;
         }
 
-        exportedVariable = &(varHashTable[v1]);
+        exportedVariable = &(varHashTable[idx]);
         if (compat_stricmp(exportedVariable->name, identifier) == 0) {
             return exportedVariable;
         }
-    } while (v1 != v2);
+    } while (idx != start);
 
     return NULL;
 }
@@ -145,25 +145,25 @@ static ExternalVariable* findVar(const char* identifier)
 static ExternalVariable* findEmptyVar(const char* identifier)
 {
     // NOTE: Uninline.
-    unsigned int v1 = hashName(identifier);
-    unsigned int v2 = v1;
+    unsigned int idx = hashName(identifier);
+    unsigned int start = idx;
 
-    ExternalVariable* exportedVariable = &(varHashTable[v1]);
+    ExternalVariable* exportedVariable = &(varHashTable[idx]);
     if (exportedVariable->name[0] == '\0') {
         return exportedVariable;
     }
 
     do {
-        v1 += 7;
-        if (v1 >= 1013) {
-            v1 -= 1013;
+        idx += 7;
+        if (idx >= 1013) {
+            idx -= 1013;
         }
 
-        exportedVariable = &(varHashTable[v1]);
+        exportedVariable = &(varHashTable[idx]);
         if (exportedVariable->name[0] == '\0') {
             return exportedVariable;
         }
-    } while (v1 != v2);
+    } while (idx != start);
 
     return NULL;
 }
