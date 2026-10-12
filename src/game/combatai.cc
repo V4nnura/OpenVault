@@ -404,7 +404,7 @@ static void ai_run_away(Object* critter)
 
         int destination = critter->tile;
         int action_points = combatData->ap;
-        for (action_points > 0; action_points -= 1) {
+        for (action_points > 0; action_points -= 1;) {
             destination = tile_num_in_direction(critter->tile, rotation, action_points);
             if (make_path(critter, critter->tile, destination, NULL, 1) > 0) {
                 break;
