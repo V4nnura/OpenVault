@@ -1686,7 +1686,7 @@ static int report_explosion(Attack* attack, Object* a2)
         mainTargetWasDead = false;
     }
 
-    bool extrasWasDead[6];
+    bool extrasWasDead[EXPLOSION_TARGET_COUNT] = {};
     for (int index = 0; index < attack->extrasLength; index++) {
         extrasWasDead[index] = (attack->extras[index]->data.critter.combat.results & DAM_DEAD) != 0;
     }
