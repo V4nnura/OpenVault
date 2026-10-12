@@ -398,14 +398,13 @@ static void ai_run_away(Object* critter)
     AiPacket* ai = ai_cap(critter);
     int distance = obj_dist(critter, obj_dude);
     if (distance < ai->max_dist) {
-        int rotation;
-        int destination;
-        int action_points;
-
         combatData->maneuver |= CRITTER_MANUEVER_FLEEING;
 
-        rotation = tile_dir(obj_dude->tile, critter->tile);
-        for (action_points = combatData->ap; action_points > 0; action_points -= 1) {
+        int rotation = tile_dir(obj_dude->tile, critter->tile);
+
+        int destination = critter->tile;
+        int action_points = combatData->ap;
+        for (action_points > 0; action_points -= 1) {
             destination = tile_num_in_direction(critter->tile, rotation, action_points);
             if (make_path(critter, critter->tile, destination, NULL, 1) > 0) {
                 break;
