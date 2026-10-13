@@ -102,7 +102,7 @@ int partyMemberAdd(Object* object)
     partyMemberCount++;
 
     if (scr_ptr(object->sid, &script) != -1) {
-        script->scr_flags |= (SCRIPT_FLAG_0x08 | SCRIPT_FLAG_0x10);
+        script->scr_flags |= (SCRIPT_FLAG_NO_SAVE | SCRIPT_FLAG_NO_REMOVE);
         script->scr_oid = object->id;
 
         object->sid = ((object->pid & 0xFFFFFF) + 18000) | (SCRIPT_TYPE_CRITTER << 24);
@@ -153,7 +153,7 @@ int partyMemberRemove(Object* object)
     partyMemberCount--;
 
     if (scr_ptr(object->sid, &script) != -1) {
-        script->scr_flags &= ~(SCRIPT_FLAG_0x08 | SCRIPT_FLAG_0x10);
+        script->scr_flags &= ~(SCRIPT_FLAG_NO_SAVE | SCRIPT_FLAG_NO_REMOVE);
     }
 
     return 0;
@@ -176,7 +176,7 @@ int partyMemberPrepSave()
         }
 
         if (scr_ptr(partyMember->object->sid, &script) != -1) {
-            script->scr_flags &= ~(SCRIPT_FLAG_0x08 | SCRIPT_FLAG_0x10);
+            script->scr_flags &= ~(SCRIPT_FLAG_NO_SAVE | SCRIPT_FLAG_NO_REMOVE);
         }
     }
 
@@ -198,7 +198,7 @@ int partyMemberUnPrepSave()
         }
 
         if (scr_ptr(partyMember->object->sid, &script) != -1) {
-            script->scr_flags |= (SCRIPT_FLAG_0x08 | SCRIPT_FLAG_0x10);
+            script->scr_flags |= (SCRIPT_FLAG_NO_SAVE | SCRIPT_FLAG_NO_REMOVE);
         }
     }
 
@@ -281,7 +281,7 @@ int partyMemberPrepLoad()
                 exit(1);
             }
 
-            script->scr_flags &= ~(SCRIPT_FLAG_0x08 | SCRIPT_FLAG_0x10);
+            script->scr_flags &= ~(SCRIPT_FLAG_NO_SAVE | SCRIPT_FLAG_NO_REMOVE);
 
             scr_remove(script->scr_id);
         } else {
@@ -326,12 +326,12 @@ int partyMemberRecoverLoad()
             script->scr_id = partyMember->object->sid;
 
             script->program = NULL;
-            script->scr_flags &= ~(SCRIPT_FLAG_0x01 | SCRIPT_FLAG_0x04);
+            script->scr_flags &= ~(SCRIPT_FLAG_LOADED | SCRIPT_FLAG_EXECUTED);
 
             mem_free(partyMember->script);
             partyMember->script = NULL;
 
-            script->scr_flags |= (SCRIPT_FLAG_0x08 | SCRIPT_FLAG_0x10);
+            script->scr_flags |= (SCRIPT_FLAG_NO_SAVE | SCRIPT_FLAG_NO_REMOVE);
 
             if (partyMember->vars != NULL) {
                 script->scr_local_var_offset = map_malloc_local_var(script->scr_num_local_vars);
@@ -601,7 +601,7 @@ static int partyMemberPrepItemSave(Object* object)
             exit(1);
         }
 
-        script->scr_flags |= (SCRIPT_FLAG_0x08 | SCRIPT_FLAG_0x10);
+        script->scr_flags |= (SCRIPT_FLAG_NO_SAVE | SCRIPT_FLAG_NO_REMOVE);
     }
 
     Inventory* inventory = &(object->data.inventory);
@@ -712,7 +712,7 @@ static int partyMemberItemRecover(PartyMember* partyMember)
     script->scr_id = partyMemberItemCount | (SCRIPT_TYPE_ITEM << 24);
 
     script->program = NULL;
-    script->scr_flags &= ~(SCRIPT_FLAG_0x01 | SCRIPT_FLAG_0x04 | SCRIPT_FLAG_0x08 | SCRIPT_FLAG_0x10);
+    script->scr_flags &= ~(SCRIPT_FLAG_LOADED | SCRIPT_FLAG_EXECUTED | SCRIPT_FLAG_NO_SAVE | SCRIPT_FLAG_NO_REMOVE);
 
     partyMemberItemCount++;
 
