@@ -2924,7 +2924,7 @@ static void insertProgram(Program* program)
 // 0x461E90
 void runProgram(Program* program)
 {
-    program->flags |= PROGRAM_FLAG_0x02;
+    program->flags |= PROGRAM_FLAG_RUNNING;
     insertProgram(program);
 }
 
