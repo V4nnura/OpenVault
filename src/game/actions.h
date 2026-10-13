@@ -34,7 +34,7 @@ int pick_hex();
 bool is_hit_from_front(Object* a1, Object* a2);
 bool can_see(Object* a1, Object* a2);
 int pick_fall(Object* obj, int anim);
-int action_explode(int tile, int elevation, int minDamage, int maxDamage, Object* a5, bool a6);
+int action_explode(int tile, int elevation, int minDamage, int maxDamage, Object* sourceObj, bool premature);
 int action_talk_to(Object* a1, Object* a2);
 void action_dmg(int tile, int elevation, int minDamage, int maxDamage, int damageType, bool animated, bool bypassArmor);
 
