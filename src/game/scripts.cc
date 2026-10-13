@@ -1071,7 +1071,7 @@ int exec_script_proc(int sid, int action)
     script->scriptOverrides = 0;
 
     bool programLoaded = false;
-    if ((script->scr_flags & SCRIPT_FLAG_0x01) == 0) {
+    if ((script->scr_flags & SCRIPT_FLAG_LOADED) == 0) {
         char name[16];
         if (scr_list_str(script->scr_script_idx, name, sizeof(name)) == -1) {
             return -1;
@@ -1089,7 +1089,7 @@ int exec_script_proc(int sid, int action)
         }
 
         programLoaded = true;
-        script->scr_flags |= SCRIPT_FLAG_0x01;
+        script->scr_flags |= SCRIPT_FLAG_LOADED;
     }
 
     Program* program = script->program;
@@ -1115,7 +1115,7 @@ int exec_script_proc(int sid, int action)
         script->target = script->owner;
     }
 
-    script->scr_flags |= SCRIPT_FLAG_0x04;
+    script->scr_flags |= SCRIPT_FLAG_EXECUTED;
 
     if (programLoaded) {
         scr_build_lookup_table(script);
@@ -1295,7 +1295,7 @@ int scr_set_dude_script()
         return -1;
     }
 
-    script->scr_flags |= (SCRIPT_FLAG_0x08 | SCRIPT_FLAG_0x10);
+    script->scr_flags |= (SCRIPT_FLAG_NO_SAVE | SCRIPT_FLAG_NO_REMOVE);
 
     return 0;
 }
@@ -1311,7 +1311,7 @@ int scr_clear_dude_script()
     if (obj_dude->sid != -1) {
         Script* script;
         if (scr_ptr(obj_dude->sid, &script) != -1) {
-            script->scr_flags &= ~(SCRIPT_FLAG_0x08 | SCRIPT_FLAG_0x10);
+            script->scr_flags &= ~(SCRIPT_FLAG_NO_SAVE | SCRIPT_FLAG_NO_REMOVE);
         }
 
         scr_remove(obj_dude->sid);
@@ -1702,7 +1702,7 @@ int scr_save(DB_FILE* stream)
                 Script* script = &(scriptExtent->scripts[index]);
 
                 lastScriptExtent = scriptList->tail;
-                if ((script->scr_flags & SCRIPT_FLAG_0x08) != 0) {
+                if ((script->scr_flags & SCRIPT_FLAG_NO_SAVE) != 0) {
                     scriptCount--;
 
                     int backwardsIndex = lastScriptExtent->length - 1;
@@ -1712,7 +1712,7 @@ int scr_save(DB_FILE* stream)
 
                     while (lastScriptExtent != scriptExtent || backwardsIndex > index) {
                         Script* backwardsScript = &(lastScriptExtent->scripts[backwardsIndex]);
-                        if ((backwardsScript->scr_flags & SCRIPT_FLAG_0x08) == 0) {
+                        if ((backwardsScript->scr_flags & SCRIPT_FLAG_NO_SAVE) == 0) {
                             break;
                         }
 
@@ -1759,7 +1759,7 @@ int scr_save(DB_FILE* stream)
                 int index;
                 for (index = 0; index < lastScriptExtent->length; index++) {
                     Script* script = &(lastScriptExtent->scripts[index]);
-                    if ((script->scr_flags & SCRIPT_FLAG_0x08) != 0) {
+                    if ((script->scr_flags & SCRIPT_FLAG_NO_SAVE) != 0) {
                         break;
                     }
                 }
@@ -1885,7 +1885,7 @@ int scr_load(DB_FILE* stream)
                 script->source = NULL;
                 script->target = NULL;
                 script->program = NULL;
-                script->scr_flags &= ~SCRIPT_FLAG_0x01;
+                script->scr_flags &= ~SCRIPT_FLAG_LOADED;
             }
 
             extent->next = NULL;
@@ -1907,7 +1907,7 @@ int scr_load(DB_FILE* stream)
                     script->source = NULL;
                     script->target = NULL;
                     script->program = NULL;
-                    script->scr_flags &= ~SCRIPT_FLAG_0x01;
+                    script->scr_flags &= ~SCRIPT_FLAG_LOADED;
                 }
 
                 prevExtent->next = extent;
@@ -2118,13 +2118,13 @@ int scr_remove(int sid)
     }
 
     Script* script = &(scriptListExtent->scripts[index]);
-    if ((script->scr_flags & SCRIPT_FLAG_0x01) != 0) {
+    if ((script->scr_flags & SCRIPT_FLAG_LOADED) != 0) {
         if (script->program != NULL) {
             script->program = NULL;
         }
     }
 
-    if ((script->scr_flags & SCRIPT_FLAG_0x10) == 0) {
+    if ((script->scr_flags & SCRIPT_FLAG_NO_REMOVE) == 0) {
         // NOTE: Uninline.
         scripts_clear_combat_requests(script);
 
@@ -2199,12 +2199,12 @@ int scr_remove_all()
             while (scriptListExtent != NULL && index < scriptListExtent->length) {
                 Script* script = &(scriptListExtent->scripts[index]);
 
-                if ((script->scr_flags & SCRIPT_FLAG_0x10) != 0) {
+                if ((script->scr_flags & SCRIPT_FLAG_NO_REMOVE) != 0) {
                     // NOTE: Clear dangling program pointer if script was loaded.
                     // Fixes sanitizer issue #223: program points to freed memory after load.
-                    if ((script->scr_flags & SCRIPT_FLAG_0x01) != 0) {
+                    if ((script->scr_flags & SCRIPT_FLAG_LOADED) != 0) {
                         script->program = NULL;
-                        script->scr_flags &= ~SCRIPT_FLAG_0x01;
+                        script->scr_flags &= ~SCRIPT_FLAG_LOADED;
                     }
                     index++;
                 } else {
@@ -2276,7 +2276,7 @@ Script* scr_find_first_at(int elevation)
     }
 
     Script* script = &(scr_find_first_ptr->scripts[0]);
-    if ((script->scr_flags & SCRIPT_FLAG_0x02) != 0 || builtTileGetElevation(script->sp.built_tile) != elevation) {
+    if ((script->scr_flags & SCRIPT_FLAG_NO_SPATIAL) != 0 || builtTileGetElevation(script->sp.built_tile) != elevation) {
         script = scr_find_next_at();
     }
 
@@ -2308,7 +2308,7 @@ Script* scr_find_next_at()
         }
 
         Script* script = &(scriptListExtent->scripts[scriptIndex]);
-        if ((script->scr_flags & SCRIPT_FLAG_0x02) == 0 && builtTileGetElevation(script->sp.built_tile) == scr_find_first_elev) {
+        if ((script->scr_flags & SCRIPT_FLAG_NO_SPATIAL) == 0 && builtTileGetElevation(script->sp.built_tile) == scr_find_first_elev) {
             break;
         }
     }
