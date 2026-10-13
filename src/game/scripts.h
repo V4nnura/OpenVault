@@ -16,11 +16,12 @@ namespace fallout {
 #define SCRIPT_DIALOG_MESSAGE_LIST_CAPACITY 1000
 
 typedef enum ScriptFlags {
-    SCRIPT_FLAG_0x01 = 0x01,
-    SCRIPT_FLAG_0x02 = 0x02,
-    SCRIPT_FLAG_0x04 = 0x04,
-    SCRIPT_FLAG_0x08 = 0x08,
-    SCRIPT_FLAG_0x10 = 0x10,
+    // Script has been loaded.
+    SCRIPT_FLAG_LOADED = 0x01,
+    SCRIPT_FLAG_NO_SPATIAL = 0x02,
+    SCRIPT_FLAG_EXECUTED = 0x04,
+    SCRIPT_FLAG_NO_SAVE = 0x08,
+    SCRIPT_FLAG_NO_REMOVE = 0x10,
 } ScriptFlags;
 
 typedef enum ScriptRequests {
