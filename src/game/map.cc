@@ -1041,7 +1041,7 @@ int map_load_file(DB_FILE* stream)
             Script* script;
             scr_ptr(map_script_id, &script);
             script->scr_script_idx = map_data.scriptIndex - 1;
-            script->scr_flags |= SCRIPT_FLAG_0x08;
+            script->scr_flags |= SCRIPT_FLAG_NO_SAVE;
             object->id = new_obj_id();
             script->scr_oid = object->id;
             script->owner = object;
