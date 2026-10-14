@@ -102,10 +102,14 @@ typedef enum ProgramFlags {
 
     // Program is in waiting state with `checkWaitFunc` set.
     PROGRAM_IS_WAITING = 0x10,
-    PROGRAM_FLAG_0x20 = 0x20,
-    PROGRAM_FLAG_0x40 = 0x40,
+    // Program has an attached child created via O_CALLSTART.
+    // Also set in many opcodes that might trigger event procedures (probably to prevent them from disrupting current execution).
+    PROGRAM_FLAG_CHILD_CALL = 0x20,
+    // Set when current synchronous procedure call is finished.
+    PROGRAM_FLAG_FINISHED = 0x40,
     PROGRAM_FLAG_CRITICAL_SECTION = 0x80,
-    PROGRAM_FLAG_0x0100 = 0x0100,
+    // Program has an attached child created via O_SPAWN.
+    PROGRAM_FLAG_CHILD_SPAWN = 0x0100,
 } ProgramFlags;
 
 enum RawValueType {
@@ -168,7 +172,7 @@ typedef struct Program {
     jmp_buf env;
     unsigned int waitEnd; // end time of timer (field_74 + wait time)
     unsigned int waitStart; // time when wait was called
-    int field_78; // time when program begin execution (for the first time)?, -1 - program never executed
+    int startTime; // time when program begin execution (for the first time), in seconds, -1 - program never executed (not used)
     InterpretCheckWaitFunc* checkWaitFunc;
     int flags; // flags
     int windowId;
