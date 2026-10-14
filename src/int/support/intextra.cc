@@ -3015,7 +3015,8 @@ static void op_rm_mult_objs_from_inven(Program* program)
     Object* owner = static_cast<Object*>(programStackPopPointer(program));
 
     if (owner == NULL || item == NULL) {
-        // FIXME: Ruined stack.
+        dbg_error(program, "rm_mult_objs_from_inven", SCRIPT_ERROR_OBJECT_IS_NULL);
+        programStackPushInteger(program, 0);
         return;
     }
 
