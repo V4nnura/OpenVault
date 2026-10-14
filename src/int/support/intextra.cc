@@ -272,7 +272,7 @@ static void op_set_map_start(Program* program)
 // 0x44B94C
 static void op_override_map_start(Program* program)
 {
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
 
     int rotation = programStackPopInteger(program);
     int elevation = programStackPopInteger(program);
@@ -303,7 +303,7 @@ static void op_override_map_start(Program* program)
         tile_refresh_display();
     }
 
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 }
 
 // 0x44BAA4
@@ -667,20 +667,20 @@ out:
 // 0x44C4FC
 static void op_destroy_object(Program* program)
 {
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
 
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
     if (object == NULL) {
         dbg_error(program, "destroy_object", SCRIPT_ERROR_OBJECT_IS_NULL);
-        program->flags &= ~PROGRAM_FLAG_0x20;
+        program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
         return;
     }
 
     if (PID_TYPE(object->pid) == OBJ_TYPE_CRITTER) {
         if (isLoadingGame()) {
             debug_printf("\nError: attempt to destroy critter in load/save-game: %s!", program->name);
-            program->flags &= ~PROGRAM_FLAG_0x20;
+            program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
             return;
         }
     }
@@ -717,10 +717,10 @@ static void op_destroy_object(Program* program)
         tile_refresh_rect(&rect, map_elevation);
     }
 
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 
     if (isSelf) {
-        program->flags |= PROGRAM_FLAG_0x0100;
+        program->flags |= PROGRAM_FLAG_CHILD_SPAWN;
     }
 }
 
@@ -1477,11 +1477,11 @@ static void op_attack(Program* program)
         return;
     }
 
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
 
     Object* self = scr_find_obj_from_program(program);
     if (self == NULL) {
-        program->flags &= ~PROGRAM_FLAG_0x20;
+        program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
         return;
     }
 
@@ -1490,33 +1490,33 @@ static void op_attack(Program* program)
     if (self->elevation != target->elevation || self->elevation != map_elevation) {
         dbg_print_com_data(self, target);
         debug_printf("\n   But attacker/target are on different elevation (ignored)");
-        program->flags &= ~PROGRAM_FLAG_0x20;
+        program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
         return;
     }
 
     if (!critter_is_active(self)) {
         dbg_print_com_data(self, target);
         debug_printf("\n   But is already Inactive (Dead/Stunned)");
-        program->flags &= ~PROGRAM_FLAG_0x20;
+        program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
         return;
     }
 
     if (!critter_is_active(target)) {
         dbg_print_com_data(self, target);
         debug_printf("\n   But target is already dead");
-        program->flags &= ~PROGRAM_FLAG_0x20;
+        program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
         return;
     }
 
     if ((target->data.critter.combat.maneuver & CRITTER_MANUEVER_FLEEING) != 0) {
         dbg_print_com_data(self, target);
         debug_printf("\n   But target is AFRAID");
-        program->flags &= ~PROGRAM_FLAG_0x20;
+        program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
         return;
     }
 
     if (dialog_active()) {
-        program->flags &= ~PROGRAM_FLAG_0x20;
+        program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
         return;
     }
 
@@ -1551,7 +1551,7 @@ static void op_attack(Program* program)
         scripts_request_combat(&combat);
     }
 
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 }
 
 // 0x44DC84
@@ -1908,7 +1908,7 @@ static void op_kill_critter(Program* program)
         return;
     }
 
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
 
     Object* self = scr_find_obj_from_program(program);
     bool isSelf = self == object;
@@ -1917,10 +1917,10 @@ static void op_kill_critter(Program* program)
     combat_delete_critter(object);
     critter_kill(object, deathFrame, 1);
 
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 
     if (isSelf) {
-        program->flags |= PROGRAM_FLAG_0x0100;
+        program->flags |= PROGRAM_FLAG_CHILD_SPAWN;
     }
 }
 
@@ -1986,7 +1986,7 @@ static void op_kill_critter_type(Program* program)
         return;
     }
 
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
 
     Object* previousObj = NULL;
     int count = 0;
@@ -2003,7 +2003,7 @@ static void op_kill_critter_type(Program* program)
             if (obj == previousObj || count > 200) {
                 dbg_error(program, "kill_critter_type", SCRIPT_ERROR_FOLLOWS);
                 debug_printf(" Infinite loop destroying critters!");
-                program->flags &= ~PROGRAM_FLAG_0x20;
+                program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
                 return;
             }
 
@@ -2040,13 +2040,13 @@ static void op_kill_critter_type(Program* program)
         obj = obj_find_next();
     }
 
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 }
 
 // 0x44E918
 static void op_critter_damage(Program* program)
 {
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
 
     int damageTypeWithFlags = programStackPopInteger(program);
     int amount = programStackPopInteger(program);
@@ -2054,14 +2054,14 @@ static void op_critter_damage(Program* program)
 
     if (object == NULL) {
         dbg_error(program, "critter_damage", SCRIPT_ERROR_OBJECT_IS_NULL);
-        program->flags &= ~PROGRAM_FLAG_0x20;
+        program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
         return;
     }
 
     if (PID_TYPE(object->pid) != OBJ_TYPE_CRITTER) {
         dbg_error(program, "critter_damage", SCRIPT_ERROR_FOLLOWS);
         debug_printf(" Can't call on non-critters!");
-        program->flags &= ~PROGRAM_FLAG_0x20;
+        program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
         return;
     }
 
@@ -2075,10 +2075,10 @@ static void op_critter_damage(Program* program)
     int damageType = damageTypeWithFlags & ~(0x100 | 0x200);
     action_dmg(object->tile, object->elevation, amount, amount, damageType, animate, bypassArmor);
 
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 
     if (self == object) {
-        program->flags |= PROGRAM_FLAG_0x0100;
+        program->flags |= PROGRAM_FLAG_CHILD_SPAWN;
     }
 }
 
@@ -2958,7 +2958,7 @@ static void op_play_gmovie(Program* program)
         /* RAEKILLS */ GAME_MOVIE_FADE_IN | GAME_MOVIE_PAUSE_MUSIC,
     };
 
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
 
     int movie = programStackPopInteger(program);
 
@@ -2986,7 +2986,7 @@ static void op_play_gmovie(Program* program)
         map_enable_bk_processes();
     }
 
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 }
 
 // 0x4502AC
@@ -3097,28 +3097,28 @@ static void op_days_since_visited(Program* program)
 // 0x450584
 static void op_gsay_start(Program* program)
 {
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
 
     if (gDialogStart() != 0) {
-        program->flags &= ~PROGRAM_FLAG_0x20;
+        program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
         interpretError("Error starting dialog.");
     }
 
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 }
 
 // 0x4505C8
 static void op_gsay_end(Program* program)
 {
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
     gDialogGo();
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 }
 
 // 0x4505EC
 static void op_gsay_reply(Program* program)
 {
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
 
     ProgramValue msg = programStackPopValue(program);
     int messageListId = programStackPopInteger(program);
@@ -3132,13 +3132,13 @@ static void op_gsay_reply(Program* program)
         interpretError("script error: %s: invalid arg %d to gsay_reply", program->name, 0);
     }
 
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 }
 
 // 0x4506B0
 static void op_gsay_option(Program* program)
 {
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
 
     int reaction = programStackPopInteger(program);
     ProgramValue proc = programStackPopValue(program);
@@ -3168,13 +3168,13 @@ static void op_gsay_option(Program* program)
         interpretError("Invalid arg 3 to sayOption");
     }
 
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 }
 
 // 0x450844
 static void op_gsay_message(Program* program)
 {
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
 
     int reaction = programStackPopInteger(program);
     ProgramValue msg = programStackPopValue(program);
@@ -3192,13 +3192,13 @@ static void op_gsay_message(Program* program)
     gDialogOption(-2, -2, NULL, 50);
     gDialogSayMessage();
 
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 }
 
 // 0x45092C
 static void op_giq_option(Program* program)
 {
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
 
     int reaction = programStackPopInteger(program);
     ProgramValue proc = programStackPopValue(program);
@@ -3211,12 +3211,12 @@ static void op_giq_option(Program* program)
 
     if (iq < 0) {
         if (-intelligence < iq) {
-            program->flags &= ~PROGRAM_FLAG_0x20;
+            program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
             return;
         }
     } else {
         if (intelligence < iq) {
-            program->flags &= ~PROGRAM_FLAG_0x20;
+            program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
             return;
         }
     }
@@ -3244,7 +3244,7 @@ static void op_giq_option(Program* program)
         interpretError("script error: %s: invalid arg %d to giq_option", program->name, 3);
     }
 
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 }
 
 // 0x450AE4
@@ -3711,7 +3711,7 @@ static void op_attack_setup(Program* program)
     Object* defender = static_cast<Object*>(programStackPopPointer(program));
     Object* attacker = static_cast<Object*>(programStackPopPointer(program));
 
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
 
     if (attacker != NULL) {
         if (defender == NULL
@@ -3719,28 +3719,28 @@ static void op_attack_setup(Program* program)
             || attacker->elevation != map_elevation) {
             dbg_print_com_data(attacker, defender);
             debug_printf("\n   But attacker/target are on different elevation (ignored)");
-            program->flags &= ~PROGRAM_FLAG_0x20;
+            program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
             return;
         }
 
         if (!critter_is_active(attacker)) {
             dbg_print_com_data(attacker, defender);
             debug_printf("\n   But is already dead");
-            program->flags &= ~PROGRAM_FLAG_0x20;
+            program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
             return;
         }
 
         if (!critter_is_active(defender)) {
             dbg_print_com_data(attacker, defender);
             debug_printf("\n   But target is already dead");
-            program->flags &= ~PROGRAM_FLAG_0x20;
+            program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
             return;
         }
 
         if ((defender->data.critter.combat.maneuver & CRITTER_MANUEVER_FLEEING) != 0) {
             dbg_print_com_data(attacker, defender);
             debug_printf("\n   But target is AFRAID");
-            program->flags &= ~PROGRAM_FLAG_0x20;
+            program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
             return;
         }
 
@@ -3766,13 +3766,13 @@ static void op_attack_setup(Program* program)
         }
     }
 
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 }
 
 // 0x451CC4
 static void op_destroy_mult_objs(Program* program)
 {
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
 
     int quantity = programStackPopInteger(program);
     Object* object = static_cast<Object*>(programStackPopPointer(program));
@@ -3820,10 +3820,10 @@ static void op_destroy_mult_objs(Program* program)
 
     programStackPushInteger(program, result);
 
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 
     if (isSelf) {
-        program->flags |= PROGRAM_FLAG_0x0100;
+        program->flags |= PROGRAM_FLAG_CHILD_SPAWN;
     }
 }
 
@@ -3862,9 +3862,9 @@ static void op_use_obj_on_obj(Program* program)
 // 0x451F2C
 static void op_endgame_slideshow(Program* program)
 {
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
     scripts_request_endgame_slideshow();
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 }
 
 // 0x451F4C
@@ -3920,9 +3920,9 @@ static void op_move_obj_inven_to_obj(Program* program)
 // 0x45207C
 static void op_endgame_movie(Program* program)
 {
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
     endgame_movie();
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 }
 
 // 0x45209C
