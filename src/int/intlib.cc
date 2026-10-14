@@ -225,7 +225,7 @@ static void op_print(Program* program)
 // 0x456F80
 static void op_selectfilelist(Program* program)
 {
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
 
     char* pattern = programStackPopString(program);
     char* title = programStackPopString(program);
@@ -252,7 +252,7 @@ static void op_selectfilelist(Program* program)
         programStackPushInteger(program, 0);
     }
 
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 }
 
 // 0x4570DC
@@ -491,7 +491,7 @@ static void op_fadein(Program* program)
 {
     int data = programStackPopInteger(program);
 
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
 
     setSystemPalette(blackPal);
 
@@ -500,7 +500,7 @@ static void op_fadein(Program* program)
 
     currentlyFadedIn = true;
 
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 }
 
 // 0x4577E0
@@ -508,14 +508,14 @@ static void op_fadeout(Program* program)
 {
     int data = programStackPopInteger(program);
 
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
 
     // NOTE: Uninline.
     interpretFadeOut((float)data);
 
     currentlyFadedIn = false;
 
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 }
 
 // 0x457884
@@ -596,7 +596,7 @@ static void op_playmovierect(Program* program)
 static void op_stopmovie(Program* program)
 {
     windowStopMovie();
-    program->flags |= PROGRAM_FLAG_0x40;
+    program->flags |= PROGRAM_FLAG_FINISHED;
 }
 
 // 0x457AF0
@@ -765,9 +765,9 @@ static void op_saystart(Program* program)
 {
     sayStartingPosition = 0;
 
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
     int rc = dialogStart(program);
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 
     if (rc != 0) {
         interpretError("Error starting dialog.");
@@ -779,9 +779,9 @@ static void op_saystartpos(Program* program)
 {
     sayStartingPosition = programStackPopInteger(program);
 
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
     int rc = dialogStart(program);
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 
     if (rc != 0) {
         interpretError("Error starting dialog.");
@@ -821,7 +821,7 @@ static void op_saygotoreply(Program* program)
 // 0x458438
 static void op_sayoption(Program* program)
 {
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
 
     ProgramValue v3 = programStackPopValue(program);
     ProgramValue v2 = programStackPopValue(program);
@@ -835,25 +835,25 @@ static void op_sayoption(Program* program)
     if ((v3.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_STRING) {
         const char* v2 = interpretGetString(program, v3.opcode, v3.integerValue);
         if (dialogOption(v1, v2) != 0) {
-            program->flags &= ~PROGRAM_FLAG_0x20;
+            program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
             interpretError("Error setting option.");
         }
     } else if ((v3.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_INT) {
         if (dialogOptionProc(v1, v3.integerValue) != 0) {
-            program->flags &= ~PROGRAM_FLAG_0x20;
+            program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
             interpretError("Error setting option.");
         }
     } else {
         interpretError("Invalid arg 2 to sayOption");
     }
 
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 }
 
 // 0x458524
 static void op_sayreply(Program* program)
 {
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
 
     ProgramValue v3 = programStackPopValue(program);
     ProgramValue v4 = programStackPopValue(program);
@@ -873,26 +873,26 @@ static void op_sayreply(Program* program)
     }
 
     if (dialogReply(v1, v2) != 0) {
-        program->flags &= ~PROGRAM_FLAG_0x20;
+        program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
         interpretError("Error setting option.");
     }
 
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 }
 
 // 0x4585DC
 static int checkDialog(Program* program)
 {
-    program->flags |= PROGRAM_FLAG_0x40;
+    program->flags |= PROGRAM_FLAG_FINISHED;
     return dialogGetDialogDepth() != -1;
 }
 
 // 0x4585F4
 static void op_sayend(Program* program)
 {
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
     int rc = dialogGo(sayStartingPosition);
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 
     if (rc == -2) {
         program->checkWaitFunc = checkDialog;
@@ -943,7 +943,7 @@ static void op_saymessagetimeout(Program* program)
 // 0x4586C4
 static void op_saymessage(Program* program)
 {
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
 
     ProgramValue v3 = programStackPopValue(program);
     ProgramValue v4 = programStackPopValue(program);
@@ -963,11 +963,11 @@ static void op_saymessage(Program* program)
     }
 
     if (dialogMessage(v1, v2, TimeOut) != 0) {
-        program->flags &= ~PROGRAM_FLAG_0x20;
+        program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
         interpretError("Error setting option.");
     }
 
-    program->flags &= ~PROGRAM_FLAG_0x20;
+    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
 }
 
 // 0x458780
