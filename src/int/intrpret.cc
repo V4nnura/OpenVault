@@ -368,8 +368,8 @@ static void detachProgram(Program* program)
 {
     Program* parent = program->parent;
     if (parent != NULL) {
-        parent->flags &= ~PROGRAM_FLAG_0x20;
-        parent->flags &= ~PROGRAM_FLAG_0x0100;
+        parent->flags &= ~PROGRAM_FLAG_CHILD_CALL;
+        parent->flags &= ~PROGRAM_FLAG_CHILD_SPAWN;
         if (program == parent->child) {
             parent->child = NULL;
         }
@@ -450,7 +450,7 @@ Program* allocateProgram(const char* path)
 
     program->child = NULL;
     program->parent = NULL;
-    program->field_78 = -1;
+    program->startTime = -1;
     program->exited = false;
     program->basePointer = -1;
     program->framePointer = -1;
@@ -1996,7 +1996,7 @@ static void op_call(Program* program)
         // interpretPushLong(externalProgram, externalProcedureArgumentCount);
         // interpretPushShort(externalProgram, VALUE_TYPE_INT);
 
-        // program->flags |= PROGRAM_FLAG_0x20;
+        // program->flags |= PROGRAM_FLAG_CHILD_CALL;
         // externalProgram->flags = 0;
         // externalProgram->instructionPointer = externalProcedureAddress;
 
@@ -2033,7 +2033,7 @@ static void op_pop_exit(Program* program)
 {
     program->instructionPointer = programReturnStackPopInteger(program);
 
-    program->flags |= PROGRAM_FLAG_0x40;
+    program->flags |= PROGRAM_FLAG_FINISHED;
 }
 
 // 0x45F1CC
@@ -2286,8 +2286,8 @@ static void op_exit(Program* program)
 
     Program* parent = program->parent;
     if (parent != NULL) {
-        if ((parent->flags & PROGRAM_FLAG_0x0100) != 0) {
-            parent->flags &= ~PROGRAM_FLAG_0x0100;
+        if ((parent->flags & PROGRAM_FLAG_CHILD_SPAWN) != 0) {
+            parent->flags &= ~PROGRAM_FLAG_CHILD_SPAWN;
         }
     }
 
@@ -2307,7 +2307,7 @@ static void op_callstart(Program* program)
         interpretError("Error, already have a child process\n");
     }
 
-    program->flags |= PROGRAM_FLAG_0x20;
+    program->flags |= PROGRAM_FLAG_CHILD_CALL;
 
     char* name = programStackPopString(program);
 
@@ -2330,7 +2330,7 @@ static void op_spawn(Program* program)
         interpretError("Error, already have a child process\n");
     }
 
-    program->flags |= PROGRAM_FLAG_0x0100;
+    program->flags |= PROGRAM_FLAG_CHILD_SPAWN;
 
     char* name = programStackPopString(program);
 
@@ -2560,12 +2560,12 @@ void interpret(Program* program, int a2)
         return;
     }
 
-    if (program->exited || (program->flags & PROGRAM_FLAG_0x20) != 0 || (program->flags & PROGRAM_FLAG_0x0100) != 0) {
+    if (program->exited || (program->flags & PROGRAM_FLAG_CHILD_CALL) != 0 || (program->flags & PROGRAM_FLAG_CHILD_SPAWN) != 0) {
         return;
     }
 
-    if (program->field_78 == -1) {
-        program->field_78 = 1000 * timerFunc() / timerTick;
+    if (program->startTime == -1) {
+        program->startTime = 1000 * timerFunc() / timerTick;
     }
 
     currentProgram = program;
@@ -2581,7 +2581,7 @@ void interpret(Program* program, int a2)
     }
 
     while ((program->flags & PROGRAM_FLAG_CRITICAL_SECTION) != 0 || --a2 != -1) {
-        if ((program->flags & (PROGRAM_FLAG_EXITED | PROGRAM_FLAG_0x04 | PROGRAM_FLAG_STOPPED | PROGRAM_FLAG_0x20 | PROGRAM_FLAG_0x40 | PROGRAM_FLAG_0x0100)) != 0) {
+        if ((program->flags & (PROGRAM_FLAG_EXITED | PROGRAM_FLAG_0x04 | PROGRAM_FLAG_STOPPED | PROGRAM_FLAG_CHILD_CALL | PROGRAM_FLAG_FINISHED | PROGRAM_FLAG_CHILD_SPAWN)) != 0) {
             break;
         }
 
@@ -2628,15 +2628,15 @@ void interpret(Program* program, int a2)
 
     if ((program->flags & PROGRAM_FLAG_EXITED) != 0) {
         if (program->parent != NULL) {
-            if (program->parent->flags & PROGRAM_FLAG_0x20) {
-                program->parent->flags &= ~PROGRAM_FLAG_0x20;
+            if (program->parent->flags & PROGRAM_FLAG_CHILD_CALL) {
+                program->parent->flags &= ~PROGRAM_FLAG_CHILD_CALL;
                 program->parent->child = NULL;
                 program->parent = NULL;
             }
         }
     }
 
-    program->flags &= ~PROGRAM_FLAG_0x40;
+    program->flags &= ~PROGRAM_FLAG_FINISHED;
     currentProgram = oldCurrentProgram;
 }
 
@@ -2692,7 +2692,7 @@ static void setupExternalCallWithReturnVal(Program* program1, Program* program2,
     program2->instructionPointer = address;
     program2->windowId = program1->windowId;
 
-    program1->flags |= PROGRAM_FLAG_0x20;
+    program1->flags |= PROGRAM_FLAG_CHILD_CALL;
 }
 
 // 0x460A94
