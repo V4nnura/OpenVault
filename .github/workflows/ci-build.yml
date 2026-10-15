@@ -81,7 +81,7 @@ jobs:
           ./gradlew assembleDebug
 
       - name: Upload
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: fallout-ce-debug.apk
           path: os/android/app/build/outputs/apk/debug/app-debug.apk
@@ -116,7 +116,7 @@ jobs:
           cpack -C Debug
 
       - name: Upload
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: fallout-ce.ipa
           path:  out/build/ios/fallout-ce.ipa
@@ -170,7 +170,7 @@ jobs:
           tar -czvf out/build/linux-${{ matrix.arch }}-debug/fallout-ce-linux-${{ matrix.arch }}.tar.gz -C out/build/linux-${{ matrix.arch }}-debug fallout-ce
 
       - name: Upload
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: fallout-ce-linux-${{ matrix.arch }}
           path: out/build/linux-${{ matrix.arch }}-debug/fallout-ce-linux-${{ matrix.arch }}.tar.gz
@@ -244,7 +244,7 @@ jobs:
           tar -czvf build/fallout-ce-linux-${{ matrix.arch }}.tar.gz -C build fallout-ce
 
       - name: Upload
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: fallout-ce-linux-${{ matrix.arch }}
           path: build/fallout-ce-linux-${{ matrix.arch }}.tar.gz
@@ -279,7 +279,7 @@ jobs:
           cpack -C Debug
 
       - name: Upload
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: fallout-ce-macos.dmg
           path:  out/build/macos/Fallout Community Edition.dmg
@@ -323,7 +323,7 @@ jobs:
           7z a fallout-ce-windows-${{ matrix.arch }}.zip fallout-ce.exe
         
       - name: Upload
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: fallout-ce-windows-${{ matrix.arch }}
           path: out/build/windows-${{ matrix.arch }}/Debug/fallout-ce-windows-${{ matrix.arch }}.zip
