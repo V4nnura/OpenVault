@@ -1262,14 +1262,12 @@ static void op_drop_obj(Program* program)
 
     Script* script;
     if (scr_ptr(sid, &script) == -1) {
-        // FIXME: Should be SCRIPT_ERROR_CANT_MATCH_PROGRAM_TO_SID.
-        dbg_error(program, "drop_obj", SCRIPT_ERROR_OBJECT_IS_NULL);
+        dbg_error(program, "drop_obj", SCRIPT_ERROR_CANT_MATCH_PROGRAM_TO_SID);
         return;
     }
 
     if (script->target == NULL) {
-        // FIXME: Should be SCRIPT_ERROR_OBJECT_IS_NULL.
-        dbg_error(program, "drop_obj", SCRIPT_ERROR_CANT_MATCH_PROGRAM_TO_SID);
+        dbg_error(program, "drop_obj", SCRIPT_ERROR_OBJECT_IS_NULL);
         return;
     }
 
@@ -1400,8 +1398,7 @@ static void op_use_obj(Program* program)
 
     Script* script;
     if (scr_ptr(sid, &script) == -1) {
-        // FIXME: Should be SCRIPT_ERROR_CANT_MATCH_PROGRAM_TO_SID.
-        dbg_error(program, "use_obj", SCRIPT_ERROR_OBJECT_IS_NULL);
+        dbg_error(program, "use_obj", SCRIPT_ERROR_CANT_MATCH_PROGRAM_TO_SID);
         return;
     }
 
@@ -3847,8 +3844,7 @@ static void op_use_obj_on_obj(Program* program)
     Script* script;
     int sid = scr_find_sid_from_program(program);
     if (scr_ptr(sid, &script) == -1) {
-        // FIXME: Should be SCRIPT_ERROR_CANT_MATCH_PROGRAM_TO_SID.
-        dbg_error(program, "use_obj_on_obj", SCRIPT_ERROR_OBJECT_IS_NULL);
+        dbg_error(program, "use_obj_on_obj", SCRIPT_ERROR_CANT_MATCH_PROGRAM_TO_SID);
         return;
     }
 
