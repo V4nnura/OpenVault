@@ -25,8 +25,8 @@ int SaveGame(int mode);
 int LoadGame(int mode);
 bool isLoadingGame();
 void KillOldMaps();
-int MapDirErase(const char* path, const char* a2);
-int MapDirEraseFile(const char* a1, const char* a2);
+int MapDirErase(const char* relativePath, const char* extension);
+int MapDirEraseFile(const char* relativePath, const char* fileName);
 long getGvarOffsetCorrection();
 
 } // namespace fallout
