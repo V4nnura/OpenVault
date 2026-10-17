@@ -59,8 +59,8 @@ typedef struct EventTypeDescription {
     QueueEventDataFreeProc* freeProc;
     QueueEventDataReadProc* readProc;
     QueueEventDataWriteProc* writeProc;
-    bool field_10;
-    QueueEventHandler* field_14;
+    bool clearOnMapExit; // unused
+    QueueEventHandler* mapExitHandlerProc; // unused
 } EventTypeDescription;
 
 extern EventTypeDescription q_func[EVENT_TYPE_COUNT];
