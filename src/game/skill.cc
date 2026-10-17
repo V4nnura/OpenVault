@@ -34,7 +34,7 @@ namespace fallout {
 
 #define HEALABLE_DAMAGE_FLAGS_LENGTH 5
 
-static void show_skill_use_messages(Object* obj, int skill, Object* a3, int a4, int a5);
+static void show_skill_use_messages(Object* obj, int skill, Object* target, int successCount, int skillBonus);
 static int skill_game_difficulty(int skill);
 static int skill_use_slot_available(int skill);
 static int skill_use_slot_add(int skill);
@@ -51,7 +51,7 @@ typedef struct SkillDescription {
     int stat2;
     int points_modifier;
     int experience;
-    int field_28;
+    int xp_skill_penalty;
 } SkillDescription;
 
 // 0x507AA4
@@ -395,13 +395,13 @@ int skill_pic(int skill)
 }
 
 // 0x498738
-static void show_skill_use_messages(Object* obj, int skill, Object* a3, int a4, int criticalChanceModifier)
+static void show_skill_use_messages(Object* obj, int skill, Object* target, int successCount, int skillBonus)
 {
     if (obj != obj_dude) {
         return;
     }
 
-    if (a4 <= 0) {
+    if (successCount <= 0) {
         return;
     }
 
@@ -412,15 +412,15 @@ static void show_skill_use_messages(Object* obj, int skill, Object* a3, int a4, 
         return;
     }
 
-    if (skillDescription->field_28 && criticalChanceModifier < 0) {
-        baseExperience += abs(criticalChanceModifier);
+    if (skillDescription->xp_skill_penalty && skillBonus < 0) {
+        baseExperience += abs(skillBonus);
     }
 
-    int xpToAdd = a4 * baseExperience;
+    int xpToAdd = successCount * baseExperience;
 
     int before = stat_pc_get(PC_STAT_EXPERIENCE);
 
-    if (stat_pc_add_experience(xpToAdd) == 0 && a4 > 0) {
+    if (stat_pc_add_experience(xpToAdd) == 0 && successCount > 0) {
         MessageListItem messageListItem;
         messageListItem.num = 505; // You earn %d XP for honing your skills
         if (message_search(&skill_message_file, &messageListItem)) {
@@ -434,7 +434,7 @@ static void show_skill_use_messages(Object* obj, int skill, Object* a3, int a4, 
 }
 
 // 0x498814
-int skill_use(Object* obj, Object* target, int skill, int criticalChanceModifier)
+int skill_use(Object* obj, Object* target, int skill, int skillBonus)
 {
     MessageListItem messageListItem;
     char text[60];
@@ -455,7 +455,7 @@ int skill_use(Object* obj, Object* target, int skill, int criticalChanceModifier
         }
     }
 
-    int criticalChance = stat_level(obj, STAT_CRITICAL_CHANCE) + criticalChanceModifier;
+    int criticalChance = stat_level(obj, STAT_CRITICAL_CHANCE) + skillBonus;
 
     int damageHealingAttempts = 1;
     int successCount = 0;
@@ -641,7 +641,7 @@ int skill_use(Object* obj, Object* target, int skill, int criticalChanceModifier
 
                         snprintf(text, sizeof(text), prefix.text, messageListItem.text);
                         display_print(text);
-                        show_skill_use_messages(obj, skill, target, successCount, criticalChanceModifier);
+                        show_skill_use_messages(obj, skill, target, successCount, skillBonus);
 
                         giveExp = false;
                     }
@@ -683,7 +683,7 @@ int skill_use(Object* obj, Object* target, int skill, int criticalChanceModifier
                 }
 
                 successCount = 1;
-                show_skill_use_messages(obj, skill, target, successCount, criticalChanceModifier);
+                show_skill_use_messages(obj, skill, target, successCount, skillBonus);
                 scr_exec_map_update_scripts();
                 palette_fade_to(cmap);
 
@@ -767,7 +767,7 @@ int skill_use(Object* obj, Object* target, int skill, int criticalChanceModifier
     }
 
     if (giveExp) {
-        show_skill_use_messages(obj, skill, target, successCount, criticalChanceModifier);
+        show_skill_use_messages(obj, skill, target, successCount, skillBonus);
     }
 
     if (skill == SKILL_FIRST_AID || skill == SKILL_DOCTOR) {
@@ -778,38 +778,38 @@ int skill_use(Object* obj, Object* target, int skill, int criticalChanceModifier
 }
 
 // 0x4991C8
-int skill_check_stealing(Object* a1, Object* a2, Object* item, bool isPlanting)
+int skill_check_stealing(Object* thief, Object* target, Object* item, bool isPlanting)
 {
     int howMuch;
 
     int stealModifier = 1 - gStealCount;
 
-    if (a1 != obj_dude || !perk_level(PERK_PICKPOCKET)) {
+    if (thief != obj_dude || !perk_level(PERK_PICKPOCKET)) {
         // -4% per item size
         stealModifier -= 4 * item_size(item);
 
-        if (FID_TYPE(a2->fid) == OBJ_TYPE_CRITTER) {
+        if (FID_TYPE(target->fid) == OBJ_TYPE_CRITTER) {
             // check facing: -25% if face to face
-            if (is_hit_from_front(a1, a2)) {
+            if (is_hit_from_front(thief, target)) {
                 stealModifier -= 25;
             }
         }
     }
 
-    if ((a2->data.critter.combat.results & (DAM_KNOCKED_OUT | DAM_KNOCKED_DOWN)) != 0) {
+    if ((target->data.critter.combat.results & (DAM_KNOCKED_OUT | DAM_KNOCKED_DOWN)) != 0) {
         stealModifier += 20;
     }
 
-    int stealChance = stealModifier + skill_level(a1, SKILL_STEAL);
+    int stealChance = stealModifier + skill_level(thief, SKILL_STEAL);
     if (stealChance > 95) {
         stealChance = 95;
     }
 
     int stealRoll;
-    if (a1 == obj_dude && isPartyMember(a2)) {
+    if (thief == obj_dude && isPartyMember(target)) {
         stealRoll = ROLL_CRITICAL_SUCCESS;
     } else {
-        int criticalChance = stat_level(a1, STAT_CRITICAL_CHANCE);
+        int criticalChance = stat_level(thief, STAT_CRITICAL_CHANCE);
         stealRoll = roll_check(stealChance, criticalChance, &howMuch);
     }
 
@@ -820,8 +820,8 @@ int skill_check_stealing(Object* a1, Object* a2, Object* item, bool isPlanting)
         catchRoll = ROLL_SUCCESS;
     } else {
         int catchChance;
-        if (PID_TYPE(a2->pid) == OBJ_TYPE_CRITTER) {
-            catchChance = skill_level(a2, SKILL_STEAL) - stealModifier;
+        if (PID_TYPE(target->pid) == OBJ_TYPE_CRITTER) {
+            catchChance = skill_level(target, SKILL_STEAL) - stealModifier;
         } else {
             catchChance = 30 - stealModifier;
         }
