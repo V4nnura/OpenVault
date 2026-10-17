@@ -492,8 +492,8 @@ void queue_leaving_map()
     int index;
 
     for (index = 0; index < EVENT_TYPE_COUNT; index++) {
-        if (q_func[index].field_10) {
-            queue_clear_type(index, q_func[index].field_14);
+        if (q_func[index].clearOnMapExit) {
+            queue_clear_type(index, q_func[index].mapExitHandlerProc);
         }
     }
 }
