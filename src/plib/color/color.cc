@@ -531,9 +531,9 @@ unsigned char* getColorBlendTable(int ch)
 // 0x4C09A8
 void freeColorBlendTable(int color)
 {
-    unsigned char* blendTable = blendTable[color];
-    if (blendTable != NULL) {
-        int* count = (int*)(blendTable - sizeof(int));
+    unsigned char* bt = blendTable[color];
+    if (bt != NULL) {
+        int* count = (int*)(bt - sizeof(int));
         *count -= 1;
         if (*count == 0) {
             mem_free(count);
