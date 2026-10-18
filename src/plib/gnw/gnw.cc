@@ -129,7 +129,6 @@ int win_init(VideoOptions* video_options, int flags)
     buffering = false;
     doing_refresh_all = 0;
 
-    colorInitIO(colorOpen, colorRead, colorClose);
     colorRegisterAlloc(mem_malloc, mem_realloc, mem_free);
 
     if (!initColors()) {
