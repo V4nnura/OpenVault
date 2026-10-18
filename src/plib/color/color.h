@@ -5,20 +5,12 @@
 
 namespace fallout {
 
-#define COLOR_PALETTE_STACK_CAPACITY 16
-
 typedef unsigned char Color;
 typedef long ColorRGB;
 typedef unsigned char ColorIndex;
 
 typedef const char*(ColorNameMangleFunc)(const char*);
 typedef void(fade_bk_func)();
-
-typedef struct ColorPaletteStackEntry {
-    unsigned char mappedColors[256];
-    unsigned char cmap[768];
-    unsigned char colorTable[32768];
-} ColorPaletteStackEntry;
 
 extern unsigned char cmap[768];
 
@@ -51,8 +43,6 @@ void freeColorBlendTable(int a1);
 void colorGamma(double value);
 double colorGetGamma();
 int colorMappedColor(ColorIndex i);
-bool colorPushColorPalette();
-bool colorPopColorPalette();
 bool initColors();
 void colorsClose();
 unsigned char* getColorPalette();
