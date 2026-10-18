@@ -14,10 +14,6 @@ typedef unsigned char ColorIndex;
 typedef const char*(ColorNameMangleFunc)(const char*);
 typedef void(fade_bk_func)();
 
-typedef void*(ColorMallocFunc)(size_t size);
-typedef void*(ColorReallocFunc)(void* ptr, size_t size);
-typedef void(ColorFreeFunc)(void* ptr);
-
 typedef struct ColorPaletteStackEntry {
     unsigned char mappedColors[256];
     unsigned char cmap[768];
