@@ -52,7 +52,6 @@ void setColorPaletteEntry(int entry, unsigned char r, unsigned char g, unsigned 
 void getColorPaletteEntry(int entry, unsigned char* r, unsigned char* g, unsigned char* b);
 unsigned char* getColorBlendTable(int ch);
 void freeColorBlendTable(int a1);
-void colorRegisterAlloc(ColorMallocFunc* mallocProc, ColorReallocFunc* reallocProc, ColorFreeFunc* freeProc);
 void colorGamma(double value);
 double colorGetGamma();
 int colorMappedColor(ColorIndex i);
