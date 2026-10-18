@@ -398,25 +398,21 @@ bool message_add(MessageList* msg, MessageListItem* new_entry)
 // 0x476D80
 bool message_parse_number(int* out_num, const char* str)
 {
-    const char* ch;
-    bool success;
-
-    ch = str;
-    if (*ch == '\0') {
+    if (*str == '\0') {
         return false;
     }
 
-    success = true;
-    if (*ch == '+' || *ch == '-') {
-        ch++;
+    bool success = true;
+    if (*str == '+' || *str == '-') {
+        str++;
     }
 
-    while (*ch != '\0') {
+    while (*str != '\0') {
         if (!isdigit(*ch)) {
             success = false;
             break;
         }
-        ch++;
+        str++;
     }
 
     *out_num = atoi(str);
