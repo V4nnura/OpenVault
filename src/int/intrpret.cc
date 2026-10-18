@@ -328,8 +328,7 @@ static void pushLongStack(unsigned char* data, int* pointer, int value)
     int v1;
 
     if (*pointer + 4 >= STACK_SIZE) {
-        // FIXME: Should be pushLongStack.
-        interpretError("pushShortStack: Stack overflow.");
+        interpretError("pushLongStack: Stack overflow.");
     }
 
     v1 = *pointer;
