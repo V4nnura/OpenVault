@@ -311,7 +311,7 @@ typedef struct ItemProto {
     int weight; // weight
     int cost; // cost
     int inventoryFid; // inv_fid
-    unsigned char field_80;
+    unsigned char soundId;
 } ItemProto;
 
 typedef struct CritterProtoData {
@@ -385,7 +385,7 @@ typedef struct SceneryProto {
     SceneryProtoData data;
     int material; // material
     int field_30; //
-    unsigned char field_34;
+    unsigned char soundId;
 } SceneryProto;
 
 typedef struct WallProto {
