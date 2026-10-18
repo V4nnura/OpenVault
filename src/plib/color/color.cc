@@ -445,7 +445,7 @@ static void buildBlendTable(unsigned char* ptr, unsigned char ch)
 {
     int r, g, b;
     int i, j;
-    int v12, v14, v16;
+    int mixedR, mixedG, mixedB;
     unsigned char* beg;
 
     beg = ptr;
@@ -461,7 +461,7 @@ static void buildBlendTable(unsigned char* ptr, unsigned char ch)
     ptr += 256;
 
     int b_1 = b;
-    int v31 = 6;
+    int blendWeight = 6;
     int g_1 = g;
     int r_1 = r;
 
@@ -471,31 +471,31 @@ static void buildBlendTable(unsigned char* ptr, unsigned char ch)
 
     for (j = 0; j < 7; j++) {
         for (i = 0; i < 256; i++) {
-            v12 = (Color2RGB(i) & 0x7C00) >> 10;
-            v14 = (Color2RGB(i) & 0x3E0) >> 5;
-            v16 = (Color2RGB(i) & 0x1F);
+            mixedR = (Color2RGB(i) & 0x7C00) >> 10;
+            mixedG = (Color2RGB(i) & 0x3E0) >> 5;
+            mixedB = (Color2RGB(i) & 0x1F);
             int index = 0;
-            index |= (r_2 + v12 * v31) / 7 << 10;
-            index |= (g_2 + v14 * v31) / 7 << 5;
-            index |= (b_2 + v16 * v31) / 7;
+            index |= (r_2 + mixedR * blendWeight) / 7 << 10;
+            index |= (g_2 + mixedG * blendWeight) / 7 << 5;
+            index |= (b_2 + mixedB * blendWeight) / 7;
             ptr[i] = colorTable[index];
         }
-        v31--;
+        blendWeight--;
         ptr += 256;
         r_2 += r_1;
         g_2 += g_1;
         b_2 += b_1;
     }
 
-    int v18 = 0;
+    int shadeStep = 0;
     for (j = 0; j < 6; j++) {
-        int v20 = v18 / 7 + 0xFFFF;
+        int shadeIntensity = shadeStep / 7 + 0xFFFF;
 
         for (i = 0; i < 256; i++) {
-            ptr[i] = calculateColor(v20, ch);
+            ptr[i] = calculateColor(shadeIntensity, ch);
         }
 
-        v18 += 0x10000;
+        shadeStep += 0x10000;
         ptr += 256;
     }
 }
@@ -529,15 +529,15 @@ unsigned char* getColorBlendTable(int ch)
 }
 
 // 0x4C09A8
-void freeColorBlendTable(int a1)
+void freeColorBlendTable(int color)
 {
-    unsigned char* v2 = blendTable[a1];
-    if (v2 != NULL) {
-        int* count = (int*)(v2 - sizeof(int));
+    unsigned char* blendTable = blendTable[color];
+    if (blendTable != NULL) {
+        int* count = (int*)(blendTable - sizeof(int));
         *count -= 1;
         if (*count == 0) {
             mem_free(count);
-            blendTable[a1] = NULL;
+            blendTable[color] = NULL;
         }
     }
 }
