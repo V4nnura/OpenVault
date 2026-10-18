@@ -15,7 +15,7 @@ static void setIntensityTableColor(int cc);
 static void setIntensityTables();
 static void setMixTableColor(int color);
 static void setMixTable();
-static void buildBlendTable(unsigned char* ptr, unsigned char ch);
+static void buildBlendTable(Color* ptr, Color ch);
 static void rebuildColorBlendTables();
 static void maxfill();
 
