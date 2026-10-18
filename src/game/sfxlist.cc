@@ -27,7 +27,7 @@ static int sfxl_get_names();
 static int sfxl_copy_names(char** fileNameList);
 static int sfxl_get_sizes();
 static int sfxl_sort_by_name();
-static int sfxl_compare_by_name(const void* a1, const void* a2);
+static int sfxl_compare_by_name(const void* a, const void* b);
 static unsigned int sfxl_ad_reader(void* stream, void* buf, unsigned int size);
 
 // 0x507A8C
@@ -56,9 +56,9 @@ static int sfxl_files_total = 0;
 static int sfxl_compression;
 
 // 0x497960
-bool sfxl_tag_is_legal(int a1)
+bool sfxl_tag_is_legal(int tag)
 {
-    return sfxl_index(a1, NULL) == SFXL_OK;
+    return sfxl_index(tag, NULL) == SFXL_OK;
 }
 
 // 0x497974
@@ -400,12 +400,12 @@ static int sfxl_sort_by_name()
 }
 
 // 0x498094
-static int sfxl_compare_by_name(const void* a1, const void* a2)
+static int sfxl_compare_by_name(const void* a, const void* b)
 {
-    SoundEffectsListEntry* v1 = (SoundEffectsListEntry*)a1;
-    SoundEffectsListEntry* v2 = (SoundEffectsListEntry*)a2;
+    SoundEffectsListEntry* lhs = (SoundEffectsListEntry*)a;
+    SoundEffectsListEntry* rhs = (SoundEffectsListEntry*)b;
 
-    return compat_stricmp(v1->name, v2->name);
+    return compat_stricmp(lhs->name, rhs->name);
 }
 
 // 0x4980A0
