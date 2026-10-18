@@ -5,14 +5,12 @@
 
 #include <algorithm>
 
+#include "plib/db/db.h"
 #include "plib/gnw/input.h"
 #include "plib/gnw/svga.h"
 
 namespace fallout {
 
-static void* colorOpen(const char* filePath);
-static int colorRead(void* handle, void* buffer, size_t size);
-static int colorClose(void* handle);
 static void* defaultMalloc(size_t size);
 static void* defaultRealloc(void* ptr, size_t size);
 static void defaultFree(void* ptr);
@@ -96,53 +94,6 @@ unsigned char colorTable[32768];
 
 // 0x6ABB00
 static int tos;
-
-// 0x6ABB58
-static ColorReadFunc* readFunc;
-
-// 0x6ABB5C
-static ColorCloseFunc* closeFunc;
-
-// 0x6ABB60
-static ColorOpenFunc* openFunc;
-
-// 0x4BFDC0
-static void* colorOpen(const char* filePath)
-{
-    if (openFunc != NULL) {
-        return openFunc(filePath);
-    }
-
-    return nullptr;
-}
-
-// 0x4BFDD8
-static int colorRead(void* fd, void* buffer, size_t size)
-{
-    if (readFunc != NULL) {
-        return readFunc(fd, buffer, size);
-    }
-
-    return -1;
-}
-
-// 0x4BFDF0
-static int colorClose(void* fd)
-{
-    if (closeFunc != NULL) {
-        return closeFunc(fd);
-    }
-
-    return -1;
-}
-
-// 0x4BFE08
-void colorInitIO(ColorOpenFunc* openProc, ColorReadFunc* readProc, ColorCloseFunc* closeProc)
-{
-    openFunc = openProc;
-    readFunc = readProc;
-    closeFunc = closeProc;
-}
 
 // 0x4BFE1C
 static void* defaultMalloc(size_t size)
@@ -430,9 +381,8 @@ bool loadColorTable(const char* path)
         path = colorNameMangler(path);
     }
 
-    // NOTE: Uninline.
-    void* handle = colorOpen(path);
-    if (handle == nullptr) {
+    DB_FILE* stream = db_fopen(path, "rb");
+    if (stream == nullptr) {
         errorStr = _aColor_cColorTa;
         return false;
     }
@@ -443,13 +393,13 @@ bool loadColorTable(const char* path)
         unsigned char b;
 
         // NOTE: Uninline.
-        colorRead(handle, &r, sizeof(r));
+        db_fread(&r, sizeof(r), 1, stream);
 
         // NOTE: Uninline.
-        colorRead(handle, &g, sizeof(g));
+        db_fread(&g, sizeof(g), 1, stream);
 
         // NOTE: Uninline.
-        colorRead(handle, &b, sizeof(b));
+        db_fread(&b, sizeof(b), 1, stream);
 
         if (r <= 0x3F && g <= 0x3F && b <= 0x3F) {
             mappedColor[index] = 1;
@@ -466,21 +416,23 @@ bool loadColorTable(const char* path)
     }
 
     // NOTE: Uninline.
-    colorRead(handle, colorTable, 0x8000);
+    db_fread(colorTable, 0x8000, 1, stream);
 
     unsigned int type;
     // NOTE: Uninline.
-    colorRead(handle, &type, sizeof(type));
+    db_fread(&type, sizeof(type), 1, stream);
 
+    // NOTE: The value is "NEWC". Original code uses cmp opcode,
+    // not stricmp, or comparing characters one-by-one.
     if (type == 'NEWC') {
         // NOTE: Uninline.
-        colorRead(handle, intensityColorTable, sizeof(intensityColorTable));
+        db_fread(intensityColorTable, sizeof(intensityColorTable), 1, stream);
 
         // NOTE: Uninline.
-        colorRead(handle, colorMixAddTable, sizeof(colorMixAddTable));
+        db_fread(colorMixAddTable, sizeof(colorMixAddTable), 1, stream);
 
         // NOTE: Uninline.
-        colorRead(handle, colorMixMulTable, sizeof(colorMixMulTable));
+        db_fread(colorMixMulTable, sizeof(colorMixMulTable), 1, stream);
     } else {
         setIntensityTables();
 
@@ -492,7 +444,7 @@ bool loadColorTable(const char* path)
     rebuildColorBlendTables();
 
     // NOTE: Uninline.
-    colorClose(handle);
+    db_fclose(stream);
 
     return true;
 }
