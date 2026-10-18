@@ -685,8 +685,7 @@ int dialogSetOptionFlags(short flags)
 // 0x431420
 int dialogSetReplyFlags(short flags)
 {
-    // FIXME: Obvious error, flags should be set on |defaultReply|.
-    defaultOption.flags = flags;
+    defaultReply.flags = flags;
 
     return 1;
 }
