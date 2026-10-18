@@ -3,13 +3,12 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #if defined(_WIN32)
 #include <windows.h>
 #else
 #include <dirent.h>
-#include <strings.h>
+#include <string.h>
 #endif
 
 #include <fpattern/fpattern.h>
