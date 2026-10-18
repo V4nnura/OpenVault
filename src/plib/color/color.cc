@@ -7,6 +7,7 @@
 
 #include "plib/db/db.h"
 #include "plib/gnw/input.h"
+#include "plib/gnw/memory.h"
 #include "plib/gnw/svga.h"
 
 namespace fallout {
@@ -47,15 +48,6 @@ static double currentGamma = 1.0;
 
 // 0x539EF0
 static fade_bk_func* colorFadeBkFuncP = NULL;
-
-// 0x539EF4
-static ColorMallocFunc* mallocPtr = defaultMalloc;
-
-// 0x539EF8
-static ColorReallocFunc* reallocPtr = defaultRealloc;
-
-// 0x539EFC
-static ColorFreeFunc* freePtr = defaultFree;
 
 // 0x539F00
 static ColorNameMangleFunc* colorNameMangler = NULL;
@@ -562,7 +554,7 @@ unsigned char* getColorBlendTable(int ch)
     unsigned char* ptr;
 
     if (blendTable[ch] == NULL) {
-        ptr = (unsigned char*)mallocPtr(4100);
+        ptr = (unsigned char*)mem_malloc(4100);
         *(int*)ptr = 1;
         blendTable[ch] = ptr + 4;
         buildBlendTable(blendTable[ch], ch);
@@ -582,18 +574,10 @@ void freeColorBlendTable(int a1)
         int* count = (int*)(v2 - sizeof(int));
         *count -= 1;
         if (*count == 0) {
-            freePtr(count);
+            mem_free(count);
             blendTable[a1] = NULL;
         }
     }
-}
-
-// 0x4C09E0
-void colorRegisterAlloc(ColorMallocFunc* mallocProc, ColorReallocFunc* reallocProc, ColorFreeFunc* freeProc)
-{
-    mallocPtr = mallocProc;
-    reallocPtr = reallocProc;
-    freePtr = freeProc;
 }
 
 // 0x4C09F4
