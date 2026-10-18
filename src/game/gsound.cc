@@ -1543,7 +1543,7 @@ char* gsnd_build_open_sfx_name(Object* object, int action)
         char scenerySoundId;
         Proto* proto;
         if (proto_ptr(object->pid, &proto) != -1) {
-            scenerySoundId = proto->scenery.field_34;
+            scenerySoundId = proto->scenery.soundId;
         } else {
             scenerySoundId = 'A';
         }
@@ -1551,7 +1551,7 @@ char* gsnd_build_open_sfx_name(Object* object, int action)
     } else {
         Proto* proto;
         proto_ptr(object->pid, &proto);
-        snprintf(sfx_file_name, sizeof(sfx_file_name), "I%cCNTNR%c", snd_lookup_scenery_action[action], proto->item.field_80);
+        snprintf(sfx_file_name, sizeof(sfx_file_name), "I%cCNTNR%c", snd_lookup_scenery_action[action], proto->item.soundId);
     }
     compat_strupr(sfx_file_name);
     return sfx_file_name;
