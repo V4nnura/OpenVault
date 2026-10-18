@@ -408,7 +408,7 @@ bool message_parse_number(int* out_num, const char* str)
     }
 
     while (*str != '\0') {
-        if (!isdigit(*ch)) {
+        if (!isdigit(*str)) {
             success = false;
             break;
         }
