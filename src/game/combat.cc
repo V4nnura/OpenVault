@@ -4705,16 +4705,14 @@ void combat_highlight_change()
 }
 
 // 0x4242B4
-bool combat_is_shot_blocked(Object* a1, int from, int to, Object* a4, int* a5)
+bool combat_is_shot_blocked(Object* obstacle, int from, int to, Object* a4, int* a5)
 {
-    Object* obstacle = a1;
-
     if (a5 != NULL) {
         *a5 = 0;
     }
 
     while (obstacle != NULL && from != to) {
-        make_straight_path(a1, from, to, NULL, &obstacle, 32);
+        make_straight_path(obstacle, from, to, NULL, &obstacle, 32);
         if (obstacle != NULL) {
             if (FID_TYPE(obstacle->fid) != OBJ_TYPE_CRITTER) {
                 return true;
