@@ -1361,7 +1361,7 @@ static int proto_read_protoSubNode(Proto* proto, DB_FILE* stream)
         if (db_freadInt32(stream, &(proto->item.weight)) == -1) return -1;
         if (db_freadInt32(stream, &(proto->item.cost)) == -1) return -1;
         if (db_freadInt32(stream, &(proto->item.inventoryFid)) == -1) return -1;
-        if (db_freadByte(stream, &(proto->item.field_80)) == -1) return -1;
+        if (db_freadByte(stream, &(proto->item.soundId)) == -1) return -1;
         if (proto_read_item_data(&(proto->item.data), proto->item.type, stream) == -1) return -1;
 
         return 0;
@@ -1386,7 +1386,7 @@ static int proto_read_protoSubNode(Proto* proto, DB_FILE* stream)
         if (db_freadInt32(stream, &(proto->scenery.sid)) == -1) return -1;
         if (db_freadInt32(stream, &(proto->scenery.type)) == -1) return -1;
         if (db_freadInt32(stream, &(proto->scenery.material)) == -1) return -1;
-        if (db_freadByte(stream, &(proto->scenery.field_34)) == -1) return -1;
+        if (db_freadByte(stream, &(proto->scenery.soundId)) == -1) return -1;
         if (proto_read_scenery_data(&(proto->scenery.data), proto->scenery.type, stream) == -1) return -1;
         return 0;
     case OBJ_TYPE_WALL:
@@ -1546,7 +1546,7 @@ static int proto_write_protoSubNode(Proto* proto, DB_FILE* stream)
         if (db_fwriteInt32(stream, proto->item.weight) == -1) return -1;
         if (db_fwriteInt32(stream, proto->item.cost) == -1) return -1;
         if (db_fwriteInt32(stream, proto->item.inventoryFid) == -1) return -1;
-        if (db_fwriteByte(stream, proto->item.field_80) == -1) return -1;
+        if (db_fwriteByte(stream, proto->item.soundId) == -1) return -1;
         if (proto_write_item_data(&(proto->item.data), proto->item.type, stream) == -1) return -1;
 
         return 0;
@@ -1570,7 +1570,7 @@ static int proto_write_protoSubNode(Proto* proto, DB_FILE* stream)
         if (db_fwriteInt32(stream, proto->scenery.sid) == -1) return -1;
         if (db_fwriteInt32(stream, proto->scenery.type) == -1) return -1;
         if (db_fwriteInt32(stream, proto->scenery.material) == -1) return -1;
-        if (db_fwriteByte(stream, proto->scenery.field_34) == -1) return -1;
+        if (db_fwriteByte(stream, proto->scenery.soundId) == -1) return -1;
         if (proto_write_scenery_data(&(proto->scenery.data), proto->scenery.type, stream) == -1) return -1;
     case OBJ_TYPE_WALL:
         if (db_fwriteInt32(stream, proto->wall.lightDistance) == -1) return -1;
