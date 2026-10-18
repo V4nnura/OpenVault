@@ -126,8 +126,6 @@ int win_init(VideoOptions* video_options, int flags)
     buffering = false;
     doing_refresh_all = 0;
 
-    colorRegisterAlloc(mem_malloc, mem_realloc, mem_free);
-
     if (!initColors()) {
         unsigned char* palette = (unsigned char*)mem_malloc(768);
         if (palette == NULL) {
