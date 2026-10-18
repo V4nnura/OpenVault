@@ -14,9 +14,6 @@ typedef unsigned char ColorIndex;
 typedef const char*(ColorNameMangleFunc)(const char*);
 typedef void(fade_bk_func)();
 
-typedef void*(ColorOpenFunc)(const char* path);
-typedef int(ColorReadFunc)(void* fd, void* buffer, size_t size);
-typedef int(ColorCloseFunc)(void* fd);
 typedef void*(ColorMallocFunc)(size_t size);
 typedef void*(ColorReallocFunc)(void* ptr, size_t size);
 typedef void(ColorFreeFunc)(void* ptr);
@@ -35,7 +32,6 @@ extern unsigned char intensityColorTable[256][256];
 extern Color colorMixMulTable[256][256];
 extern unsigned char colorTable[32768];
 
-void colorInitIO(ColorOpenFunc* openProc, ColorReadFunc* readProc, ColorCloseFunc* closeProc);
 void colorSetNameMangler(ColorNameMangleFunc* c);
 Color colorMixAdd(Color a, Color b);
 Color colorMixMul(Color a, Color b);
