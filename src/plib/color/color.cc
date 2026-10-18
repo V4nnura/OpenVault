@@ -6,7 +6,6 @@
 #include <algorithm>
 
 #include "plib/db/db.h"
-#include "plib/gnw/input.h"
 #include "plib/gnw/memory.h"
 #include "plib/gnw/svga.h"
 
@@ -204,9 +203,7 @@ void setSystemPaletteEntries(unsigned char* palette, int start, int end)
 // 0x4C00D8
 void getSystemPaletteEntry(int entry, unsigned char* r, unsigned char* g, unsigned char* b)
 {
-    int baseIndex;
-
-    baseIndex = entry * 3;
+    int baseIndex = entry * 3;
     *r = systemCmap[baseIndex];
     *g = systemCmap[baseIndex + 1];
     *b = systemCmap[baseIndex + 2];
@@ -332,9 +329,7 @@ static void setMixTableColor(int color)
 // 0x4C0454
 static void setMixTable()
 {
-    int i;
-
-    for (i = 0; i < 256; i++) {
+    for (int i = 0; i < 256; i++) {
         setMixTableColor(i);
     }
 }
@@ -430,9 +425,7 @@ void setColorPalette(unsigned char* pal)
 // 0x4C0680
 void setColorPaletteEntry(int entry, unsigned char r, unsigned char g, unsigned char b)
 {
-    int baseIndex;
-
-    baseIndex = entry * 3;
+    int baseIndex = entry * 3;
     cmap[baseIndex] = r;
     cmap[baseIndex + 1] = g;
     cmap[baseIndex + 2] = b;
@@ -441,9 +434,7 @@ void setColorPaletteEntry(int entry, unsigned char r, unsigned char g, unsigned 
 // 0x4C06A8
 void getColorPaletteEntry(int entry, unsigned char* r, unsigned char* g, unsigned char* b)
 {
-    int baseIndex;
-
-    baseIndex = entry * 3;
+    int baseIndex = entry * 3;
     *r = cmap[baseIndex];
     *g = cmap[baseIndex + 1];
     *b = cmap[baseIndex + 2];
@@ -512,9 +503,7 @@ static void buildBlendTable(unsigned char* ptr, unsigned char ch)
 // 0x4C0918
 static void rebuildColorBlendTables()
 {
-    int i;
-
-    for (i = 0; i < 256; i++) {
+    for (int i = 0; i < 256; i++) {
         if (blendTable[i]) {
             buildBlendTable(blendTable[i], i);
         }
@@ -581,13 +570,9 @@ int colorMappedColor(ColorIndex i)
 // 0x4C1388
 static void maxfill(unsigned long* buffer, int side)
 {
-    unsigned long maxv;
-    long i;
-    unsigned long* bp;
-
-    bp = buffer;
-    maxv = side * side * side;
-    for (i = maxv; i > 0; i--) {
+    unsigned long* bp = buffer;
+    unsigned long maxv = side * side * side;
+    for (long i = maxv; i > 0; i--) {
         *bp++ = -1;
     }
 }
