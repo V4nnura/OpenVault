@@ -23,9 +23,6 @@ namespace fallout {
 static void win_free(int win);
 static void win_clip(Window* w, RectPtr* rectListNodePtr, unsigned char* dest);
 static void refresh_all(Rect* rect, unsigned char* dest);
-static void* colorOpen(const char* path);
-static int colorRead(void* handle, void* buf, size_t count);
-static int colorClose(void* handle);
 
 // 0x53A22C
 static bool GNW95_already_running = false;
@@ -1314,24 +1311,6 @@ void win_set_trans_b2b(int id, WindowBlitProc* trans_b2b)
     } else {
         w->blitProc = trans_buf_to_buf;
     }
-}
-
-// 0x4C422C
-static void* colorOpen(const char* path)
-{
-    return db_fopen(path, "rb");
-}
-
-// 0x4C4298
-static int colorRead(void* handle, void* buf, size_t count)
-{
-    return db_fread(buf, 1, count, reinterpret_cast<DB_FILE*>(handle));
-}
-
-// 0x4C42A0
-static int colorClose(void* handle)
-{
-    return db_fclose(reinterpret_cast<DB_FILE*>(handle));
 }
 
 // 0x4C42B8
