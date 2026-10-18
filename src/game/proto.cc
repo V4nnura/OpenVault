@@ -1007,8 +1007,7 @@ int proto_data_member(int pid, int member, ProtoDataMemberValue* value)
         case MISC_DATA_MEMBER_DESCRIPTION:
             // NOTE: Uninline.
             value->stringValue = proto_description(proto->misc.pid);
-            // FIXME: Errornously report type as int, should be string.
-            return PROTO_DATA_MEMBER_TYPE_INT;
+            return PROTO_DATA_MEMBER_TYPE_STRING;
         case MISC_DATA_MEMBER_FID:
             value->integerValue = proto->misc.fid;
             return 1;
