@@ -12,9 +12,6 @@
 
 namespace fallout {
 
-static void* defaultMalloc(size_t size);
-static void* defaultRealloc(void* ptr, size_t size);
-static void defaultFree(void* ptr);
 static void setIntensityTableColor(int cc);
 static void setIntensityTables();
 static void setMixTableColor(int color);
@@ -57,9 +54,6 @@ unsigned char cmap[768] = {
     0x3F, 0x3F, 0x3F
 };
 
-// 0x673280
-static ColorPaletteStackEntry* colorPaletteStack[COLOR_PALETTE_STACK_CAPACITY];
-
 // 0x6732C0
 static unsigned char systemCmap[256 * 3];
 
@@ -83,27 +77,6 @@ Color colorMixMulTable[256][256];
 
 // 0x6A3B00
 unsigned char colorTable[32768];
-
-// 0x6ABB00
-static int tos;
-
-// 0x4BFE1C
-static void* defaultMalloc(size_t size)
-{
-    return malloc(size);
-}
-
-// 0x4BFE24
-static void* defaultRealloc(void* ptr, size_t size)
-{
-    return realloc(ptr, size);
-}
-
-// 0x4BFE2C
-static void defaultFree(void* ptr)
-{
-    free(ptr);
-}
 
 // 0x4BFE34
 void colorSetNameMangler(ColorNameMangleFunc* c)
@@ -619,60 +592,6 @@ static void maxfill(unsigned long* buffer, int side)
     }
 }
 
-// 0x4C13AC
-bool colorPushColorPalette()
-{
-    if (tos >= COLOR_PALETTE_STACK_CAPACITY) {
-        errorStr = _aColor_cColorpa;
-        return false;
-    }
-
-    ColorPaletteStackEntry* entry = (ColorPaletteStackEntry*)malloc(sizeof(*entry));
-    if (entry == NULL) {
-        errorStr = _aColor_cOutOfMemory;
-        return false;
-    }
-    colorPaletteStack[tos] = entry;
-
-    memcpy(entry->mappedColors, mappedColor, sizeof(mappedColor));
-    memcpy(entry->cmap, cmap, sizeof(cmap));
-    memcpy(entry->colorTable, colorTable, sizeof(colorTable));
-
-    tos++;
-
-    return true;
-}
-
-// 0x4C1464
-bool colorPopColorPalette()
-{
-    if (tos == 0) {
-        errorStr = aColor_cColor_0;
-        return false;
-    }
-
-    tos--;
-
-    ColorPaletteStackEntry* entry = colorPaletteStack[tos];
-
-    memcpy(mappedColor, entry->mappedColors, sizeof(mappedColor));
-    memcpy(cmap, entry->cmap, sizeof(cmap));
-    memcpy(colorTable, entry->colorTable, sizeof(colorTable));
-
-    free(entry);
-    colorPaletteStack[tos] = NULL;
-
-    setIntensityTables();
-
-    for (int index = 0; index < 256; index++) {
-        setMixTableColor(index);
-    }
-
-    rebuildColorBlendTables();
-
-    return true;
-}
-
 // 0x4C1550
 bool initColors()
 {
@@ -699,12 +618,6 @@ void colorsClose()
     for (int index = 0; index < 256; index++) {
         freeColorBlendTable(index);
     }
-
-    for (int index = 0; index < tos; index++) {
-        free(colorPaletteStack[index]);
-    }
-
-    tos = 0;
 }
 
 // 0x4C15E8
