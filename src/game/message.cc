@@ -135,14 +135,13 @@ bool message_init(MessageList* messageList)
 // 0x4766D4
 bool message_exit(MessageList* messageList)
 {
-    int i;
     MessageListItem* entry;
 
     if (messageList == NULL) {
         return false;
     }
 
-    for (i = 0; i < messageList->entries_num; i++) {
+    for (int i = 0; i < messageList->entries_num; i++) {
         entry = &(messageList->entries[i]);
 
         if (entry->audio != NULL) {
@@ -169,15 +168,13 @@ bool message_load(MessageList* messageList, const char* path)
 {
     char* language;
     char localized_path[COMPAT_MAX_PATH];
-    DB_FILE* file_ptr;
     char num[MESSAGE_LIST_ITEM_FIELD_MAX_SIZE];
     char audio[MESSAGE_LIST_ITEM_FIELD_MAX_SIZE];
     char text[MESSAGE_LIST_ITEM_FIELD_MAX_SIZE];
     int rc;
-    bool success;
     MessageListItem entry;
 
-    success = false;
+    bool success = false;
 
     if (messageList == NULL) {
         return false;
@@ -193,7 +190,7 @@ bool message_load(MessageList* messageList, const char* path)
 
     snprintf(localized_path, sizeof(localized_path), "%s\\%s\\%s", "text", language, path);
 
-    file_ptr = db_fopen(localized_path, "rt");
+    DB_FILE* file_ptr = db_fopen(localized_path, "rt");
     if (file_ptr == NULL) {
         return false;
     }
@@ -434,9 +431,7 @@ bool message_parse_number(int* out_num, const char* str)
 int message_load_field(DB_FILE* file, char* str)
 {
     int ch;
-    int len;
-
-    len = 0;
+    int len = 0;
 
     while (1) {
         ch = db_fgetc(file);
