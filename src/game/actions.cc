@@ -272,9 +272,9 @@ void show_damage_to_object(Object* defender, int damage, int flags, Object* weap
             fid = art_id(OBJ_TYPE_MISC, 10, 0, 0, 0);
             if (fid == attacker->fid) {
                 anim = check_death(defender, ANIM_EXPLODED_TO_NOTHING, VIOLENCE_LEVEL_MAXIMUM_BLOOD, hit_from_front);
-            } else if (attacker->pid == PROTO_ID_0x20001EB) {
+            } else if (attacker->pid == PROTO_ID_FORCE_FIELD_NS) {
                 anim = check_death(defender, ANIM_ELECTRIFIED_TO_NOTHING, VIOLENCE_LEVEL_MAXIMUM_BLOOD, hit_from_front);
-            } else if (attacker->fid == FID_0x20001F5) {
+            } else if (attacker->fid == FRAME_ID_FORCE_FIELD_NS) {
                 anim = check_death(defender, a8, VIOLENCE_LEVEL_MAXIMUM_BLOOD, hit_from_front);
             } else {
                 anim = pick_death(attacker, defender, damage, item_w_damage_type(weapon), a8, hit_from_front);
@@ -495,7 +495,7 @@ void show_damage(Attack* attack, int a2, int delay)
             bool hit_from_front = is_hit_from_front(attack->attacker, attack->defender);
 
             if (FID_TYPE(attack->defender->fid) == OBJ_TYPE_CRITTER) {
-                if (attack->attacker->fid == FID_0x20001F5) {
+                if (attack->attacker->fid == FRAME_ID_FORCE_FIELD_NS) {
                     show_damage_to_object(attack->defender,
                         attack->defenderDamage,
                         attack->defenderFlags,
