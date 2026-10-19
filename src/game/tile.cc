@@ -2,10 +2,10 @@
 
 #include <assert.h>
 #include <limits.h>
+#include <math.h>
 #include <string.h>
 
-#define _USE_MATH_DEFINES
-#include <math.h>
+#include <algorithm>
 
 #include "game/config.h"
 #include "game/gconfig.h"
@@ -1708,13 +1708,8 @@ void floor_draw(int fid, int x, int y, Rect* rect)
         int parity = tile & 1;
         int ambientIntensity = light_get_ambient();
         for (int i = 0; i < 10; i++) {
-            // NOTE: calling light_get_tile two times, probably a result of using __min kind macro
-            int tileIntensity = light_get_tile(elev, tile + verticies[i].offsets[parity]);
-            if (tileIntensity <= ambientIntensity) {
-                tileIntensity = ambientIntensity;
-            }
-
-            verticies[i].intensity = tileIntensity;
+            // NOTE: Calls `_light_get_tile` twice.
+            verticies[i].intensity = std::max(light_get_tile(elev, tile + verticies[i].offsets[parity]),ambientIntensity);
         }
 
         int v23 = 0;
