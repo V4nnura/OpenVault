@@ -365,7 +365,7 @@ static int ai_check_drugs(Object* critter)
             break;
         }
 
-        if (drug->pid == PROTO_ID_STIMPACK || drug->pid == PROTO_ID_SUPER_STIMPACK) {
+        if (drug->pid == PROTO_ID_STIMPAK || drug->pid == PROTO_ID_SUPER_STIMPAK) {
             if (item_remove_mult(critter, drug, 1) == 0) {
                 if (item_d_take_drug(critter, drug) == -1) {
                     item_add_force(critter, drug, 1);
