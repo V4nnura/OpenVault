@@ -813,7 +813,7 @@ int scripts_check_state()
                     while (elevatorDoors != NULL) {
                         int pid = elevatorDoors->pid;
                         if (PID_TYPE(pid) == OBJ_TYPE_SCENERY
-                            && (pid == PROTO_ID_0x2000099 || pid == PROTO_ID_0x20001A5 || pid == PROTO_ID_0x20001D6)
+                            && (pid == PROTO_ID_BROTHERHOOD_DOOR || pid == PROTO_ID_ELEVATOR_DOOR || pid == PROTO_ID_ELEVATOR_DOOR_ALT)
                             && tile_dist(elevatorDoors->tile, obj_dude->tile) <= 4) {
                             break;
                         }
@@ -839,7 +839,7 @@ int scripts_check_state()
                 while (elevatorDoors != NULL) {
                     int pid = elevatorDoors->pid;
                     if (PID_TYPE(pid) == OBJ_TYPE_SCENERY
-                        && (pid == PROTO_ID_0x2000099 || pid == PROTO_ID_0x20001A5 || pid == PROTO_ID_0x20001D6)
+                        && (pid == PROTO_ID_BROTHERHOOD_DOOR || pid == PROTO_ID_ELEVATOR_DOOR || pid == PROTO_ID_ELEVATOR_DOOR_ALT)
                         && tile_dist(elevatorDoors->tile, obj_dude->tile) <= 4) {
                         break;
                     }
@@ -918,7 +918,7 @@ int scripts_check_state_in_combat()
                     while (elevatorDoors != NULL) {
                         int pid = elevatorDoors->pid;
                         if (PID_TYPE(pid) == OBJ_TYPE_SCENERY
-                            && (pid == PROTO_ID_0x2000099 || pid == PROTO_ID_0x20001A5 || pid == PROTO_ID_0x20001D6)
+                            && (pid == PROTO_ID_BROTHERHOOD_DOOR || pid == PROTO_ID_ELEVATOR_DOOR || pid == PROTO_ID_ELEVATOR_DOOR_ALT)
                             && tile_dist(elevatorDoors->tile, obj_dude->tile) <= 4) {
                             break;
                         }
