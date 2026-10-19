@@ -410,13 +410,13 @@ static void draw_top_down_map(int window, int elevation, unsigned char* backgrou
                     continue;
                 }
 
-                if (object->pid == PROTO_ID_0x2000031) {
+                if (object->pid == PROTO_ID_EXIT_GRID_MAP_MARKER) {
                     objectColor = colorTable[32328];
                 } else if (objectType == OBJ_TYPE_WALL) {
                     objectColor = colorTable[992];
                 } else if (objectType == OBJ_TYPE_SCENERY
                     && (flags & AUTOMAP_WTH_HIGH_DETAILS) != 0
-                    && object->pid != PROTO_ID_0x2000158) {
+                    && object->pid != PROTO_ID_BLOCK_HEX_AUTO_INVISO) {
                     objectColor = colorTable[480];
                 } else if (object == obj_dude) {
                     objectColor = colorTable[31744];
@@ -966,7 +966,7 @@ static void decode_map_data(int elevation)
             int contentType;
 
             int objectType = FID_TYPE(object->fid);
-            if (objectType == OBJ_TYPE_SCENERY && object->pid != PROTO_ID_0x2000158) {
+            if (objectType == OBJ_TYPE_SCENERY && object->pid != PROTO_ID_BLOCK_HEX_AUTO_INVISO) {
                 contentType = 2;
             } else if (objectType == OBJ_TYPE_WALL) {
                 contentType = 1;
