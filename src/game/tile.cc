@@ -696,22 +696,17 @@ int tile_roof_visible()
 // 0x49E258
 int tile_coord(int tile, int* screenX, int* screenY, int elevation)
 {
-    int v3;
-    int v4;
-    int v5;
-    int v6;
-
     if (!TILE_IS_VALID(tile)) {
         return -1;
     }
 
-    v3 = grid_width - 1 - tile % grid_width;
-    v4 = tile / grid_width;
+    int v3 = grid_width - 1 - tile % grid_width;
+    int v4 = tile / grid_width;
 
     *screenX = tile_offx;
     *screenY = tile_offy;
 
-    v5 = (v3 - tile_x) / -2;
+    int v5 = (v3 - tile_x) / -2;
     *screenX += 48 * ((v3 - tile_x) / 2);
     *screenY += 12 * v5;
 
@@ -724,7 +719,7 @@ int tile_coord(int tile, int* screenX, int* screenY, int elevation)
         }
     }
 
-    v6 = v4 - tile_y;
+    int v6 = v4 - tile_y;
     *screenX += 16 * v6;
     *screenY += 12 * v6;
 
@@ -1071,30 +1066,23 @@ int square_coord(int squareTile, int* coordX, int* coordY, int elevation)
 // 0x49E954
 int square_coord_roof(int squareTile, int* screenX, int* screenY, int elevation)
 {
-    int v5;
-    int v6;
-    int v7;
-    int v8;
-    int v9;
-    int v10;
-
     if (squareTile < 0 || squareTile >= square_size) {
         return -1;
     }
 
-    v5 = square_width - 1 - squareTile % square_width;
-    v6 = squareTile / square_width;
-    v7 = square_x;
+    int v5 = square_width - 1 - squareTile % square_width;
+    int v6 = squareTile / square_width;
+    int v7 = square_x;
     *screenX = square_offx;
     *screenY = square_offy;
 
-    v8 = v5 - v7;
+    int v8 = v5 - v7;
     *screenX += 48 * v8;
     *screenY -= 12 * v8;
 
-    v9 = v6 - square_y;
+    int v9 = v6 - square_y;
     *screenX += 32 * v9;
-    v10 = 24 * v9 + *screenY;
+    int v10 = 24 * v9 + *screenY;
     *screenY = v10;
     *screenY = v10 - 96;
 
@@ -1134,17 +1122,12 @@ int square_num_roof(int screenX, int screenY, int elevation)
 // 0x49EA88
 void square_xy(int screenX, int screenY, int elevation, int* coordX, int* coordY)
 {
-    int v4;
-    int v5;
-    int v6;
-    int v8;
-
-    v4 = screenX - square_offx;
-    v5 = screenY - square_offy - 12;
-    v6 = 3 * v4 - 4 * v5;
+    int v4 = screenX - square_offx;
+    int v5 = screenY - square_offy - 12;
+    int v6 = 3 * v4 - 4 * v5;
     *coordX = v6 >= 0 ? (v6 / 192) : ((v6 + 1) / 192 - 1);
 
-    v8 = 4 * v5 + v4;
+    int v8 = 4 * v5 + v4;
     *coordY = v8 >= 0 ? (v8 / 128) : ((v8 + 1) / 128 - 1);
 
     *coordX += square_x;
@@ -1156,18 +1139,13 @@ void square_xy(int screenX, int screenY, int elevation, int* coordX, int* coordY
 // 0x49EB30
 void square_xy_roof(int screenX, int screenY, int elevation, int* coordX, int* coordY)
 {
-    int v4;
-    int v5;
-    int v6;
-    int v8;
-
-    v4 = screenX - square_offx;
-    v5 = screenY + 96 - square_offy - 12;
-    v6 = 3 * v4 - 4 * v5;
+    int v4 = screenX - square_offx;
+    int v5 = screenY + 96 - square_offy - 12;
+    int v6 = 3 * v4 - 4 * v5;
 
     *coordX = (v6 >= 0) ? (v6 / 192) : ((v6 + 1) / 192 - 1);
 
-    v8 = 4 * v5 + v4;
+    int v8 = 4 * v5 + v4;
     *coordY = v8 >= 0 ? (v8 / 128) : ((v8 + 1) / 128 - 1);
 
     *coordX += square_x;
@@ -2032,8 +2010,7 @@ int tile_scroll_to(int tile, int flags)
         return -1;
     }
 
-    int index = 1;
-    for (; index < count; index++) {
+    for (int index = 1; index < count; index++) {
         if (tile_set_center(v9[index], 0) == -1) {
             break;
         }
