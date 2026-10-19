@@ -1604,13 +1604,15 @@ void combat_exit()
 // 0x41F960
 int find_cid(int start, int cid, Object** critterList, int critterListLength)
 {
-    for (start; start < critterListLength; start++) {
-        if (critterList[start]->cid == cid) {
+    int index;
+
+    for (index = start; index < critterListLength; index++) {
+        if (critterList[index]->cid == cid) {
             break;
         }
     }
 
-    return start;
+    return index;
 }
 
 // 0x41F988
@@ -2152,8 +2154,6 @@ void combat_turn_run()
 // 0x4206B0
 static int combat_input()
 {
-    int input;
-
     while ((combat_state & COMBAT_STATE_PLAYER_TURN) != 0) {
         sharedFpsLimiter.mark();
 
@@ -2177,7 +2177,7 @@ static int combat_input()
             break;
         }
 
-        input = get_input();
+        int input = get_input();
 
         if (input == KEY_SPACE) {
             break;
