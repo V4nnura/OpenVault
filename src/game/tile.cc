@@ -1708,7 +1708,7 @@ void floor_draw(int fid, int x, int y, Rect* rect)
         int parity = tile & 1;
         int ambientIntensity = light_get_ambient();
         for (int i = 0; i < 10; i++) {
-            // NOTE: Calls `_light_get_tile` twice.
+            // NOTE: Calls `light_get_tile` twice.
             verticies[i].intensity = std::max(light_get_tile(elev, tile + verticies[i].offsets[parity]), ambientIntensity);
         }
 
