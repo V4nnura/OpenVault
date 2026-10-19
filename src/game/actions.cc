@@ -1848,7 +1848,7 @@ void action_dmg(int tile, int elevation, int minDamage, int maxDamage, int damag
     }
 
     Object* attacker;
-    if (obj_new(&attacker, FID_0x20001F5, -1) == -1) {
+    if (obj_new(&attacker, FRAME_ID_FORCE_FIELD_NS, -1) == -1) {
         mem_free(attack);
         return;
     }
