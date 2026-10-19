@@ -1879,8 +1879,6 @@ void combat_give_exps(int exp_points)
 {
     MessageListItem format;
     MessageListItem prefix;
-    int current_hp;
-    int max_hp;
     char text[132];
 
     if (exp_points <= 0) {
@@ -1900,8 +1898,8 @@ void combat_give_exps(int exp_points)
 
     prefix.num = roll_random(0, 3) + 622; // generate prefix for message
 
-    current_hp = stat_level(obj_dude, STAT_CURRENT_HIT_POINTS);
-    max_hp = stat_level(obj_dude, STAT_MAXIMUM_HIT_POINTS);
+    int current_hp = stat_level(obj_dude, STAT_CURRENT_HIT_POINTS);
+    int max_hp = stat_level(obj_dude, STAT_MAXIMUM_HIT_POINTS);
     if (current_hp == max_hp && roll_random(0, 100) > 65) {
         prefix.num = 626; // Best possible prefix: For destroying your enemies without taking a scratch,
     }
