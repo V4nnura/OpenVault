@@ -1769,8 +1769,7 @@ static void combat_begin(Object* a1)
             scr_set_objs(critter->sid, NULL, NULL);
             scr_set_ext_param(critter->sid, 0);
             if (critter->pid == PROTO_ID_GORIS && !critter_is_dead(critter)) {
-                    goris = critter;
-                }
+                goris = critter;
             }
         }
 
