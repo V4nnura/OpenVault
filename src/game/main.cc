@@ -267,7 +267,7 @@ int gnw_main(int argc, char** argv)
 // 0x4728CC
 static bool main_init_system(int argc, char** argv)
 {
-    if (game_init("FALLOUT", false, 0, 0, argc, argv) == -1) {
+    if (game_init("FALLOUT", false, 0, WINDOW_MANAGER_INIT_FLAG_NONE, argc, argv) == -1) {
         return false;
     }
 
