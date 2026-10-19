@@ -2010,7 +2010,8 @@ int tile_scroll_to(int tile, int flags)
         return -1;
     }
 
-    for (int index = 1; index < count; index++) {
+    int index = 1;
+    for (; index < count; index++) {
         if (tile_set_center(v9[index], 0) == -1) {
             break;
         }
@@ -2018,7 +2019,7 @@ int tile_scroll_to(int tile, int flags)
 
     int rc = 0;
     if ((flags & 0x01) != 0) {
-        if (int index != count) {
+        if (index != count) {
             tile_set_center(oldCenterTile, 0);
             rc = -1;
         }
