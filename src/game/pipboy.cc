@@ -1766,11 +1766,6 @@ static void PipArchives(int a1)
 // 0x488D5C
 static int ListArchive(int a1)
 {
-    const char* text;
-    int movie;
-    int line;
-    int color;
-
     buf_to_buf(pipbmp[PIPBOY_FRM_BACKGROUND] + PIPBOY_WINDOW_WIDTH * PIPBOY_WINDOW_CONTENT_VIEW_Y + PIPBOY_WINDOW_CONTENT_VIEW_X,
         PIPBOY_WINDOW_CONTENT_VIEW_WIDTH,
         PIPBOY_WINDOW_CONTENT_VIEW_HEIGHT,
@@ -1783,17 +1778,18 @@ static int ListArchive(int a1)
     }
 
     // VIDEO ARCHIVES
-    text = getmsg(&pipboy_message_file, &pipmesg, 206);
+    const char* text = getmsg(&pipboy_message_file, &pipmesg, 206);
     pip_print(text, PIPBOY_TEXT_ALIGNMENT_CENTER | PIPBOY_TEXT_STYLE_UNDERLINE, colorTable[992]);
 
     if (bottom_line >= 2) {
         cursor_line = 2;
     }
 
-    line = 0;
+    int line = 0;
 
-    for (movie = MOVIE_VEXPLD; movie < MOVIE_COUNT; movie++) {
+    for (int movie = MOVIE_VEXPLD; movie < MOVIE_COUNT; movie++) {
         if (gmovie_has_been_played(movie)) {
+            int color;
             if (line++ == a1 - 1) {
                 color = colorTable[32747];
             } else {
