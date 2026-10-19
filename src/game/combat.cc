@@ -1756,7 +1756,7 @@ static void combat_begin(Object* a1)
         list_noncom = list_total;
         list_com = 0;
 
-        Object* goris = NULL;
+        Object* v1 = NULL;
         for (index = 0; index < list_total; index++) {
             Object* critter = combat_list[index];
             CritterCombatData* combatData = &(critter->data.critter.combat);
@@ -1768,8 +1768,9 @@ static void combat_begin(Object* a1)
 
             scr_set_objs(critter->sid, NULL, NULL);
             scr_set_ext_param(critter->sid, 0);
-            if (critter->pid == PROTO_ID_GORIS && !critter_is_dead(critter)) {
-                    goris = critter;
+            if (critter->pid == 0x1000098) {
+                if (!critter_is_dead(critter)) {
+                    v1 = critter;
                 }
             }
         }
@@ -1789,8 +1790,11 @@ static void combat_begin(Object* a1)
 // 0x41FE6C
 static void combat_begin_extra(Object* attacker)
 {
-    for (int index = 0; index < list_total; index++) {
-        int outline_type = OUTLINE_TYPE_HOSTILE;
+    int index;
+    int outline_type;
+
+    for (index = 0; index < list_total; index++) {
+        outline_type = OUTLINE_TYPE_HOSTILE;
         if (perk_level(PERK_FRIENDLY_FOE)) {
             if (combat_list[index]->data.critter.combat.team == obj_dude->data.critter.combat.team) {
                 outline_type = OUTLINE_TYPE_FRIENDLY;
@@ -1922,7 +1926,9 @@ void combat_give_exps(int exp_points)
 // 0x4201A0
 static void combat_add_noncoms()
 {
-    for (int index = list_com; index < list_com + list_noncom; index++) {
+    int index;
+
+    for (index = list_com; index < list_com + list_noncom; index++) {
         Object* obj = combat_list[index];
         if (combatai_want_to_join(obj)) {
             obj->data.critter.combat.maneuver = CRITTER_MANEUVER_NONE;
@@ -1946,9 +1952,12 @@ static void combat_add_noncoms()
 // 0x420234
 int combat_in_range(Object* critter)
 {
-    int perception = stat_level(critter, STAT_PERCEPTION);
+    int perception;
+    int index;
 
-    for (int index = 0; index < list_com; index++) {
+    perception = stat_level(critter, STAT_PERCEPTION);
+
+    for (index = 0; index < list_com; index++) {
         if (obj_dist(combat_list[index], critter) <= perception) {
             return 1;
         }
@@ -2801,20 +2810,27 @@ static int compute_spray(Attack* attack, int accuracy, int* roundsHitMainTargetP
 // 0x421490
 static int compute_attack(Attack* attack)
 {
-    int weapon_range = item_w_range(attack->attacker, attack->hitMode);
-    int distance = obj_dist(attack->attacker, attack->defender);
+    int weapon_range;
+    int distance;
+    int anim;
+    int to_hit;
+    int damage_type;
     bool is_grenade = false;
+    int weapon_subtype;
     int critical_chance;
     int roll;
+
+    weapon_range = item_w_range(attack->attacker, attack->hitMode);
+    distance = obj_dist(attack->attacker, attack->defender);
 
     if (weapon_range < distance) {
         return -1;
     }
 
-    int anim = item_w_anim(attack->attacker, attack->hitMode);
-    int to_hit = determine_to_hit(attack->attacker, attack->defender, attack->defenderHitLocation, attack->hitMode);
+    anim = item_w_anim(attack->attacker, attack->hitMode);
+    to_hit = determine_to_hit(attack->attacker, attack->defender, attack->defenderHitLocation, attack->hitMode);
 
-    int damage_type = item_w_damage_type(attack->weapon);
+    damage_type = item_w_damage_type(attack->weapon);
     if (anim == ANIM_THROW_ANIM && (damage_type == DAMAGE_TYPE_EXPLOSION || damage_type == DAMAGE_TYPE_PLASMA || damage_type == DAMAGE_TYPE_EMP)) {
         is_grenade = true;
     }
@@ -2823,7 +2839,7 @@ static int compute_attack(Attack* attack)
         attack->defenderHitLocation = HIT_LOCATION_TORSO;
     }
 
-    int weapon_subtype = item_w_subtype(attack->weapon, attack->hitMode);
+    weapon_subtype = item_w_subtype(attack->weapon, attack->hitMode);
     int roundsHitMainTarget = 1;
     int damage_multiplier = 2;
     int roundsSpent = 1;
@@ -3239,9 +3255,11 @@ int determine_to_hit_no_range(Object* a1, Object* a2, int hitLocation, int hitMo
 // 0x421E3C
 static int determine_to_hit_func(Object* attacker, Object* defender, int hitLocation, int hitMode, int check_range)
 {
-    Object* weapon = item_hit_with(attacker, hitMode);
+    Object* weapon;
     bool is_ranged_weapon = false;
     int accuracy = 0;
+
+    weapon = item_hit_with(attacker, hitMode);
 
     if (weapon == NULL) {
         accuracy = skill_level(attacker, SKILL_UNARMED);
@@ -3477,10 +3495,12 @@ static void compute_damage(Attack* attack, int rounds, int damage_multiplier)
 // 0x422348
 void death_checks(Attack* attack)
 {
+    int index;
+
     check_for_death(attack->attacker, attack->attackerDamage, &(attack->attackerFlags));
     check_for_death(attack->defender, attack->defenderDamage, &(attack->defenderFlags));
 
-    for (int index = 0; index < attack->extrasLength; index++) {
+    for (index = 0; index < attack->extrasLength; index++) {
         check_for_death(attack->extras[index], attack->extrasDamage[index], &(attack->extrasFlags[index]));
     }
 }
