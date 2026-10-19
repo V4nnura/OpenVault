@@ -4683,8 +4683,9 @@ bool combat_is_shot_blocked(Object* obstacle, int from, int to, Object* a4, int*
         *a5 = 0;
     }
 
+    Object* obstacle = a1;
     while (obstacle != NULL && from != to) {
-        make_straight_path(obstacle, from, to, NULL, &obstacle, 32);
+        make_straight_path(a1, from, to, NULL, &obstacle, 32);
         if (obstacle != NULL) {
             if (FID_TYPE(obstacle->fid) != OBJ_TYPE_CRITTER) {
                 return true;
