@@ -1604,7 +1604,9 @@ void combat_exit()
 // 0x41F960
 int find_cid(int start, int cid, Object** critterList, int critterListLength)
 {
-    for (int index = start; index < critterListLength; index++) {
+    int index;
+
+    for (index = start; index < critterListLength; index++) {
         if (critterList[index]->cid == cid) {
             break;
         }
