@@ -2018,7 +2018,7 @@ int tile_scroll_to(int tile, int flags)
 
     int rc = 0;
     if ((flags & 0x01) != 0) {
-        if (index != count) {
+        if (int index != count) {
             tile_set_center(oldCenterTile, 0);
             rc = -1;
         }
