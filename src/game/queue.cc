@@ -235,7 +235,7 @@ int queue_add(int delay, Object* obj, void* data, int eventType)
     newQueueListNode->data = data;
 
     if (obj != NULL) {
-        obj->flags |= OBJECT_USED;
+        obj->flags |= OBJECT_QUEUED;
     }
 
     QueueListNode** queueListNodePtr = &queue;
