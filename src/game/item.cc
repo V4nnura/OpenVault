@@ -515,11 +515,11 @@ static bool item_identical(Object* item1, Object* item2)
         return false;
     }
 
-    if ((item1->flags & (OBJECT_EQUIPPED | OBJECT_USED)) != 0) {
+    if ((item1->flags & (OBJECT_EQUIPPED | OBJECT_QUEUED)) != 0) {
         return false;
     }
 
-    if ((item2->flags & (OBJECT_EQUIPPED | OBJECT_USED)) != 0) {
+    if ((item2->flags & (OBJECT_EQUIPPED | OBJECT_QUEUED)) != 0) {
         return false;
     }
 
@@ -885,14 +885,14 @@ int item_queued(Object* obj)
         return false;
     }
 
-    if ((obj->flags & OBJECT_USED) != 0) {
+    if ((obj->flags & OBJECT_QUEUED) != 0) {
         return true;
     }
 
     Inventory* inventory = &(obj->data.inventory);
     for (int index = 0; index < inventory->length; index++) {
         InventoryItem* inventoryItem = &(inventory->items[index]);
-        if ((inventoryItem->item->flags & OBJECT_USED) != 0) {
+        if ((inventoryItem->item->flags & OBJECT_QUEUED) != 0) {
             return true;
         }
 
