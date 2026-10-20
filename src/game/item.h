@@ -71,7 +71,7 @@ int item_w_anim_code(Object* weapon);
 int item_w_proj_pid(Object* weapon);
 int item_w_ammo_pid(Object* weapon);
 char item_w_sound_id(Object* weapon);
-int item_w_called_shot(Object* critter, int hit_mode);
+bool item_w_called_shot(Object* critter, int hit_mode);
 int item_w_can_unload(Object* weapon);
 Object* item_w_unload(Object* weapon);
 int item_w_primary_mp_cost(Object* weapon);
