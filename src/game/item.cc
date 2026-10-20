@@ -607,25 +607,20 @@ int item_size(Object* item)
 int item_weight(Object* item)
 {
     Proto* item_proto;
-    Proto* ammo_proto;
-    int type;
-    int weight;
-    int curr_ammo;
-    int ammo_pid;
-
     proto_ptr(item->pid, &item_proto);
-    type = item_proto->item.type;
-    weight = item_proto->item.weight;
+    int type = item_proto->item.type;
+    int weight = item_proto->item.weight;
 
     switch (type) {
     case ITEM_TYPE_CONTAINER:
         weight += item_total_weight(item);
         break;
     case ITEM_TYPE_WEAPON:
-        curr_ammo = item_w_curr_ammo(item);
+        int curr_ammo = item_w_curr_ammo(item);
         if (curr_ammo > 0) {
-            ammo_pid = item_w_ammo_pid(item);
+            int ammo_pid = item_w_ammo_pid(item);
             if (ammo_pid != -1) {
+                Proto* ammo_proto;
                 if (proto_ptr(ammo_pid, &ammo_proto) != -1) {
                     weight += ammo_proto->item.weight * ((curr_ammo - 1) / ammo_proto->item.data.ammo.quantity + 1);
                 }
@@ -822,7 +817,6 @@ bool item_grey(Object* weapon)
 int item_inv_fid(Object* item)
 {
     Proto* proto;
-
     proto_ptr(item->pid, &proto);
     return proto->item.inventoryFid;
 }
