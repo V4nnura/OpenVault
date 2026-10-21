@@ -170,13 +170,10 @@ void debug_clear()
 {
     char* buffer = NULL;
 
-    switch (debug_func) {
-    case debug_mono:
+    if (debug_func == debug_mono) {
         buffer = (char*)0xB0000;
-        break;
-    case debug_screen:
+    } else if (debug_func == debug_screen) {
         buffer = (char*)0xB8000;
-        break;
     }
 
     if (buffer != NULL) {
