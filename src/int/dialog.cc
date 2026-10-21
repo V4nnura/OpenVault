@@ -310,9 +310,8 @@ static void printLine(int win, char** strings, int strings_num, int a4, int a5, 
 // 0x42FCF0
 static void printStr(int win, char* a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9)
 {
-    char** strings = windowWordWrap(a2, a3, 0, &strings_num);
     int strings_num;
-
+    char** strings = windowWordWrap(a2, a3, 0, &strings_num);
     printLine(win, strings, strings_num, a3, a4, a5, a6, a7, a8);
     windowFreeWordList(strings, strings_num);
 }
