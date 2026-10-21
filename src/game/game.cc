@@ -1030,12 +1030,16 @@ int game_state()
 // 0x43C7B4
 int game_state_request(int new_game_state)
 {
-    if (new_game_state == GAME_STATE_0) {
+    switch (new_game_state) {
+    case GAME_STATE_0:
         new_game_state = GAME_STATE_1;
-    } else if (new_game_state == GAME_STATE_2) {
+        break;
+    case GAME_STATE_2:
         new_game_state = GAME_STATE_3;
-    } else if (new_game_state == GAME_STATE_4) {
+        break;
+    case GAME_STATE_4:
         new_game_state = GAME_STATE_5;
+        break;
     }
 
     if (game_state_cur != GAME_STATE_4 || new_game_state != GAME_STATE_5) {
