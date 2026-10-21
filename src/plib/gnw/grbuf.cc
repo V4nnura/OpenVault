@@ -218,11 +218,8 @@ void trans_buf_to_buf(unsigned char* src, int width, int height, int srcPitch, u
 // 0x4BDFC4
 void mask_buf_to_buf(unsigned char* src, int width, int height, int srcPitch, unsigned char* mask, int maskPitch, unsigned char* dest, int destPitch)
 {
-    int y;
-    int x;
-
-    for (y = 0; y < height; y++) {
-        for (x = 0; x < width; x++) {
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
             if (*mask != 0) {
                 *dest = *src;
             }
@@ -239,9 +236,7 @@ void mask_buf_to_buf(unsigned char* src, int width, int height, int srcPitch, un
 // 0x4BE10C
 void buf_fill(unsigned char* buf, int width, int height, int pitch, int value)
 {
-    int y;
-
-    for (y = 0; y < height; y++) {
+    for (int y = 0; y < height; y++) {
         memset(buf, value, width);
         buf += pitch;
     }
@@ -276,13 +271,10 @@ void swap_color_buf(unsigned char* buf, int width, int height, int pitch, int co
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             int currentColor = *buf & 0xFF;
-            switch (currentColor) {
-            case color1:
+            if (currentColor == color1) {
                 *buf = color2 & 0xFF;
-                break;
-            case color2:
+            } else if (currentColor == color2) {
                 *buf = color1 & 0xFF;
-                break;
             }
             buf++;
         }
