@@ -1049,9 +1049,7 @@ int game_state_request(int a1)
 // 0x43C810
 void game_state_update()
 {
-    int v0;
-
-    v0 = game_state_cur;
+    int v0 = game_state_cur;
     switch (game_state_cur) {
     case GAME_STATE_1:
         v0 = GAME_STATE_0;
@@ -1236,13 +1234,9 @@ int game_quit_with_confirm()
 // 0x43D348
 static int game_init_databases()
 {
-    int hashing;
-    char* main_file_name;
-    char* patch_file_name;
-
-    hashing = 0;
-    main_file_name = NULL;
-    patch_file_name = NULL;
+    int hashing = 0;
+    char* main_file_name = NULL;
+    char* patch_file_name = NULL;
 
     if (config_get_value(&game_config, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_HASHING_KEY, &hashing)) {
         db_enable_hash_table();
