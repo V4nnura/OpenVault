@@ -4394,10 +4394,7 @@ static void obj_render_outline(Object* object, Rect* rect)
     v49.ulx = 0;
     v49.uly = 0;
     v49.lrx = frameWidth - 1;
-
-    // FIXME: I'm not sure why it ignores frameHeight and makes separate call
-    // to obtain height.
-    v49.lry = art_frame_length(art, object->frame, object->rotation) - 1;
+    v49.lry = frameHeight - 1;
 
     Rect objectRect;
     if (object->tile == -1) {
