@@ -276,10 +276,13 @@ void swap_color_buf(unsigned char* buf, int width, int height, int pitch, int co
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             int currentColor = *buf & 0xFF;
-            if (currentColor == color1) {
+            switch (currentColor) {
+            case color1:
                 *buf = color2 & 0xFF;
-            } else if (currentColor == color2) {
+                break;
+            case color2:
                 *buf = color1 & 0xFF;
+                break;
             }
             buf++;
         }
