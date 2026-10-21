@@ -1097,7 +1097,7 @@ int exec_script_proc(int sid, int action)
         return -1;
     }
 
-    if ((program->flags & 0x0124) != 0) {
+    if ((program->flags & (PROGRAM_FLAG_FATAL_ERROR | PROGRAM_FLAG_CHILD_CALL | PROGRAM_FLAG_CHILD_SPAWN)) != 0) {
         return 0;
     }
 
