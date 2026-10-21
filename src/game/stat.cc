@@ -103,10 +103,6 @@ static int curr_pc_stat[PC_STAT_COUNT];
 // 0x49C2F0
 int stat_init()
 {
-    char path[COMPAT_MAX_PATH];
-    MessageListItem messageListItem;
-    int index;
-
     // NOTE: Uninline.
     stat_pc_set_defaults();
 
@@ -114,12 +110,15 @@ int stat_init()
         return -1;
     }
 
+    char path[COMPAT_MAX_PATH];
     snprintf(path, sizeof(path), "%s%s", msg_path, "stat.msg");
 
     if (!message_load(&stat_message_file, path)) {
         return -1;
     }
 
+    int index;
+    MessageListItem messageListItem;
     for (index = 0; index < STAT_COUNT; index++) {
         stat_data[index].name = getmsg(&stat_message_file, &messageListItem, 100 + index);
         stat_data[index].description = getmsg(&stat_message_file, &messageListItem, 200 + index);
@@ -157,9 +156,7 @@ int stat_exit()
 // 0x49C474
 int stat_load(DB_FILE* stream)
 {
-    int pc_stat;
-
-    for (pc_stat = 0; pc_stat < PC_STAT_COUNT; pc_stat++) {
+    for (int pc_stat = 0; pc_stat < PC_STAT_COUNT; pc_stat++) {
         if (db_freadInt(stream, &(curr_pc_stat[pc_stat])) == -1) {
             return -1;
         }
@@ -171,9 +168,7 @@ int stat_load(DB_FILE* stream)
 // 0x49C4A0
 int stat_save(DB_FILE* stream)
 {
-    int pc_stat;
-
-    for (pc_stat = 0; pc_stat < PC_STAT_COUNT; pc_stat++) {
+    for (int pc_stat = 0; pc_stat < PC_STAT_COUNT; pc_stat++) {
         if (db_fwriteInt(stream, curr_pc_stat[pc_stat]) == -1) {
             return -1;
         }
@@ -246,9 +241,8 @@ int stat_get_base(Object* critter, int stat)
 // 0x49C5E0
 int stat_get_base_direct(Object* critter, int stat)
 {
-    Proto* proto;
-
     if (stat >= 0 && stat < SAVEABLE_STAT_COUNT) {
+        Proto* proto;
         proto_ptr(critter->pid, &proto);
         return proto->critter.data.baseStats[stat];
     } else {
@@ -280,8 +274,6 @@ int stat_get_bonus(Object* critter, int stat)
 // 0x49C694
 int stat_set_base(Object* critter, int stat, int value)
 {
-    Proto* proto;
-
     if (stat < 0 || stat >= STAT_COUNT) {
         return -5;
     }
@@ -304,6 +296,7 @@ int stat_set_base(Object* critter, int stat, int value)
             return -3;
         }
 
+        Proto* proto;
         proto_ptr(critter->pid, &proto);
         proto->critter.data.baseStats[stat] = value;
 
@@ -386,9 +379,7 @@ int stat_set_bonus(Object* critter, int stat, int value)
 // 0x49C8A4
 void stat_set_defaults(CritterProtoData* data)
 {
-    int stat;
-
-    for (stat = 0; stat < SAVEABLE_STAT_COUNT; stat++) {
+    for (int stat = 0; stat < SAVEABLE_STAT_COUNT; stat++) {
         data->baseStats[stat] = stat_data[stat].defaultValue;
         data->bonusStats[stat] = 0;
     }
@@ -454,8 +445,6 @@ int stat_pc_get(int pc_stat)
 // 0x49CAE8
 int stat_pc_set(int pc_stat, int value)
 {
-    int rc;
-
     if (pc_stat < 0 && pc_stat >= PC_STAT_COUNT) {
         return -5;
     }
@@ -470,6 +459,7 @@ int stat_pc_set(int pc_stat, int value)
 
     curr_pc_stat[pc_stat] = value;
 
+    int rc;
     if (pc_stat == PC_STAT_EXPERIENCE) {
         rc = stat_pc_add_experience(0);
     } else {
@@ -482,9 +472,7 @@ int stat_pc_set(int pc_stat, int value)
 // 0x49CB3C
 void stat_pc_set_defaults()
 {
-    int pc_stat;
-
-    for (pc_stat = 0; pc_stat < PC_STAT_COUNT; pc_stat++) {
+    for (int pc_stat = 0; pc_stat < PC_STAT_COUNT; pc_stat++) {
         curr_pc_stat[pc_stat] = pc_stat_data[pc_stat].defaultValue;
     }
 }
