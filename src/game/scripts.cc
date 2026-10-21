@@ -81,7 +81,7 @@ static int scr_build_lookup_table(Script* scr);
 static int scr_index_to_name(int scriptIndex, char* name, size_t size);
 static int scr_header_load();
 static int scr_write_ScriptSubNode(Script* scr, DB_FILE* stream);
-static int scr_write_ScriptNode(ScriptListExtent* a1, DB_FILE* stream);
+static int scr_write_ScriptNode(ScriptListExtent* scriptExtent, DB_FILE* stream);
 static int scr_read_ScriptSubNode(Script* scr, DB_FILE* stream);
 static int scr_read_ScriptNode(ScriptListExtent* scriptExtent, DB_FILE* stream);
 static int scr_new_id(int scriptType);
@@ -305,8 +305,6 @@ int gtime_q_process(Object* obj, void* data)
     // 0x50795C
     static int moviePlaying = 0;
 
-    int movie = -1;
-
     debug_printf("\nQUEUE PROCESS: Midnight!");
 
     if (moviePlaying == 1) {
@@ -315,6 +313,7 @@ int gtime_q_process(Object* obj, void* data)
 
     obj_unjam_all_locks();
 
+    int movie = -1;
     if (game_global_vars[GVAR_FIND_WATER_CHIP] != 2) {
         if (game_global_vars[GVAR_VAULT_WATER] > 0) {
             game_global_vars[GVAR_VAULT_WATER] -= 1;
@@ -395,11 +394,9 @@ int new_obj_id()
     // 0x51C7D4
     static int cur_id = 4;
 
-    Object* ptr;
-
     do {
         cur_id++;
-        ptr = obj_find_first();
+        Object* ptr = obj_find_first();
 
         while (ptr) {
             if (cur_id == ptr->id) {
@@ -530,7 +527,6 @@ int scr_set_action_num(int sid, int value)
 Program* loadProgram(const char* name)
 {
     char path[COMPAT_MAX_PATH];
-
     strcpy(path, cd_path_base);
     strcat(path, script_path_base);
     strcat(path, name);
@@ -1148,11 +1144,6 @@ static int scr_build_lookup_table(Script* script)
 // 0x492DEC
 int scr_find_str_run_info(int scr_script_idx, int* run_info_flags, int sid)
 {
-    char path[COMPAT_MAX_PATH];
-    DB_FILE* stream;
-    char string[COMPAT_MAX_PATH];
-    Script* script;
-
     if (scr_script_idx < 0) {
         return -1;
     }
@@ -1161,14 +1152,16 @@ int scr_find_str_run_info(int scr_script_idx, int* run_info_flags, int sid)
         return -1;
     }
 
+    char path[COMPAT_MAX_PATH];
     script_make_path(path);
     strcat(path, "scripts.lst");
 
-    stream = db_fopen(path, "rt");
+    DB_FILE* stream = db_fopen(path, "rt");
     if (stream == NULL) {
         return -1;
     }
 
+    char string[COMPAT_MAX_PATH];
     int idx;
     for (idx = 0; idx <= scr_script_idx; idx++) {
         if (db_fgets(string, sizeof(string), stream) == NULL) {
@@ -1192,6 +1185,7 @@ int scr_find_str_run_info(int scr_script_idx, int* run_info_flags, int sid)
 
                 sep = strstr(sep, "local_vars=");
                 if (sep != NULL) {
+                    Script* script;
                     if (scr_ptr(sid, &script) != -1) {
                         script->scr_num_local_vars = atoi(sep + 11);
                     } else {
@@ -1210,10 +1204,6 @@ int scr_find_str_run_info(int scr_script_idx, int* run_info_flags, int sid)
 // 0x492FC4
 static int scr_index_to_name(int scr_script_idx, char* name, size_t size)
 {
-    char path[COMPAT_MAX_PATH];
-    DB_FILE* stream;
-    char string[COMPAT_MAX_PATH];
-
     if (scr_script_idx < 0) {
         return -1;
     }
@@ -1222,14 +1212,16 @@ static int scr_index_to_name(int scr_script_idx, char* name, size_t size)
         return -1;
     }
 
+    char path[COMPAT_MAX_PATH];
     script_make_path(path);
     strcat(path, "scripts.lst");
 
-    stream = db_fopen(path, "rt");
+    DB_FILE* stream = db_fopen(path, "rt");
     if (stream == NULL) {
         return -1;
     }
 
+    char string[COMPAT_MAX_PATH];
     int idx;
     for (idx = 0; idx <= scr_script_idx; idx++) {
         if (db_fgets(string, sizeof(string), stream) == NULL) {
@@ -1356,8 +1348,6 @@ int scr_reset()
 // 0x4932B4
 int scr_game_init()
 {
-    char path[COMPAT_MAX_PATH];
-
     if (!message_init(&script_message_file)) {
         debug_printf("\nError initing script message file!");
         return -1;
@@ -1370,6 +1360,7 @@ int scr_game_init()
         }
     }
 
+    char path[COMPAT_MAX_PATH];
     snprintf(path, sizeof(path), "%s%s", msg_path, "script.msg");
     if (!message_load(&script_message_file, path)) {
         debug_printf("\nError loading script message file!");
@@ -1573,15 +1564,13 @@ int scr_game_load2(DB_FILE* stream)
 // 0x49362C
 static int scr_header_load()
 {
-    char path[COMPAT_MAX_PATH];
-    DB_FILE* stream;
-
     num_script_indexes = 0;
 
+    char path[COMPAT_MAX_PATH];
     script_make_path(path);
     strcat(path, "scripts.lst");
 
-    stream = db_fopen(path, "rt");
+    DB_FILE* stream = db_fopen(path, "rt");
     if (stream == NULL) {
         return -1;
     }
@@ -1648,16 +1637,16 @@ static int scr_write_ScriptSubNode(Script* scr, DB_FILE* stream)
 }
 
 // 0x4938A0
-static int scr_write_ScriptNode(ScriptListExtent* a1, DB_FILE* stream)
+static int scr_write_ScriptNode(ScriptListExtent* scriptExtent, DB_FILE* stream)
 {
     for (int index = 0; index < SCRIPT_LIST_EXTENT_SIZE; index++) {
-        Script* script = &(a1->scripts[index]);
+        Script* script = &(scriptExtent->scripts[index]);
         if (scr_write_ScriptSubNode(script, stream) != 0) {
             return -1;
         }
     }
 
-    if (db_fwriteInt(stream, a1->length) != 0) {
+    if (db_fwriteInt(stream, scriptExtent->length) != 0) {
         return -1;
     }
 
@@ -1683,8 +1672,9 @@ int scr_save(DB_FILE* stream)
 
         ScriptListExtent* scriptExtent = scriptList->head;
         ScriptListExtent* lastScriptExtent = NULL;
+        int index;
         while (scriptExtent != NULL) {
-            for (int index = 0; index < scriptExtent->length; index++) {
+            for (index = 0; index < scriptExtent->length; index++) {
                 Script* script = &(scriptExtent->scripts[index]);
 
                 lastScriptExtent = scriptList->tail;
@@ -1742,7 +1732,6 @@ int scr_save(DB_FILE* stream)
             }
 
             if (lastScriptExtent != NULL) {
-                int index;
                 for (index = 0; index < lastScriptExtent->length; index++) {
                     Script* script = &(lastScriptExtent->scripts[index]);
                     if ((script->scr_flags & SCRIPT_FLAG_NO_SAVE) != 0) {
@@ -1768,8 +1757,6 @@ int scr_save(DB_FILE* stream)
 // 0x493BB8
 static int scr_read_ScriptSubNode(Script* scr, DB_FILE* stream)
 {
-    int prg;
-
     if (db_freadInt(stream, &(scr->scr_id)) == -1) return -1;
     if (db_freadInt(stream, &(scr->scr_next)) == -1) return -1;
 
@@ -1783,6 +1770,7 @@ static int scr_read_ScriptSubNode(Script* scr, DB_FILE* stream)
         break;
     }
 
+    int prg;
     if (db_freadInt(stream, &(scr->scr_flags)) == -1) return -1;
     if (db_freadInt(stream, &(scr->scr_script_idx)) == -1) return -1;
     if (db_freadInt(stream, &(prg)) == -1) return -1;
@@ -2279,6 +2267,7 @@ Script* scr_find_next_at()
         return NULL;
     }
 
+    Script* script;
     for (;;) {
         scriptIndex++;
 
@@ -2293,13 +2282,12 @@ Script* scr_find_next_at()
             break;
         }
 
-        Script* script = &(scriptListExtent->scripts[scriptIndex]);
+        script = &(scriptListExtent->scripts[scriptIndex]);
         if ((script->scr_flags & SCRIPT_FLAG_NO_SPATIAL) == 0 && builtTileGetElevation(script->sp.built_tile) == scr_find_first_elev) {
             break;
         }
     }
 
-    Script* script;
     if (scriptListExtent != NULL) {
         script = &(scriptListExtent->scripts[scriptIndex]);
     } else {
@@ -2558,8 +2546,6 @@ char* scr_get_msg_str_speech(int messageListId, int messageId, int a3)
 // 0x494EA4
 int scr_get_local_var(int sid, int variable, ProgramValue& value)
 {
-    Script* script;
-
     if (SID_TYPE(sid) == SCRIPT_TYPE_SYSTEM) {
         debug_printf("\nError! System scripts/Map scripts not allowed local_vars!\n");
         value.opcode = VALUE_TYPE_INT;
@@ -2567,6 +2553,7 @@ int scr_get_local_var(int sid, int variable, ProgramValue& value)
         return -1;
     }
 
+    Script* script;
     if (scr_ptr(sid, &script) == -1) {
         value.opcode = VALUE_TYPE_INT;
         value.integerValue = -1;
@@ -2597,7 +2584,6 @@ int scr_get_local_var(int sid, int variable, ProgramValue& value)
 int scr_set_local_var(int sid, int variable, ProgramValue& value)
 {
     Script* script;
-
     if (scr_ptr(sid, &script) == -1) {
         return -1;
     }
