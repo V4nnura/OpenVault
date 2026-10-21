@@ -79,11 +79,7 @@ static int* anon_alias;
 // 0x418170
 int art_init()
 {
-    char path[COMPAT_MAX_PATH];
     DB_FILE* stream;
-    char string[200];
-    DB_DATABASE* old_db_handle;
-    bool critter_db_selected;
 
     int cacheSize;
     if (!config_get_value(&game_config, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_ART_CACHE_SIZE_KEY, &cacheSize)) {
@@ -95,6 +91,8 @@ int art_init()
         return -1;
     }
 
+    char path[COMPAT_MAX_PATH];
+    DB_DATABASE* old_db_handle;
     for (int objectType = 0; objectType < OBJ_TYPE_COUNT; objectType++) {
         art[objectType].flags = 0;
         snprintf(path, sizeof(path), "%s%s%s\\%s.lst",
@@ -103,6 +101,7 @@ int art_init()
             art[objectType].dir,
             art[objectType].dir);
 
+        bool critter_db_selected;
         if (objectType == OBJ_TYPE_CRITTER) {
             old_db_handle = db_current();
             critter_db_selected = true;
@@ -160,6 +159,7 @@ int art_init()
         critterFileNames += 13;
     }
 
+    char string[200];
     for (int critterIndex = 0; critterIndex < art[OBJ_TYPE_CRITTER].fileNamesLength; critterIndex++) {
         if (!db_fgets(string, sizeof(string), stream)) {
             break;
@@ -390,16 +390,13 @@ Art* art_ptr_lock(int fid, CacheEntry** handlePtr)
 // 0x418954
 unsigned char* art_ptr_lock_data(int fid, int frame, int direction, CacheEntry** handlePtr)
 {
-    Art* art;
-    ArtFrame* frm;
-
-    art = NULL;
+    Art* art = NULL;
     if (handlePtr) {
         cache_lock(&art_cache, fid, (void**)&art, handlePtr);
     }
 
     if (art != NULL) {
-        frm = frame_ptr(art, frame, direction);
+        ArtFrame* frm = frame_ptr(art, frame, direction);
         if (frm != NULL) {
 
             return (unsigned char*)frm + sizeof(*frm);
@@ -462,13 +459,11 @@ int art_discard(int fid)
 // 0x418A7C
 int art_get_base_name(int objectType, int id, char* dest)
 {
-    ArtListDescription* ptr;
-
     if (objectType < OBJ_TYPE_ITEM && objectType >= OBJ_TYPE_COUNT) {
         return -1;
     }
 
-    ptr = &(art[objectType]);
+    ArtListDescription* ptr = &(art[objectType]);
 
     if (id >= ptr->fileNamesLength) {
         return -1;
@@ -706,9 +701,7 @@ int art_frame_max_frame(Art* art)
 // 0x418F74
 int art_frame_width(Art* art, int frame, int direction)
 {
-    ArtFrame* frm;
-
-    frm = frame_ptr(art, frame, direction);
+    ArtFrame* frm = frame_ptr(art, frame, direction);
     if (frm == NULL) {
         return -1;
     }
@@ -719,9 +712,7 @@ int art_frame_width(Art* art, int frame, int direction)
 // 0x418F8C
 int art_frame_length(Art* art, int frame, int direction)
 {
-    ArtFrame* frm;
-
-    frm = frame_ptr(art, frame, direction);
+    ArtFrame* frm = frame_ptr(art, frame, direction);
     if (frm == NULL) {
         return -1;
     }
@@ -732,9 +723,7 @@ int art_frame_length(Art* art, int frame, int direction)
 // 0x4197D4
 int art_frame_width_length(Art* art, int frame, int direction, int* widthPtr, int* heightPtr)
 {
-    ArtFrame* frm;
-
-    frm = frame_ptr(art, frame, direction);
+    ArtFrame* frm = frame_ptr(art, frame, direction);
     if (frm == NULL) {
         if (widthPtr != NULL) {
             *widthPtr = 0;
@@ -761,9 +750,7 @@ int art_frame_width_length(Art* art, int frame, int direction, int* widthPtr, in
 // 0x418FA8
 int art_frame_hot(Art* art, int frame, int direction, int* xPtr, int* yPtr)
 {
-    ArtFrame* frm;
-
-    frm = frame_ptr(art, frame, direction);
+    ArtFrame* frm = frame_ptr(art, frame, direction);
     if (frm == NULL) {
         return -1;
     }
@@ -790,9 +777,7 @@ int art_frame_offset(Art* art, int rotation, int* xPtr, int* yPtr)
 // 0x418FF8
 unsigned char* art_frame_data(Art* art, int frame, int direction)
 {
-    ArtFrame* frm;
-
-    frm = frame_ptr(art, frame, direction);
+    ArtFrame* frm = frame_ptr(art, frame, direction);
     if (frm == NULL) {
         return NULL;
     }
@@ -1045,14 +1030,12 @@ static int art_readFrameData(Art* art, DB_FILE* stream)
 // 0x419500
 Art* load_frame(const char* path)
 {
-    DB_FILE* stream;
-    Art header;
-
-    stream = db_fopen(path, "rb");
+    DB_FILE* stream = db_fopen(path, "rb");
     if (stream == NULL) {
         return nullptr;
     }
 
+    Art header;
     if (art_readFrameData(&header, stream) != 0) {
         db_fclose(stream);
         return nullptr;
