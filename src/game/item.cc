@@ -175,7 +175,8 @@ int item_add_mult(Object* owner, Object* itemToAdd, int quantity)
     }
 
     int parentType = FID_TYPE(owner->fid);
-    if (parentType == OBJ_TYPE_ITEM) {
+    switch (parentType) {
+    case OBJ_TYPE_ITEM:
         int itemType = item_get_type(owner);
         if (itemType == ITEM_TYPE_CONTAINER) {
             // NOTE: Uninline.
@@ -210,7 +211,8 @@ int item_add_mult(Object* owner, Object* itemToAdd, int quantity)
         } else {
             return -1;
         }
-    } else if (parentType == OBJ_TYPE_CRITTER) {
+        break;
+    case OBJ_TYPE_CRITTER:
         if (critter_body_type(owner) != BODY_TYPE_BIPED) {
             return -5;
         }
@@ -223,6 +225,7 @@ int item_add_mult(Object* owner, Object* itemToAdd, int quantity)
         if (currentWeight + weightToAdd > maxWeight) {
             return -6;
         }
+        break;
     }
 
     return item_add_force(owner, itemToAdd, quantity);
