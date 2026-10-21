@@ -166,10 +166,8 @@ static DialogScrollButtonData upButton;
 // 0x42F434
 static STRUCT_56DAE0_FIELD_4* getReply()
 {
-    STRUCT_56DAE0_FIELD_4* v0;
+    STRUCT_56DAE0_FIELD_4* v0 = &(dialog[tods].field_4[dialog[tods].field_C]);
     STRUCT_56DAE0_FIELD_4_FIELD_C* v1;
-
-    v0 = &(dialog[tods].field_4[dialog[tods].field_C]);
     if (v0->field_C == NULL) {
         v0->field_14 = 1;
         v1 = (STRUCT_56DAE0_FIELD_4_FIELD_C*)mymalloc(sizeof(STRUCT_56DAE0_FIELD_4_FIELD_C), __FILE__, __LINE__); // "..\\int\\DIALOG.C", 789
@@ -185,17 +183,12 @@ static STRUCT_56DAE0_FIELD_4* getReply()
 // 0x42F4C0
 static void replyAddOption(const char* a1, const char* a2, int a3)
 {
-    STRUCT_56DAE0_FIELD_4* v18;
-    int v17;
-    char* v14;
-    char* v15;
-
-    v18 = getReply();
-    v17 = v18->field_14 - 1;
+    STRUCT_56DAE0_FIELD_4* v18 = getReply();
+    int v17 = v18->field_14 - 1;
     v18->field_C[v17].kind = 2;
 
     if (a1 != NULL) {
-        v14 = (char*)mymalloc(strlen(a1) + 1, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 805
+        char* v14 = (char*)mymalloc(strlen(a1) + 1, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 805
         strcpy(v14, a1);
         v18->field_C[v17].field_0 = v14;
     } else {
@@ -203,7 +196,7 @@ static void replyAddOption(const char* a1, const char* a2, int a3)
     }
 
     if (a2 != NULL) {
-        v15 = (char*)mymalloc(strlen(a2) + 1, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 810
+        char* v15 = (char*)mymalloc(strlen(a2) + 1, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 810
         strcpy(v15, a2);
         v18->field_C[v17].string = v15;
     } else {
@@ -218,17 +211,13 @@ static void replyAddOption(const char* a1, const char* a2, int a3)
 // 0x42F624
 static void replyAddOptionProc(const char* a1, int a2, int a3)
 {
-    STRUCT_56DAE0_FIELD_4* v5;
-    int v13;
-    char* v11;
-
-    v5 = getReply();
-    v13 = v5->field_14 - 1;
+    STRUCT_56DAE0_FIELD_4* v5 = getReply();
+    int v13 = v5->field_14 - 1;
 
     v5->field_C[v13].kind = 1;
 
     if (a1 != NULL) {
-        v11 = (char*)mymalloc(strlen(a1) + 1, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 830
+        char* v11 = (char*)mymalloc(strlen(a1) + 1, __FILE__, __LINE__); // "..\\int\\DIALOG.C", 830
         strcpy(v11, a1);
         v5->field_C[v13].field_0 = v11;
     } else {
@@ -259,17 +248,12 @@ static void optionFree(STRUCT_56DAE0_FIELD_4_FIELD_C* a1)
 // 0x42F754
 static void replyFree()
 {
-    int i;
-    int j;
-    STRUCT_56DAE0* ptr;
-    STRUCT_56DAE0_FIELD_4* v6;
-
-    ptr = &(dialog[tods]);
-    for (i = 0; i < ptr->field_8; i++) {
-        v6 = &(dialog[tods].field_4[i]);
+    STRUCT_56DAE0* ptr = &(dialog[tods]);
+    for (int i = 0; i < ptr->field_8; i++) {
+        STRUCT_56DAE0_FIELD_4* v6 = &(dialog[tods].field_4[i]);
 
         if (v6->field_C != NULL) {
-            for (j = 0; j < v6->field_14; j++) {
+            for (int j = 0; j < v6->field_14; j++) {
                 optionFree(&(v6->field_C[j]));
             }
 
@@ -317,11 +301,8 @@ static int endDialog()
 // 0x42FC70
 static void printLine(int win, char** strings, int strings_num, int a4, int a5, int a6, int a7, int a8, int a9)
 {
-    int i;
-    int v11;
-
-    for (i = 0; i < strings_num; i++) {
-        v11 = a7 + i * text_height();
+    for (int i = 0; i < strings_num; i++) {
+        int v11 = a7 + i * text_height();
         windowPrintBuf(win, strings[i], strlen(strings[i]), a4, a5 + a7, a6, v11, a8, a9);
     }
 }
@@ -329,10 +310,9 @@ static void printLine(int win, char** strings, int strings_num, int a4, int a5, 
 // 0x42FCF0
 static void printStr(int win, char* a2, int a3, int a4, int a5, int a6, int a7, int a8, int a9)
 {
-    char** strings;
+    char** strings = windowWordWrap(a2, a3, 0, &strings_num);
     int strings_num;
 
-    strings = windowWordWrap(a2, a3, 0, &strings_num);
     printLine(win, strings, strings_num, a3, a4, a5, a6, a7, a8);
     windowFreeWordList(strings, strings_num);
 }
@@ -340,22 +320,20 @@ static void printStr(int win, char* a2, int a3, int a4, int a5, int a6, int a7, 
 // 0x430104
 static int abortReply(int a1)
 {
-    int result;
-    int y;
-    int x;
-
-    if (replyPlaying == 2) {
+    switch (replyPlaying) {
+    case 2:
         return moviePlaying() == 0;
-    } else if (replyPlaying == 3) {
+    case 3:
         return 1;
     }
 
-    result = 1;
+    int result = 1;
     if (a1) {
         if (replyWin != -1) {
             if (!(mouse_get_buttons() & 0x10)) {
                 result = 0;
             } else {
+                int x, y;
                 mouse_get_position(&x, &y);
 
                 if (win_get_top_win(x, y) != replyWin) {
@@ -386,14 +364,12 @@ static void endReply()
 // 0x4301E8
 static void drawStr(int win, char* str, int font, int width, int height, int left, int top, int a8, int a9, int a10)
 {
-    int old_font;
-    Rect rect;
-
-    old_font = windowGetFont();
+    int old_font = windowGetFont();
     windowSetFont(font);
 
     printStr(win, str, width, height, left, top, a8, a9, a10);
 
+    Rect rect;
     rect.ulx = left;
     rect.uly = top;
     rect.lrx = width + left;
@@ -440,18 +416,14 @@ int dialogRestart()
 // 0x430DE4
 int dialogGotoReply(const char* a1)
 {
-    STRUCT_56DAE0* ptr;
-    STRUCT_56DAE0_FIELD_4* v5;
-    int i;
-
     if (tods == -1) {
         return 1;
     }
 
     if (a1 != NULL) {
-        ptr = &(dialog[tods]);
-        for (i = 0; i < ptr->field_8; i++) {
-            v5 = &(ptr->field_4[i]);
+        STRUCT_56DAE0* ptr = &(dialog[tods]);
+        for (int i = 0; i < ptr->field_8; i++) {
+            STRUCT_56DAE0_FIELD_4* v5 = &(ptr->field_4[i]);
             if (v5->field_4 != NULL && compat_stricmp(v5->field_4, a1) == 0) {
                 ptr->field_10 = i;
                 return 0;
