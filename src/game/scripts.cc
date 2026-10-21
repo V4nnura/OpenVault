@@ -394,9 +394,11 @@ int new_obj_id()
     // 0x51C7D4
     static int cur_id = 4;
 
+    Object* ptr;
+
     do {
         cur_id++;
-        Object* ptr = obj_find_first();
+        ptr = obj_find_first();
 
         while (ptr) {
             if (cur_id == ptr->id) {
