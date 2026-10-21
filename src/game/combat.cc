@@ -49,7 +49,7 @@ namespace fallout {
 #define CALLED_SHOT_WINDOW_WIDTH 424
 #define CALLED_SHOT_WINDOW_HEIGHT 309
 
-static void combat_begin(Object* a1);
+static void combat_begin(Object* attacker);
 static void combat_begin_extra(Object* attacker);
 static void combat_over();
 static void combat_add_noncoms();
@@ -1739,7 +1739,7 @@ void combat_data_init(Object* obj)
 }
 
 // 0x41FD70
-static void combat_begin(Object* a1)
+static void combat_begin(Object* attacker)
 {
     anim_stop();
     remove_bk_process(dude_fidget);
@@ -1775,7 +1775,7 @@ static void combat_begin(Object* a1)
         game_ui_disable(0);
         gmouse_set_cursor(MOUSE_CURSOR_WAIT_WATCH);
         combat_ending_guy = NULL;
-        combat_begin_extra(a1);
+        combat_begin_extra(attacker);
         intface_end_window_open(true);
         gmouse_enable_scrolling();
     }
