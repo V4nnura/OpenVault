@@ -753,8 +753,6 @@ int scripts_clear_combat_requests(Script* script)
 // 0x492250
 int scripts_check_state()
 {
-    WorldMapContext ctx;
-
     if (scriptState.requests == 0) {
         return 0;
     }
@@ -772,6 +770,7 @@ int scripts_check_state()
         }
     }
 
+    WorldMapContext ctx;
     if ((scriptState.requests & SCRIPT_REQUEST_TOWN_MAP) != 0) {
         scriptState.requests &= ~SCRIPT_REQUEST_TOWN_MAP;
         ctx.state = 0;
@@ -1149,10 +1148,9 @@ static int scr_build_lookup_table(Script* script)
 // 0x492DEC
 int scr_find_str_run_info(int scr_script_idx, int* run_info_flags, int sid)
 {
-    int rc = -1;
     char path[COMPAT_MAX_PATH];
+    DB_FILE* stream;
     char string[COMPAT_MAX_PATH];
-    char* sep;
     Script* script;
 
     if (scr_script_idx < 0) {
@@ -1166,7 +1164,7 @@ int scr_find_str_run_info(int scr_script_idx, int* run_info_flags, int sid)
     script_make_path(path);
     strcat(path, "scripts.lst");
 
-    DB_FILE* stream = db_fopen(path, "rt");
+    stream = db_fopen(path, "rt");
     if (stream == NULL) {
         return -1;
     }
@@ -1178,9 +1176,10 @@ int scr_find_str_run_info(int scr_script_idx, int* run_info_flags, int sid)
         }
     }
 
+    int rc = -1;
     if (idx - 1 == scr_script_idx) {
         rc = 0;
-        sep = strchr(string, '#');
+        char* sep = strchr(string, '#');
         if (sep != NULL) {
             if (sep[1] != '\0') {
                 if (strstr(sep, "map_init") != NULL) {
@@ -1211,10 +1210,9 @@ int scr_find_str_run_info(int scr_script_idx, int* run_info_flags, int sid)
 // 0x492FC4
 static int scr_index_to_name(int scr_script_idx, char* name, size_t size)
 {
-    int rc = -1;
     char path[COMPAT_MAX_PATH];
+    DB_FILE* stream;
     char string[COMPAT_MAX_PATH];
-    char* sep;
 
     if (scr_script_idx < 0) {
         return -1;
@@ -1227,7 +1225,7 @@ static int scr_index_to_name(int scr_script_idx, char* name, size_t size)
     script_make_path(path);
     strcat(path, "scripts.lst");
 
-    DB_FILE* stream = db_fopen(path, "rt");
+    stream = db_fopen(path, "rt");
     if (stream == NULL) {
         return -1;
     }
@@ -1239,8 +1237,9 @@ static int scr_index_to_name(int scr_script_idx, char* name, size_t size)
         }
     }
 
+    int rc = -1;
     if (idx - 1 == scr_script_idx) {
-        sep = strchr(string, '.');
+        char* sep = strchr(string, '.');
         if (sep != NULL) {
             *sep = '\0';
             snprintf(name, size, "%s.%s", string, "int");
@@ -1575,13 +1574,14 @@ int scr_game_load2(DB_FILE* stream)
 static int scr_header_load()
 {
     char path[COMPAT_MAX_PATH];
+    DB_FILE* stream;
 
     num_script_indexes = 0;
 
     script_make_path(path);
     strcat(path, "scripts.lst");
 
-    DB_FILE* stream = db_fopen(path, "rt");
+    stream = db_fopen(path, "rt");
     if (stream == NULL) {
         return -1;
     }
