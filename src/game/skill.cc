@@ -143,9 +143,7 @@ int skill_init()
 // 0x4982A4
 void skill_reset()
 {
-    int index;
-
-    for (index = 0; index < NUM_TAGGED_SKILLS; index++) {
+    for (int index = 0; index < NUM_TAGGED_SKILLS; index++) {
         tag_skill[index] = -1;
     }
 
@@ -174,9 +172,7 @@ int skill_save(DB_FILE* stream)
 // 0x498324
 void skill_set_defaults(CritterProtoData* data)
 {
-    int index;
-
-    for (index = 0; index < SKILL_COUNT; index++) {
+    for (int index = 0; index < SKILL_COUNT; index++) {
         data->skills[index] = 0;
     }
 }
@@ -184,9 +180,7 @@ void skill_set_defaults(CritterProtoData* data)
 // 0x498340
 void skill_set_tags(int* skills, int count)
 {
-    int index;
-
-    for (index = 0; index < count; index++) {
+    for (int index = 0; index < count; index++) {
         tag_skill[index] = skills[index];
     }
 }
@@ -194,9 +188,7 @@ void skill_set_tags(int* skills, int count)
 // 0x498364
 void skill_get_tags(int* skills, int count)
 {
-    int index;
-
-    for (index = 0; index < count; index++) {
+    for (int index = 0; index < count; index++) {
         skills[index] = tag_skill[index];
     }
 }
@@ -204,29 +196,25 @@ void skill_get_tags(int* skills, int count)
 // 0x498388
 int skill_level(Object* critter, int skill)
 {
-    SkillDescription* skill_description;
-    int points;
-    int bonus;
-    int value;
-
     if (skill < 0 || skill >= SKILL_COUNT) {
         return -5;
     }
 
-    points = skill_points(critter, skill);
+    int points = skill_points(critter, skill);
     if (points < 0) {
         return points;
     }
 
-    skill_description = &(skill_data[skill]);
+    SkillDescription* skill_description = &(skill_data[skill]);
 
+    int bonus;
     if (skill_description->stat2 != -1) {
         bonus = (stat_level(critter, skill_description->stat1) + stat_level(critter, skill_description->stat2)) * skill_description->stat_modifier / 2;
     } else {
         bonus = stat_level(critter, skill_description->stat1) * skill_description->stat_modifier;
     }
 
-    value = skill_description->default_value + bonus + points * skill_description->points_modifier;
+    int value = skill_description->default_value + bonus + points * skill_description->points_modifier;
 
     if (critter == obj_dude) {
         if (skill == tag_skill[0] || skill == tag_skill[1] || skill == tag_skill[2] || skill == tag_skill[3]) {
@@ -267,11 +255,6 @@ int skill_points(Object* obj, int skill)
 // 0x4984E4
 int skill_inc_point(Object* obj, int skill)
 {
-    Proto* proto;
-    int unspent_skill_points;
-    int level;
-    int rc;
-
     if (obj != obj_dude) {
         return -5;
     }
@@ -280,19 +263,20 @@ int skill_inc_point(Object* obj, int skill)
         return -5;
     }
 
+    Proto* proto;
     proto_ptr(obj->pid, &proto);
 
-    unspent_skill_points = stat_pc_get(PC_STAT_UNSPENT_SKILL_POINTS);
+    int unspent_skill_points = stat_pc_get(PC_STAT_UNSPENT_SKILL_POINTS);
     if (unspent_skill_points <= 0) {
         return -4;
     }
 
-    level = skill_level(obj, skill);
+    int level = skill_level(obj, skill);
     if (level >= SKILL_LEVEL_MAX) {
         return -3;
     }
 
-    rc = stat_pc_set(PC_STAT_UNSPENT_SKILL_POINTS, unspent_skill_points - 1);
+    int rc = stat_pc_set(PC_STAT_UNSPENT_SKILL_POINTS, unspent_skill_points - 1);
     if (rc == 0) {
         proto->critter.data.skills[skill] += 1;
     }
@@ -303,10 +287,6 @@ int skill_inc_point(Object* obj, int skill)
 // 0x498588
 int skill_dec_point(Object* critter, int skill)
 {
-    Proto* proto;
-    int unspent_skill_points;
-    int rc;
-
     if (critter != obj_dude) {
         return -5;
     }
@@ -315,15 +295,16 @@ int skill_dec_point(Object* critter, int skill)
         return -5;
     }
 
+    Proto* proto;
     proto_ptr(critter->pid, &proto);
 
     if (proto->critter.data.skills[skill] <= 0) {
         return -2;
     }
 
-    unspent_skill_points = stat_pc_get(PC_STAT_UNSPENT_SKILL_POINTS);
+    int unspent_skill_points = stat_pc_get(PC_STAT_UNSPENT_SKILL_POINTS);
 
-    rc = stat_pc_set(PC_STAT_UNSPENT_SKILL_POINTS, unspent_skill_points + 1);
+    int rc = stat_pc_set(PC_STAT_UNSPENT_SKILL_POINTS, unspent_skill_points + 1);
     if (rc == 0) {
         proto->critter.data.skills[skill] -= 1;
     }
@@ -334,28 +315,23 @@ int skill_dec_point(Object* critter, int skill)
 // 0x498608
 int skill_result(Object* critter, int skill, int modifier, int* how_much)
 {
-    int level;
-    int critical_chance;
     if (skill < 0 || skill >= SKILL_COUNT) {
         return ROLL_FAILURE;
     }
 
-    level = skill_level(critter, skill);
-    critical_chance = stat_level(critter, STAT_CRITICAL_CHANCE);
+    int level = skill_level(critter, skill);
+    int critical_chance = stat_level(critter, STAT_CRITICAL_CHANCE);
     return roll_check(level + modifier, critical_chance, how_much);
 }
 
 // 0x498640
 int skill_contest(Object* attacker, Object* defender, int skill, int atk_modifier, int def_modifier, int* how_much)
 {
-    int atk_roll;
     int atk_how_much;
-    int def_roll;
-    int def_how_much;
-
-    atk_roll = skill_result(attacker, skill, atk_modifier, &atk_how_much);
+    int atk_roll = skill_result(attacker, skill, atk_modifier, &atk_how_much);
     if (atk_roll > ROLL_FAILURE) {
-        def_roll = skill_result(defender, skill, def_modifier, &def_how_much);
+        int def_how_much;
+        int def_roll = skill_result(defender, skill, def_modifier, &def_how_much);
         if (def_roll > ROLL_FAILURE) {
             atk_how_much -= def_how_much;
         }
