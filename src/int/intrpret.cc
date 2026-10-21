@@ -2570,8 +2570,9 @@ void interpret(Program* program, int a2)
     currentProgram = program;
 
     if (setjmp(program->env)) {
+        // longjmp from programFatalError()
         currentProgram = oldCurrentProgram;
-        program->flags |= PROGRAM_FLAG_EXITED | PROGRAM_FLAG_0x04;
+        program->flags |= PROGRAM_FLAG_EXITED | PROGRAM_FLAG_FATAL_ERROR;
         return;
     }
 
@@ -2580,7 +2581,7 @@ void interpret(Program* program, int a2)
     }
 
     while ((program->flags & PROGRAM_FLAG_CRITICAL_SECTION) != 0 || --a2 != -1) {
-        if ((program->flags & (PROGRAM_FLAG_EXITED | PROGRAM_FLAG_0x04 | PROGRAM_FLAG_STOPPED | PROGRAM_FLAG_CHILD_CALL | PROGRAM_FLAG_FINISHED | PROGRAM_FLAG_CHILD_SPAWN)) != 0) {
+        if ((program->flags & (PROGRAM_FLAG_EXITED | PROGRAM_FLAG_FATAL_ERROR | PROGRAM_FLAG_STOPPED | PROGRAM_FLAG_CHILD_CALL | PROGRAM_FLAG_FINISHED | PROGRAM_FLAG_CHILD_SPAWN)) != 0) {
             break;
         }
 
@@ -2823,41 +2824,32 @@ void executeProcedure(Program* program, int procedureIndex)
 // 0x461BE8
 static void doEvents()
 {
-    ProgramListNode* programListNode;
-    unsigned int time;
-    int procedureCount;
-    int procedureIndex;
-    unsigned char* procedurePtr;
-    int procedureFlags;
-    int oldProgramFlags;
-    int oldInstructionPointer;
-    int data;
     jmp_buf env = {};
 
     if (suspendEvents) {
         return;
     }
 
-    programListNode = head;
-    time = 1000 * timerFunc() / timerTick;
+    ProgramListNode* programListNode = head;
+    unsigned int time = 1000 * timerFunc() / timerTick;
 
     while (programListNode != NULL) {
-        procedureCount = fetchLong(programListNode->program->procedures, 0);
+        int procedureCount = fetchLong(programListNode->program->procedures, 0);
 
-        procedurePtr = programListNode->program->procedures + 4;
-        for (procedureIndex = 0; procedureIndex < procedureCount; procedureIndex++) {
-            procedureFlags = fetchLong(procedurePtr, offsetof(Procedure, flags));
+        unsigned char* procedurePtr = programListNode->program->procedures + 4;
+        for (int procedureIndex = 0; procedureIndex < procedureCount; procedureIndex++) {
+            int procedureFlags = fetchLong(procedurePtr, offsetof(Procedure, flags));
             if ((procedureFlags & PROCEDURE_FLAG_CONDITIONAL) != 0) {
                 memcpy(env, programListNode->program->env, sizeof(env));
-                oldProgramFlags = programListNode->program->flags;
-                oldInstructionPointer = programListNode->program->instructionPointer;
+                int oldProgramFlags = programListNode->program->flags;
+                int oldInstructionPointer = programListNode->program->instructionPointer;
 
                 programListNode->program->flags = 0;
                 programListNode->program->instructionPointer = fetchLong(procedurePtr, offsetof(Procedure, conditionOffset));
                 interpret(programListNode->program, -1);
 
-                if ((programListNode->program->flags & PROGRAM_FLAG_0x04) == 0) {
-                    data = programStackPopInteger(programListNode->program);
+                if ((programListNode->program->flags & PROGRAM_FLAG_FATAL_ERROR) == 0) {
+                    int data = programStackPopInteger(programListNode->program);
 
                     programListNode->program->flags = oldProgramFlags;
                     programListNode->program->instructionPointer = oldInstructionPointer;
@@ -2930,10 +2922,8 @@ void runProgram(Program* program)
 // 0x461ED8
 Program* runScript(char* name)
 {
-    Program* program;
-
     // NOTE: Uninline.
-    program = allocateProgram(interpretMangleName(name));
+    Program* program = allocateProgram(interpretMangleName(name));
     if (program != NULL) {
         // NOTE: Uninline.
         runProgram(program);
@@ -2985,9 +2975,7 @@ void clearPrograms()
 // 0x461F90
 void clearTopProgram()
 {
-    ProgramListNode* next;
-
-    next = head->next;
+    ProgramListNode* next = head->next;
     removeProgList(head);
     head = next;
 }
@@ -2996,16 +2984,12 @@ void clearTopProgram()
 char** getProgramList(int* programListLengthPtr)
 {
     char** programList;
-    int programListLength;
-    int index;
-    int it;
-    ProgramListNode* programListNode;
 
-    index = 0;
-    programListLength = 0;
+    int index = 0;
+    int programListLength = 0;
 
-    for (it = 1; it <= 2; it++) {
-        programListNode = head;
+    for (int it = 1; it <= 2; it++) {
+        ProgramListNode* programListNode = head;
         while (programListNode != NULL) {
             if (it == 1) {
                 programListLength++;
@@ -3032,10 +3016,8 @@ char** getProgramList(int* programListLengthPtr)
 // 0x462058
 void freeProgramList(char** programList, int programListLength)
 {
-    int index;
-
     if (programList != NULL) {
-        for (index = 0; index < programListLength; index++) {
+        for (int index = 0; index < programListLength; index++) {
             if (programList[index] != NULL) {
                 myfree(programList[index], __FILE__, __LINE__); // "..\int\INTRPRET.C", 2802
             }
@@ -3075,23 +3057,16 @@ void interpretSuspendEvents()
 // 0x4620FC
 void interpretResumeEvents()
 {
-    int counter;
-    ProgramListNode* programListNode;
-    unsigned int time;
-    int procedureCount;
-    int procedureIndex;
-    unsigned char* procedurePtr;
-
-    counter = suspendEvents;
+    int counter = suspendEvents;
     if (suspendEvents != 0) {
         suspendEvents--;
         if (counter == 1) {
-            programListNode = head;
-            time = 1000 * (timerFunc() - suspendTime) / timerTick;
+            ProgramListNode* programListNode = head;
+            unsigned int time = 1000 * (timerFunc() - suspendTime) / timerTick;
             while (programListNode != NULL) {
-                procedureCount = fetchLong(programListNode->program->procedures, 0);
-                procedurePtr = programListNode->program->procedures + 4;
-                for (procedureIndex = 0; procedureIndex < procedureCount; procedureIndex++) {
+                int procedureCount = fetchLong(programListNode->program->procedures, 0);
+                unsigned char* procedurePtr = programListNode->program->procedures + 4;
+                for (int procedureIndex = 0; procedureIndex < procedureCount; procedureIndex++) {
                     if ((fetchLong(procedurePtr, 4) & PROCEDURE_FLAG_TIMED) != 0) {
                         storeLong(fetchLong(procedurePtr, 8) + time, procedurePtr, 8);
                     }
