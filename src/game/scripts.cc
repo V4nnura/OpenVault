@@ -305,10 +305,7 @@ int gtime_q_process(Object* obj, void* data)
     // 0x50795C
     static int moviePlaying = 0;
 
-    int movie;
-    int rc;
-
-    movie = -1;
+    int movie = -1;
 
     debug_printf("\nQUEUE PROCESS: Midnight!");
 
@@ -361,7 +358,7 @@ int gtime_q_process(Object* obj, void* data)
         }
     }
 
-    rc = critter_check_rads(obj_dude);
+    int rc = critter_check_rads(obj_dude);
 
     queue_clear_type(EVENT_TYPE_GAME_TIME, NULL);
 
@@ -520,7 +517,6 @@ void scr_set_ext_param(int sid, int value)
 int scr_set_action_num(int sid, int value)
 {
     Script* scr;
-
     if (scr_ptr(sid, &scr) == -1) {
         return -1;
     }
@@ -1137,10 +1133,9 @@ int exec_script_proc(int sid, int action)
 // 0x492AA0
 static int scr_build_lookup_table(Script* script)
 {
-    int action;
     int proc = sizeof(Script);
 
-    for (action = 0; action < SCRIPT_PROC_COUNT; action++) {
+    for (int action = 0; action < SCRIPT_PROC_COUNT; action++) {
         proc = interpretFindProcedure(script->program, procTableStrs[action]);
         if (proc == -1) {
             proc = SCRIPT_PROC_NO_PROC;
@@ -1156,8 +1151,6 @@ int scr_find_str_run_info(int scr_script_idx, int* run_info_flags, int sid)
 {
     int rc = -1;
     char path[COMPAT_MAX_PATH];
-    DB_FILE* stream;
-    int idx;
     char string[COMPAT_MAX_PATH];
     char* sep;
     Script* script;
@@ -1173,11 +1166,12 @@ int scr_find_str_run_info(int scr_script_idx, int* run_info_flags, int sid)
     script_make_path(path);
     strcat(path, "scripts.lst");
 
-    stream = db_fopen(path, "rt");
+    DB_FILE* stream = db_fopen(path, "rt");
     if (stream == NULL) {
         return -1;
     }
 
+    int idx;
     for (idx = 0; idx <= scr_script_idx; idx++) {
         if (db_fgets(string, sizeof(string), stream) == NULL) {
             break;
@@ -1219,8 +1213,6 @@ static int scr_index_to_name(int scr_script_idx, char* name, size_t size)
 {
     int rc = -1;
     char path[COMPAT_MAX_PATH];
-    DB_FILE* stream;
-    int idx;
     char string[COMPAT_MAX_PATH];
     char* sep;
 
@@ -1235,11 +1227,12 @@ static int scr_index_to_name(int scr_script_idx, char* name, size_t size)
     script_make_path(path);
     strcat(path, "scripts.lst");
 
-    stream = db_fopen(path, "rt");
+    DB_FILE* stream = db_fopen(path, "rt");
     if (stream == NULL) {
         return -1;
     }
 
+    int idx;
     for (idx = 0; idx <= scr_script_idx; idx++) {
         if (db_fgets(string, sizeof(string), stream) == NULL) {
             break;
@@ -1325,13 +1318,11 @@ int scr_clear_dude_script()
 // 0x493230
 int scr_init()
 {
-    int index;
-
     if (!message_init(&script_message_file)) {
         return -1;
     }
 
-    for (index = 0; index < SCRIPT_DIALOG_MESSAGE_LIST_CAPACITY; index++) {
+    for (int index = 0; index < SCRIPT_DIALOG_MESSAGE_LIST_CAPACITY; index++) {
         if (!message_init(&(script_dialog_msgs[index]))) {
             return -1;
         }
@@ -1366,7 +1357,6 @@ int scr_reset()
 // 0x4932B4
 int scr_game_init()
 {
-    int index;
     char path[COMPAT_MAX_PATH];
 
     if (!message_init(&script_message_file)) {
@@ -1374,7 +1364,7 @@ int scr_game_init()
         return -1;
     }
 
-    for (index = 0; index < SCRIPT_DIALOG_MESSAGE_LIST_CAPACITY; index++) {
+    for (int index = 0; index < SCRIPT_DIALOG_MESSAGE_LIST_CAPACITY; index++) {
         if (!message_init(&(script_dialog_msgs[index]))) {
             debug_printf("\nERROR IN SCRIPT_DIALOG_MSGS!");
             return -1;
@@ -1445,11 +1435,8 @@ int scr_exit()
 // 0x49345C
 int scr_message_free()
 {
-    int index;
-    MessageList* message_list;
-
-    for (index = 0; index < SCRIPT_DIALOG_MESSAGE_LIST_CAPACITY; index++) {
-        message_list = &(script_dialog_msgs[index]);
+    for (int index = 0; index < SCRIPT_DIALOG_MESSAGE_LIST_CAPACITY; index++) {
+        MessageList* message_list = &(script_dialog_msgs[index]);
         if (message_list->entries_num != 0) {
             if (!message_exit(message_list)) {
                 debug_printf("\nERROR in scr_message_free!");
@@ -1588,14 +1575,13 @@ int scr_game_load2(DB_FILE* stream)
 static int scr_header_load()
 {
     char path[COMPAT_MAX_PATH];
-    DB_FILE* stream;
 
     num_script_indexes = 0;
 
     script_make_path(path);
     strcat(path, "scripts.lst");
 
-    stream = db_fopen(path, "rt");
+    DB_FILE* stream = db_fopen(path, "rt");
     if (stream == NULL) {
         return -1;
     }
@@ -2422,19 +2408,14 @@ int scr_load_all_scripts()
 // 0x4949C0
 void scr_exec_map_enter_scripts()
 {
-    int script_type;
-    ScriptListExtent* script_list_extent;
-    int script_index;
-    int sid;
-
     scr_spatials_disable();
 
-    for (script_type = 0; script_type < SCRIPT_TYPE_COUNT; script_type++) {
-        script_list_extent = scriptlists[script_type].head;
+    for (int script_type = 0; script_type < SCRIPT_TYPE_COUNT; script_type++) {
+        ScriptListExtent* script_list_extent = scriptlists[script_type].head;
         while (script_list_extent != NULL) {
-            for (script_index = 0; script_index < script_list_extent->length; script_index++) {
+            for (int script_index = 0; script_index < script_list_extent->length; script_index++) {
                 if (script_list_extent->scripts[script_index].procs[SCRIPT_PROC_MAP_ENTER] > 0) {
-                    sid = script_list_extent->scripts[script_index].scr_id;
+                    int sid = script_list_extent->scripts[script_index].scr_id;
                     if (sid != map_script_id) {
                         scr_set_ext_param(sid, (map_data.flags & 0x1) == 0);
                         exec_script_proc(sid, SCRIPT_PROC_MAP_ENTER);
@@ -2451,21 +2432,16 @@ void scr_exec_map_enter_scripts()
 // 0x494A70
 void scr_exec_map_update_scripts()
 {
-    int script_type;
-    ScriptListExtent* script_list_extent;
-    int script_index;
-    int sid;
-
     scr_spatials_disable();
 
     exec_script_proc(map_script_id, SCRIPT_PROC_MAP_UPDATE);
 
-    for (script_type = 0; script_type < SCRIPT_TYPE_COUNT; script_type++) {
-        script_list_extent = scriptlists[script_type].head;
+    for (int script_type = 0; script_type < SCRIPT_TYPE_COUNT; script_type++) {
+        ScriptListExtent* script_list_extent = scriptlists[script_type].head;
         while (script_list_extent != NULL) {
-            for (script_index = 0; script_index < script_list_extent->length; script_index++) {
+            for (int script_index = 0; script_index < script_list_extent->length; script_index++) {
                 if (script_list_extent->scripts[script_index].procs[SCRIPT_PROC_MAP_UPDATE] > 0) {
-                    sid = script_list_extent->scripts[script_index].scr_id;
+                    int sid = script_list_extent->scripts[script_index].scr_id;
                     if (sid != map_script_id) {
                         exec_script_proc(sid, SCRIPT_PROC_MAP_UPDATE);
                     }
