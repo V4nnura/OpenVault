@@ -168,21 +168,20 @@ int debug_puts(char* string)
 // 0x4B306C
 void debug_clear()
 {
-    char* buffer;
-    int x;
-    int y;
+    char* buffer = NULL;
 
-    buffer = NULL;
-
-    if (debug_func == debug_mono) {
+    switch (debug_func) {
+    case debug_mono:
         buffer = (char*)0xB0000;
-    } else if (debug_func == debug_screen) {
+        break;
+    case debug_screen:
         buffer = (char*)0xB8000;
+        break;
     }
 
     if (buffer != NULL) {
-        for (y = 0; y < 25; y++) {
-            for (x = 0; x < 80; x++) {
+        for (int y = 0; y < 25; y++) {
+            for (int x = 0; x < 80; x++) {
                 *buffer++ = ' ';
                 *buffer++ = 7;
             }
@@ -237,9 +236,7 @@ static int debug_screen(char* string)
 // 0x4B315C
 static void debug_putc(int ch)
 {
-    char* buffer;
-
-    buffer = (char*)0xB0000;
+    char* buffer = (char*)0xB0000;
 
     switch (ch) {
     case 7:
@@ -284,13 +281,10 @@ static void debug_putc(int ch)
 // 0x4B326C
 static void debug_scroll()
 {
-    char* buffer;
+    char* buffer = (char*)0xB0000;
+
     int x;
-    int y;
-
-    buffer = (char*)0xB0000;
-
-    for (y = 0; y < 24; y++) {
+    for (int y = 0; y < 24; y++) {
         for (x = 0; x < 80 * 2; x++) {
             buffer[0] = buffer[80 * 2];
             buffer++;
