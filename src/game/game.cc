@@ -1028,40 +1028,37 @@ int game_state()
 }
 
 // 0x43C7B4
-int game_state_request(int a1)
+int game_state_request(int new_game_state)
 {
-    if (a1 == GAME_STATE_0) {
-        a1 = GAME_STATE_1;
-    } else if (a1 == GAME_STATE_2) {
-        a1 = GAME_STATE_3;
-    } else if (a1 == GAME_STATE_4) {
-        a1 = GAME_STATE_5;
+    if (new_game_state == GAME_STATE_0) {
+        new_game_state = GAME_STATE_1;
+    } else if (new_game_state == GAME_STATE_2) {
+        new_game_state = GAME_STATE_3;
+    } else if (new_game_state == GAME_STATE_4) {
+        new_game_state = GAME_STATE_5;
     }
 
-    if (game_state_cur != GAME_STATE_4 || a1 != GAME_STATE_5) {
-        game_state_cur = a1;
-        return 0;
+    if (game_state_cur != GAME_STATE_4 || new_game_state != GAME_STATE_5) {
+        return -1;
     }
 
-    return -1;
+    game_state_cur = new_game_state;
+    return 0;
 }
 
 // 0x43C810
 void game_state_update()
 {
-    int v0 = game_state_cur;
     switch (game_state_cur) {
     case GAME_STATE_1:
-        v0 = GAME_STATE_0;
+        game_state_cur = GAME_STATE_0;
         break;
     case GAME_STATE_3:
-        v0 = GAME_STATE_2;
+        game_state_cur = GAME_STATE_2;
         break;
     case GAME_STATE_5:
-        v0 = GAME_STATE_4;
+        game_state_cur = GAME_STATE_4;
     }
-
-    game_state_cur = v0;
 }
 
 // 0x43D0AC
