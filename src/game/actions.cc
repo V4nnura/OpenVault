@@ -89,12 +89,9 @@ static int death_3[DAMAGE_TYPE_COUNT] = {
 // 0x410410
 void switch_dude()
 {
-    Object* critter;
-    int gender;
-
-    critter = pick_object(OBJ_TYPE_CRITTER, false);
+    Object* critter = pick_object(OBJ_TYPE_CRITTER, false);
     if (critter != NULL) {
-        gender = stat_level(critter, STAT_GENDER);
+        int gender = stat_level(critter, STAT_GENDER);
         stat_set_base(obj_dude, STAT_GENDER, gender);
 
         obj_dude = critter;
@@ -152,11 +149,14 @@ int action_blood(Object* obj, int anim, int delay)
     }
 
     int bloodyAnim;
-    if (anim == ANIM_FALL_BACK) {
+    switch (anim) {
+    case ANIM_FALL_BACK:
         bloodyAnim = ANIM_FALL_BACK_BLOOD;
-    } else if (anim == ANIM_FALL_FRONT) {
+        break;
+    case ANIM_FALL_FRONT:
         bloodyAnim = ANIM_FALL_FRONT_BLOOD;
-    } else {
+        break;
+    default:
         return anim;
     }
 
@@ -262,11 +262,10 @@ static int internal_destroy(Object* a1, Object* a2)
 // 0x410810
 void show_damage_to_object(Object* defender, int damage, int flags, Object* weapon, bool hit_from_front, int knockback_distance, int knockback_rotation, int a8, Object* attacker, int delay)
 {
-    int anim;
     int fid;
     const char* sfx_name;
 
-    anim = FID_ANIM_TYPE(defender->fid);
+    int anim = FID_ANIM_TYPE(defender->fid);
     if (!critter_is_prone(defender)) {
         if ((flags & DAM_DEAD) != 0) {
             fid = art_id(OBJ_TYPE_MISC, 10, 0, 0, 0);
@@ -398,11 +397,10 @@ void show_damage_to_object(Object* defender, int damage, int flags, Object* weap
 // 0x410D50
 static int show_death(Object* obj, int anim)
 {
-    Rect temp_rect;
     Rect dirty_rect;
-
     obj_bound(obj, &dirty_rect);
 
+    Rect temp_rect;
     if (obj->pid != 16777266 && obj->pid != 16777265 && obj->pid != 16777224) {
         obj->flags |= OBJECT_NO_BLOCK;
         if (obj_toggle_flat(obj, &temp_rect) == 0) {
@@ -428,11 +426,9 @@ static int show_death(Object* obj, int anim)
 // 0x410E74
 int show_damage_target(Attack* attack)
 {
-    int frontHit;
-
     if (FID_TYPE(attack->defender->fid) == OBJ_TYPE_CRITTER) {
         // NOTE: Uninline.
-        frontHit = is_hit_from_front(attack->attacker, attack->defender);
+        int frontHit = is_hit_from_front(attack->attacker, attack->defender);
 
         register_begin(ANIMATION_REQUEST_RESERVED);
         register_priority(1);
@@ -554,18 +550,13 @@ int action_attack(Attack* attack)
 // 0x4111C4
 static int action_melee(Attack* attack, int anim)
 {
-    int fid;
-    Art* art;
-    CacheEntry* cache_entry;
-    int delay;
-    const char* sfx_name;
-    char sfx_name_temp[16];
-
     register_begin(ANIMATION_REQUEST_RESERVED);
     register_priority(1);
 
-    fid = art_id(OBJ_TYPE_CRITTER, attack->attacker->fid & 0xFFF, anim, FID_WEAPON_CODE(attack->attacker->fid), attack->attacker->rotation + 1);
-    art = art_ptr_lock(fid, &cache_entry);
+    int fid = art_id(OBJ_TYPE_CRITTER, attack->attacker->fid & 0xFFF, anim, FID_WEAPON_CODE(attack->attacker->fid), attack->attacker->rotation + 1);
+    CacheEntry* cache_entry;
+    Art* art = art_ptr_lock(fid, &cache_entry);
+    int delay;
     if (art != NULL) {
         delay = art_frame_action_frame(art);
     } else {
@@ -576,12 +567,14 @@ static int action_melee(Attack* attack, int anim)
     tile_num_in_direction(attack->attacker->tile, attack->attacker->rotation, 1);
     register_object_turn_towards(attack->attacker, attack->defender->tile);
 
+    const char* sfx_name;
     if (anim != ANIM_THROW_PUNCH && anim != ANIM_KICK_LEG) {
         sfx_name = gsnd_build_weapon_sfx_name(WEAPON_SOUND_EFFECT_ATTACK, attack->weapon, attack->hitMode, attack->defender);
     } else {
         sfx_name = gsnd_build_character_sfx_name(attack->attacker, anim, CHARACTER_SOUND_EFFECT_UNUSED);
     }
 
+    char sfx_name_temp[16];
     strcpy(sfx_name_temp, sfx_name);
 
     combatai_msg(attack->attacker, attack, AI_MESSAGE_TYPE_ATTACK, 0);
