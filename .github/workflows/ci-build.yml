@@ -90,7 +90,7 @@ jobs:
   ios:
     name: iOS
 
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: Clone
@@ -253,7 +253,7 @@ jobs:
   macos:
     name: macOS
 
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: Clone
