@@ -86,12 +86,11 @@ bool cache_exit(Cache* cache)
 // 0x41EAC0
 int cache_query(Cache* cache, int key)
 {
-    int index;
-
     if (cache == NULL) {
         return 0;
     }
 
+    int index;
     if (cache_find(cache, key, &index) != 2) {
         return 0;
     }
@@ -130,7 +129,6 @@ bool cache_lock(Cache* cache, int key, void** data, CacheEntry** cacheEntryPtr)
         if (lock_sound_ticker == 0) {
             soundUpdate();
         }
-        break;
     } else {
         return false;
     }
