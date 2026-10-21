@@ -540,15 +540,19 @@ bool heap_validate(Heap* heap)
             return false;
         }
 
-        if (blockHeader->state == HEAP_BLOCK_STATE_FREE) {
+        switch (blockHeader->state) {
+        case HEAP_BLOCK_STATE_FREE:
             freeBlocks++;
             freeSize += blockHeader->size;
-        } else if (blockHeader->state == HEAP_BLOCK_STATE_MOVABLE) {
+            break;
+        case HEAP_BLOCK_STATE_MOVABLE:
             moveableBlocks++;
             moveableSize += blockHeader->size;
-        } else if (blockHeader->state == HEAP_BLOCK_STATE_LOCKED) {
+            break;
+        case HEAP_BLOCK_STATE_LOCKED:
             lockedBlocks++;
             lockedSize += blockHeader->size;
+            break;
         }
 
         if (index != blocksCount - 1) {
