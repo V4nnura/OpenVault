@@ -95,8 +95,6 @@ void FMExit()
 // 0x43A820
 static int FMLoadFont(int font_index)
 {
-    InterfaceFontDescriptor* fontDescriptor = &(gFontCache[font_index]);
-
     char path[56];
     snprintf(path, sizeof(path), "font%d.aaf", font_index);
 
@@ -123,6 +121,7 @@ static int FMLoadFont(int font_index)
         return -1;
     }
 
+    InterfaceFontDescriptor* fontDescriptor = &(gFontCache[font_index]);
     if (db_fread(&(fontDescriptor->maxHeight), 2, 1, stream) != 1) {
         db_fclose(stream);
         return -1;
@@ -190,11 +189,10 @@ static int FMLoadFont(int font_index)
 
 static bool FMFontExists(int font_index)
 {
-    dir_entry de;
     char path[56];
-
     snprintf(path, sizeof(path), "font%d.aaf", font_index);
 
+    dir_entry de;
     return db_dir_entry(path, &de) == 0;
 }
 
@@ -251,12 +249,11 @@ int FMtext_width(const char* string)
 // 0x43ACE0
 int FMtext_char_width(char c)
 {
-    int width;
-
     if (!gFMInit) {
         return 0;
     }
 
+    int width;
     if (c == ' ') {
         width = gCurrentFont->wordSpacing;
     } else {
