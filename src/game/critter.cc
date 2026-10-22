@@ -268,8 +268,6 @@ int critter_get_poison(Object* critter)
 // 0x427AEC
 int critter_adjust_poison(Object* critter, int amount)
 {
-    MessageListItem messageListItem;
-
     if (critter != obj_dude) {
         return -1;
     }
@@ -290,6 +288,8 @@ int critter_adjust_poison(Object* critter, int amount)
         queue_clear_type(EVENT_TYPE_POISON, NULL);
         queue_add(10 * (505 - 5 * critter->data.critter.poison), obj_dude, NULL, EVENT_TYPE_POISON);
 
+        MessageListItem messageListItem;
+
         // You have been poisoned!
         messageListItem.num = 3000;
         if (message_search(&misc_message_file, &messageListItem)) {
@@ -305,8 +305,6 @@ int critter_adjust_poison(Object* critter, int amount)
 // 0x427BAC
 int critter_check_poison(Object* obj, void* data)
 {
-    MessageListItem messageListItem;
-
     if (obj != obj_dude) {
         return 0;
     }
@@ -315,6 +313,8 @@ int critter_check_poison(Object* obj, void* data)
     critter_adjust_hits(obj, -1);
 
     intface_update_hit_points(false);
+
+    MessageListItem messageListItem;
 
     // You take damage from poison.
     messageListItem.num = 3001;
@@ -339,13 +339,11 @@ int critter_get_rads(Object* obj)
 // 0x427C18
 int critter_adjust_rads(Object* obj, int amount)
 {
-    MessageListItem messageListItem;
-    Proto* proto;
-
     if (obj != obj_dude) {
         return -1;
     }
 
+    Proto* proto;
     proto_ptr(obj_dude->pid, &proto);
 
     if (amount > 0) {
@@ -355,6 +353,8 @@ int critter_adjust_rads(Object* obj, int amount)
     if (amount > 0) {
         proto->critter.data.flags |= CRITTER_BARTER;
     }
+
+    MessageListItem messageListItem;
 
     if (amount > 0) {
         Object* item;
@@ -423,14 +423,11 @@ int critter_check_rads(Object* obj)
         -8,
     };
 
-    Proto* proto;
-    int radiation;
-    int radiation_level;
-
     if (obj != obj_dude) {
         return 0;
     }
 
+    Proto* proto;
     proto_ptr(obj->pid, &proto);
     if ((proto->critter.data.flags & CRITTER_BARTER) == 0) {
         return 0;
@@ -441,7 +438,8 @@ int critter_check_rads(Object* obj)
     queue_clear_type(EVENT_TYPE_RADIATION, get_rad_damage_level);
 
     // NOTE: Uninline
-    radiation = critter_get_rads(obj);
+    int radiation = critter_get_rads(obj);
+    int radiation_level;
 
     if (radiation > 999) {
         radiation_level = RADIATION_LEVEL_FATAL;
@@ -652,8 +650,6 @@ int critter_kill_count_save(DB_FILE* stream)
 // 0x428120
 int critter_kill_count_type(Object* obj)
 {
-    Proto* proto;
-
     if (obj == obj_dude) {
         if (stat_level(obj, STAT_GENDER) == GENDER_FEMALE) {
             return KILL_TYPE_WOMAN;
@@ -665,6 +661,7 @@ int critter_kill_count_type(Object* obj)
         return -1;
     }
 
+    Proto* proto;
     proto_ptr(obj->pid, &proto);
 
     return proto->critter.data.killType;
@@ -895,9 +892,7 @@ int critter_body_type(Object* critter)
 // 0x42857C
 int critter_load_data(CritterProtoData* critterData, const char* path)
 {
-    DB_FILE* stream;
-
-    stream = db_fopen(path, "rb");
+    DB_FILE* stream = db_fopen(path, "rb");
     if (stream == NULL) {
         return -1;
     }
@@ -970,9 +965,7 @@ int critter_read_data(DB_FILE* stream, CritterProtoData* critterData)
 // 0x42878C
 int critter_save_data(CritterProtoData* critterData, const char* path)
 {
-    DB_FILE* stream;
-
-    stream = db_fopen(path, "wb");
+    DB_FILE* stream = db_fopen(path, "wb");
     if (stream == NULL) {
         return -1;
     }
@@ -1192,15 +1185,9 @@ int critter_set_who_hit_me(Object* critter, Object* who_hit_me)
 // 0x428C1C
 bool critter_can_obj_dude_rest()
 {
-    int map_idx;
+    int map_idx = map_get_index_number();
     int check_team;
-    int can_rest;
-    Object** critters;
-    int critters_count;
-    int index;
-    Object* critter;
 
-    map_idx = map_get_index_number();
     switch (map_idx) {
     case MAP_HUBOLDTN:
     case MAP_HUBHEIGT:
@@ -1232,11 +1219,12 @@ bool critter_can_obj_dude_rest()
         }
     }
 
-    can_rest = true;
+    bool can_rest = true;
 
-    critters_count = obj_create_list(-1, map_elevation, OBJ_TYPE_CRITTER, &critters);
-    for (index = 0; index < critters_count; index++) {
-        critter = critters[index];
+    Object** critters;
+    int critters_count = obj_create_list(-1, map_elevation, OBJ_TYPE_CRITTER, &critters);
+    for (int index = 0; index < critters_count; index++) {
+        Object* critter = critters[index];
         if ((critter->data.critter.combat.results & DAM_DEAD) == 0) {
             if (critter != obj_dude) {
                 if (critter->data.critter.combat.whoHitMe == obj_dude) {
