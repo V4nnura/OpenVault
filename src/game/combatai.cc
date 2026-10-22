@@ -753,12 +753,12 @@ static Object* ai_search_environ(Object* critter, int itemType)
         return NULL;
     }
 
+    Object** objects;
     int count = obj_create_list(-1, map_elevation, OBJ_TYPE_ITEM, &objects);
     if (count == 0) {
         return NULL;
     }
 
-    Object** objects;
     // NOTE: Uninline.
     ai_sort_list(objects, count, critter);
 
