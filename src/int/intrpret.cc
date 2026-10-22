@@ -36,13 +36,13 @@ static int outputStr(char* string);
 static int checkWait(Program* program);
 static const char* findCurrentProc(Program* program);
 static opcode_t fetchWord(unsigned char* data, int pos);
-static int fetchLong(unsigned char* a1, int a2);
-static void storeWord(int value, unsigned char* a2, int a3);
+static int fetchLong(unsigned char* data, int pos);
+static void storeWord(int value, unsigned char* stack, int pos);
 static void storeLong(int value, unsigned char* stack, int pos);
-static void pushShortStack(unsigned char* a1, int* a2, int value);
-static void pushLongStack(unsigned char* a1, int* a2, int value);
-static int popLongStack(unsigned char* a1, int* a2);
-static opcode_t popShortStack(unsigned char* a1, int* a2);
+static void pushShortStack(unsigned char* data, int* pointer, int value);
+static void pushLongStack(unsigned char* data, int* pointer, int value);
+static int popLongStack(unsigned char* data, int* pointer);
+static opcode_t popShortStack(unsigned char* data, int* pointer);
 static void detachProgram(Program* program);
 static void purgeProgram(Program* program);
 static opcode_t getOp(Program* program);
@@ -122,10 +122,10 @@ static void op_fork(Program* program);
 static void op_exec(Program* program);
 static void op_check_arg_count(Program* program);
 static void op_lookup_string_proc(Program* program);
-static void setupCallWithReturnVal(Program* program, int address, int a3);
+static void setupCallWithReturnVal(Program* program, int address, int returnAddress);
 static void setupCall(Program* program, int address, int returnAddress);
-static void setupExternalCallWithReturnVal(Program* program1, Program* program2, int address, int a4);
-static void setupExternalCall(Program* program1, Program* program2, int address, int a4);
+static void setupExternalCallWithReturnVal(Program* caller, Program* callee, int address, int returnAddress);
+static void setupExternalCall(Program* caller, Program* callee, int address, int returnAddress);
 static void doEvents();
 static void removeProgList(ProgramListNode* programListNode);
 static void insertProgram(Program* program);
@@ -325,16 +325,14 @@ static void pushShortStack(unsigned char* data, int* pointer, int value)
 // 0x45B774
 static void pushLongStack(unsigned char* data, int* pointer, int value)
 {
-    int v1;
-
     if (*pointer + 4 >= STACK_SIZE) {
         interpretError("pushLongStack: Stack overflow.");
     }
 
-    v1 = *pointer;
-    storeWord(value >> 16, data, v1);
-    storeWord(value & 0xFFFF, data, v1 + 2);
-    *pointer = v1 + 4;
+    int pos = *pointer;
+    storeWord(value >> 16, data, pos);
+    storeWord(value & 0xFFFF, data, pos + 2);
+    *pointer = pos + 4;
 }
 
 // 0x45B7CC
@@ -2067,9 +2065,9 @@ static void op_pop_flags_return_val_exit_extern(Program* program)
 
     op_pop_flags(program);
 
-    Program* v1 = (Program*)programReturnStackPopPointer(program);
-    v1->checkWaitFunc = (InterpretCheckWaitFunc*)programReturnStackPopPointer(program);
-    v1->flags = programReturnStackPopInteger(program);
+    Program* caller = (Program*)programReturnStackPopPointer(program);
+    caller->checkWaitFunc = (InterpretCheckWaitFunc*)programReturnStackPopPointer(program);
+    caller->flags = programReturnStackPopInteger(program);
 
     op_pop_exit(program);
 
@@ -2082,9 +2080,9 @@ static void op_pop_flags_return_extern(Program* program)
 
     op_pop_flags(program);
 
-    Program* v1 = (Program*)programReturnStackPopPointer(program);
-    v1->checkWaitFunc = (InterpretCheckWaitFunc*)programReturnStackPopPointer(program);
-    v1->flags = programReturnStackPopInteger(program);
+    Program* caller = (Program*)programReturnStackPopPointer(program);
+    caller->checkWaitFunc = (InterpretCheckWaitFunc*)programReturnStackPopPointer(program);
+    caller->flags = programReturnStackPopInteger(program);
 
     op_pop_return(program);
 }
@@ -2094,9 +2092,9 @@ static void op_pop_flags_exit_extern(Program* program)
 {
     op_pop_flags(program);
 
-    Program* v1 = (Program*)programReturnStackPopPointer(program);
-    v1->checkWaitFunc = (InterpretCheckWaitFunc*)programReturnStackPopPointer(program);
-    v1->flags = programReturnStackPopInteger(program);
+    Program* caller = (Program*)programReturnStackPopPointer(program);
+    caller->checkWaitFunc = (InterpretCheckWaitFunc*)programReturnStackPopPointer(program);
+    caller->flags = programReturnStackPopInteger(program);
 
     op_pop_exit(program);
 }
@@ -2109,25 +2107,25 @@ static void op_pop_flags_return_val_extern(Program* program)
 
     op_pop_flags(program);
 
-    Program* v10 = (Program*)programReturnStackPopPointer(program);
-    v10->checkWaitFunc = (InterpretCheckWaitFunc*)programReturnStackPopPointer(program);
-    v10->flags = programReturnStackPopInteger(program);
+    Program* caller = (Program*)programReturnStackPopPointer(program);
+    caller->checkWaitFunc = (InterpretCheckWaitFunc*)programReturnStackPopPointer(program);
+    caller->flags = programReturnStackPopInteger(program);
     if ((value.opcode & 0xF7FF) == VALUE_TYPE_STRING) {
         char* string = interpretGetString(program, value.opcode, value.integerValue);
         ProgramValue otherValue;
-        otherValue.integerValue = interpretAddString(v10, string);
+        otherValue.integerValue = interpretAddString(caller, string);
         otherValue.opcode = VALUE_TYPE_DYNAMIC_STRING;
-        programStackPushValue(v10, otherValue);
+        programStackPushValue(caller, otherValue);
     } else {
-        programStackPushValue(v10, value);
+        programStackPushValue(caller, value);
     }
 
-    if (v10->flags & 0x80) {
-        program->flags &= ~0x80;
+    if (caller->flags & PROGRAM_FLAG_CRITICAL_SECTION) {
+        program->flags &= ~PROGRAM_FLAG_CRITICAL_SECTION;
     }
 
     op_pop_return(program);
-    op_pop_return(v10);
+    op_pop_return(caller);
 }
 
 // 0x45F544
@@ -2670,36 +2668,36 @@ static void setupCall(Program* program, int address, int returnAddress)
 }
 
 // 0x460968
-static void setupExternalCallWithReturnVal(Program* program1, Program* program2, int address, int a4)
+static void setupExternalCallWithReturnVal(Program* caller, Program* callee, int address, int returnAddress)
 {
-    programReturnStackPushInteger(program2, program2->instructionPointer);
+    programReturnStackPushInteger(callee, callee->instructionPointer);
 
-    programReturnStackPushInteger(program2, program1->flags & 0xFFFF);
+    programReturnStackPushInteger(callee, caller->flags & 0xFFFF);
 
-    programReturnStackPushPointer(program2, (void*)program1->checkWaitFunc);
+    programReturnStackPushPointer(callee, (void*)caller->checkWaitFunc);
 
-    programReturnStackPushPointer(program2, program1);
+    programReturnStackPushPointer(callee, caller);
 
-    programReturnStackPushInteger(program2, a4);
+    programReturnStackPushInteger(callee, returnAddress);
 
-    programStackPushInteger(program2, program2->flags & 0xFFFF);
+    programStackPushInteger(callee, callee->flags & 0xFFFF);
 
-    programStackPushPointer(program2, (void*)program2->checkWaitFunc);
+    programStackPushPointer(callee, (void*)callee->checkWaitFunc);
 
-    programStackPushInteger(program2, program2->windowId);
+    programStackPushInteger(callee, callee->windowId);
 
-    program2->flags &= ~0xFFFF;
-    program2->instructionPointer = address;
-    program2->windowId = program1->windowId;
+    callee->flags &= ~0xFFFF;
+    callee->instructionPointer = address;
+    callee->windowId = caller->windowId;
 
-    program1->flags |= PROGRAM_FLAG_CHILD_CALL;
+    caller->flags |= PROGRAM_FLAG_CHILD_CALL;
 }
 
 // 0x460A94
-static void setupExternalCall(Program* program1, Program* program2, int address, int a4)
+static void setupExternalCall(Program* caller, Program* callee, int address, int returnAddress)
 {
-    setupExternalCallWithReturnVal(program1, program2, address, a4);
-    programStackPushInteger(program2, 0);
+    setupExternalCallWithReturnVal(caller, callee, address, returnAddress);
+    programStackPushInteger(callee, 0);
 }
 
 // 0x461728
