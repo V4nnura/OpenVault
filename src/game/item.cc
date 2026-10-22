@@ -35,8 +35,8 @@ static int item_move_func(Object* source, Object* target, Object* item, int quan
 static bool item_identical(Object* item1, Object* item2);
 static int item_m_stealth_effect_on(Object* object);
 static int item_m_stealth_effect_off(Object* critter, Object* item);
-static int insert_drug_effect(Object* critter_obj, Object* item_obj, int duration, int* stats, int* mods);
-static void perform_drug_effect(Object* critter_obj, int* stats, int* mods, bool is_immediate);
+static int insert_drug_effect(Object* critter, Object* item, int duration, int* stats, int* mods);
+static void perform_drug_effect(Object* critter, int* stats, int* mods, bool isImmediate);
 static int insert_withdrawal(Object* obj, int active, int duration, int perk, int pid);
 static int item_wd_clear_all(Object* obj, void* data);
 static void perform_withdrawal_start(Object* obj, int perk, int pid);
@@ -127,12 +127,11 @@ static int wd_gvar;
 // 0x469C10
 int item_init()
 {
-    char path[COMPAT_MAX_PATH];
-
     if (!message_init(&item_message_file)) {
         return -1;
     }
 
+    char path[COMPAT_MAX_PATH];
     snprintf(path, sizeof(path), "%s%s", msg_path, "item.msg");
 
     if (!message_load(&item_message_file, path)) {
@@ -477,7 +476,7 @@ int item_drop_all(Object* critter, int tile)
                 }
             }
 
-            for (int index = 0; index < inventoryItem->quantity; index++) {
+            for (index = 0; index < inventoryItem->quantity; index++) {
                 if (item_remove_mult(critter, item, 1) != 0) {
                     return -1;
                 }
@@ -580,7 +579,6 @@ char* item_description(Object* obj)
 int item_get_type(Object* item)
 {
     Proto* proto;
-
     proto_ptr(item->pid, &proto);
     return proto->item.type;
 }
@@ -589,7 +587,6 @@ int item_get_type(Object* item)
 int item_material(Object* item)
 {
     Proto* proto;
-
     proto_ptr(item->pid, &proto);
     return proto->item.material;
 }
@@ -598,7 +595,6 @@ int item_material(Object* item)
 int item_size(Object* item)
 {
     Proto* proto;
-
     proto_ptr(item->pid, &proto);
     return proto->item.size;
 }
@@ -1040,10 +1036,6 @@ int item_w_damage_min_max(Object* weapon, int* min_damage, int* max_damage)
 // 0x46AC88
 int item_w_damage(Object* critter, int hit_mode)
 {
-    int min_damage = 0;
-    int max_damage = 0;
-    int bonus_damage = 0;
-
     if (critter == NULL) {
         return 0;
     }
@@ -1051,6 +1043,9 @@ int item_w_damage(Object* critter, int hit_mode)
     // NOTE: Uninline.
     Object* weapon = item_hit_with(critter, hit_mode);
 
+    int min_damage = 0;
+    int max_damage = 0;
+    int bonus_damage = 0;
     if (weapon != NULL) {
         // NOTE: Uninline.
         item_w_damage_min_max(weapon, &min_damage, &max_damage);
@@ -1152,9 +1147,9 @@ int item_w_curr_ammo(Object* ammoOrWeapon)
     Proto* proto;
     proto_ptr(ammoOrWeapon->pid, &proto);
 
-    // NOTE: Looks like the condition jumps were erased during compilation only
-    // because ammo's quantity and weapon's ammo quantity coincidently stored
-    // in the same offset relative to [Object].
+    // NOTE: Looks like the condition jumps were erased during compilation
+    // only because ammo's quantity and weapon's ammo quantity coincidently
+    // stored in the same offset relative to [Object].
     if (proto->item.type == ITEM_TYPE_AMMO) {
         return ammoOrWeapon->data.item.ammo.quantity;
     } else {
@@ -1315,9 +1310,6 @@ int item_w_reload(Object* weapon, Object* ammo)
 // 0x46B104
 int item_w_range(Object* critter, int hit_mode)
 {
-    int range;
-    int max_range;
-
     // NOTE: Uninline.
     Object* weapon = item_hit_with(critter, hit_mode);
 
@@ -1328,6 +1320,7 @@ int item_w_range(Object* critter, int hit_mode)
     Proto* proto;
     proto_ptr(weapon->pid, &proto);
 
+    int range;
     if (hit_mode == HIT_MODE_LEFT_WEAPON_PRIMARY || hit_mode == HIT_MODE_RIGHT_WEAPON_PRIMARY) {
         range = proto->item.data.weapon.maxRange1;
     } else {
@@ -1335,6 +1328,7 @@ int item_w_range(Object* critter, int hit_mode)
     }
 
     if (item_w_subtype(weapon, hit_mode) == ATTACK_TYPE_THROW) {
+        int max_range;
         if (critter == obj_dude) {
             max_range = 3 * (stat_level(critter, STAT_STRENGTH) + 2 * perk_level(PERK_HEAVE_HO));
         } else {
@@ -1354,15 +1348,13 @@ int item_w_range(Object* critter, int hit_mode)
 // 0x46B1E8
 int item_w_mp_cost(Object* critter, int hit_mode, bool aiming)
 {
-    int action_points;
-    int weapon_subtype;
-
     if (hit_mode == HIT_MODE_LEFT_WEAPON_RELOAD || hit_mode == HIT_MODE_RIGHT_WEAPON_RELOAD) {
         return 2;
     }
 
     // NOTE: Uninline.
     Object* weapon = item_hit_with(critter, hit_mode);
+    int action_points;
     if (weapon == NULL || hit_mode == HIT_MODE_PUNCH || hit_mode == HIT_MODE_KICK) {
         action_points = 3;
     } else {
@@ -1382,7 +1374,7 @@ int item_w_mp_cost(Object* critter, int hit_mode, bool aiming)
     }
 
     if (critter == obj_dude) {
-        weapon_subtype = item_w_subtype(weapon, hit_mode);
+        int weapon_subtype = item_w_subtype(weapon, hit_mode);
 
         if (perk_level(PERK_BONUS_HTH_ATTACKS)) {
             if (weapon_subtype == ATTACK_TYPE_MELEE || weapon_subtype == ATTACK_TYPE_UNARMED) {
@@ -2124,8 +2116,6 @@ static void perform_drug_effect(Object* critter, int* stats, int* mods, bool isI
     }
 
     for (int index = startIndex; index < 3; index++) {
-        int oldStatBonus;
-        int statBonus;
         int stat = stats[index];
         if (stat == -1) {
             continue;
@@ -2135,10 +2125,10 @@ static void perform_drug_effect(Object* critter, int* stats, int* mods, bool isI
             critter->data.critter.combat.maneuver &= ~CRITTER_MANUEVER_FLEEING;
         }
 
-        oldStatBonus = stat_get_bonus(critter, stat);
-
+        int oldStatBonus = stat_get_bonus(critter, stat);
         int before = (critter == obj_dude) ? stat_level(obj_dude, stat) : 0;
 
+        int statBonus;
         if (firstStatIsMinimum) {
             statBonus = roll_random(mods[index - 1], mods[index]) + oldStatBonus;
             firstStatIsMinimum = false;
@@ -2566,7 +2556,8 @@ int item_caps_adjust(Object* obj, int amount)
     if (amount <= 0 || caps != 0) {
         Inventory* inventory = &(obj->data.inventory);
 
-        for (int index = 0; index < inventory->length && amount != 0; index++) {
+        int index;
+        for (index = 0; index < inventory->length && amount != 0; index++) {
             InventoryItem* inventoryItem = &(inventory->items[index]);
             Object* item = inventoryItem->item;
             if (item->pid == PROTO_ID_MONEY) {
@@ -2586,7 +2577,7 @@ int item_caps_adjust(Object* obj, int amount)
             }
         }
 
-        for (int index = 0; index < inventory->length && amount != 0; index++) {
+        for (index = 0; index < inventory->length && amount != 0; index++) {
             InventoryItem* inventoryItem = &(inventory->items[index]);
             Object* item = inventoryItem->item;
             if (item_get_type(item) == ITEM_TYPE_CONTAINER) {
