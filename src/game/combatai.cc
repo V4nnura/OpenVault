@@ -151,8 +151,6 @@ static void parse_hurt_str(char* str, int* value)
 // 0x4244F0
 int combat_ai_init()
 {
-    int index;
-    Config config;
     int rc = 0;
 
     if (combatai_load_messages() == -1) {
@@ -161,6 +159,7 @@ int combat_ai_init()
 
     num_caps = 0;
 
+    Config config;
     if (!config_init(&config)) {
         return -1;
     }
@@ -168,6 +167,7 @@ int combat_ai_init()
     if (config_load(&config, "data\\ai.txt", true)) {
         cap = (AiPacket*)mem_malloc(sizeof(*cap) * config.size);
         if (cap != NULL) {
+            int index;
             for (index = 0; index < config.size; index++) {
                 cap[index].name = NULL;
             }
@@ -287,13 +287,11 @@ int combat_ai_num()
 // 0x424A84
 char* combat_ai_name(int packet_num)
 {
-    int index;
-
     if (packet_num < 0 || packet_num >= num_caps) {
         return NULL;
     }
 
-    for (index = 0; index < num_caps; index++) {
+    for (int index = 0; index < num_caps; index++) {
         if (cap[index].packet_num == packet_num) {
             return cap[index].name;
         }
@@ -305,9 +303,8 @@ char* combat_ai_name(int packet_num)
 // 0x424AD8
 static AiPacket* ai_cap(Object* obj)
 {
-    int index;
     int packet_num = obj->data.critter.combat.aiPacket;
-    for (index = 0; index < num_caps; index++) {
+    for (int index = 0; index < num_caps; index++) {
         if (packet_num == cap[index].packet_num) {
             return &(cap[index]);
         }
@@ -348,8 +345,6 @@ static int ai_magic_hands(Object* critter, Object* item, int num)
 // 0x424C00
 static int ai_check_drugs(Object* critter)
 {
-    int index = -1;
-
     if (critter_body_type(critter) != BODY_TYPE_BIPED) {
         return 0;
     }
@@ -360,6 +355,7 @@ static int ai_check_drugs(Object* critter)
             break;
         }
 
+        int index = -1;
         Object* drug = inven_find_type(critter, ITEM_TYPE_DRUG, &index);
         if (drug == NULL) {
             break;
@@ -473,8 +469,6 @@ static void ai_sort_list(Object** critterList, int length, Object* origin)
 // 0x424EA0
 static Object* ai_find_nearest_team(Object* critter, Object* other, int flags)
 {
-    int index;
-
     if (other == NULL) {
         return NULL;
     }
@@ -486,7 +480,7 @@ static Object* ai_find_nearest_team(Object* critter, Object* other, int flags)
     // NOTE: Uninline.
     ai_sort_list(curr_crit_list, curr_crit_num, critter);
 
-    for (index = 0; index < curr_crit_num; index++) {
+    for (int index = 0; index < curr_crit_num; index++) {
         Object* candidate = curr_crit_list[index];
         if (critter != candidate) {
             if ((candidate->data.critter.combat.results & DAM_DEAD) == 0) {
@@ -755,9 +749,6 @@ Object* ai_search_inven(Object* critter, int check_action_points)
 // 0x425358
 static Object* ai_search_environ(Object* critter, int itemType)
 {
-    Object** objects;
-    int index;
-
     if (critter_body_type(critter) != BODY_TYPE_BIPED) {
         return NULL;
     }
@@ -767,6 +758,7 @@ static Object* ai_search_environ(Object* critter, int itemType)
         return NULL;
     }
 
+    Object** objects;
     // NOTE: Uninline.
     ai_sort_list(objects, count, critter);
 
@@ -775,7 +767,7 @@ static Object* ai_search_environ(Object* critter, int itemType)
 
     Object* found_item = NULL;
 
-    for (index = 0; index < count; index++) {
+    for (int index = 0; index < count; index++) {
         Object* item = objects[index];
         int distance = obj_dist(critter, item);
         if (distance > max_distance) {
@@ -913,16 +905,14 @@ static int ai_switch_weapons(Object* critter, int* hit_mode, Object** weapon)
 // 0x425654
 static int ai_called_shot(Object* critter, Object* target, int hit_mode)
 {
-    int min_intelligence;
-    int combat_difficulty;
-
     int hit_location = HIT_LOCATION_TORSO;
 
     if (item_w_mp_cost(critter, hit_mode, 1) <= critter->data.critter.combat.ap) {
         if (item_w_called_shot(critter, hit_mode)) {
             AiPacket* ai = ai_cap(critter);
             if (roll_random(1, ai->called_freq) == 1) {
-                combat_difficulty = COMBAT_DIFFICULTY_NORMAL;
+                int min_intelligence;
+                int combat_difficulty = COMBAT_DIFFICULTY_NORMAL;
                 config_get_value(&game_config, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_DIFFICULTY_KEY, &combat_difficulty);
                 switch (combat_difficulty) {
                 case COMBAT_DIFFICULTY_EASY:
@@ -976,14 +966,6 @@ static int ai_attack(Object* critter, Object* target, int hit_mode)
 static int ai_try_attack(Object* critter, Object* target)
 {
     int combat_taunts = 1;
-    int attempt;
-    int bad_shot;
-    Object* ammo;
-    int remaining_rounds;
-    int volume;
-    const char* sfx;
-    int action_points;
-    int to_hit;
 
     critter_set_who_hit_me(critter, target);
 
@@ -1002,12 +984,18 @@ static int ai_try_attack(Object* critter, Object* target)
         }
     }
 
-    for (attempt = 0; attempt < 10; attempt++) {
+    for (int attempt = 0; attempt < 10; attempt++) {
         if ((critter->data.critter.combat.results & (DAM_KNOCKED_OUT | DAM_DEAD | DAM_LOSE_TURN)) != 0) {
             break;
         }
 
-        bad_shot = combat_check_bad_shot(critter, target, hit_mode, false);
+        int bad_shot = combat_check_bad_shot(critter, target, hit_mode, false);
+        Object* ammo;
+        int remaining_rounds;
+        int volume;
+        const char* sfx;
+        int action_points;
+        int to_hit;
         switch (bad_shot) {
         case COMBAT_BAD_SHOT_OK:
             to_hit = determine_to_hit(critter, target, HIT_LOCATION_UNCALLED, hit_mode);
@@ -1335,16 +1323,11 @@ int combatai_switch_team(Object* critter, int team)
 // 0x425F18
 int combatai_msg(Object* critter, Attack* attack, int type, int delay)
 {
-    int combat_taunts = 1;
-    int start;
-    int end;
-    char* string;
-    MessageListItem messageListItem;
-
     if (PID_TYPE(critter->pid) != OBJ_TYPE_CRITTER) {
         return -1;
     }
 
+    int combat_taunts = 1;
     config_get_value(&game_config, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_COMBAT_TAUNTS_KEY, &combat_taunts);
     if (!combat_taunts) {
         return -1;
@@ -1366,6 +1349,9 @@ int combatai_msg(Object* critter, Attack* attack, int type, int delay)
         return -1;
     }
 
+    int start;
+    int end;
+    char* string;
     switch (type) {
     case AI_MESSAGE_TYPE_RUN:
         start = ai->run_start;
@@ -1400,6 +1386,8 @@ int combatai_msg(Object* critter, Attack* attack, int type, int delay)
         return -1;
     }
 
+    MessageListItem messageListItem;
+
     messageListItem.num = roll_random(start, end);
     if (!message_search(&ai_message_file, &messageListItem)) {
         return -1;
@@ -1415,13 +1403,11 @@ int combatai_msg(Object* critter, Attack* attack, int type, int delay)
 // 0x4260B0
 static int ai_print_msg(Object* critter, int type)
 {
-    char* string;
-    Rect rect;
-
     if (text_object_count() > 0) {
         return 0;
     }
 
+    char* string;
     switch (type) {
     case AI_MESSAGE_TYPE_HIT:
     case AI_MESSAGE_TYPE_MISS:
@@ -1434,6 +1420,7 @@ static int ai_print_msg(Object* critter, int type)
 
     AiPacket* ai = ai_cap(critter);
 
+    Rect rect;
     if (text_object_create(critter, string, ai->font, ai->color, ai->outline_color, &rect) == 0) {
         tile_refresh_rect(&rect, critter->elevation);
     }
@@ -1485,8 +1472,6 @@ Object* combat_ai_random_target(Attack* attack)
 static int combatai_rating(Object* obj)
 {
     Object* item;
-    int weapon_damage_min;
-    int weapon_damage_max;
 
     if (obj == NULL) {
         return 0;
@@ -1501,6 +1486,8 @@ static int combatai_rating(Object* obj)
     }
 
     int melee_damage = stat_level(obj, STAT_MELEE_DAMAGE);
+    int weapon_damage_min;
+    int weapon_damage_max;
 
     item = inven_right_hand(obj);
     if (item != NULL && item_get_type(item) == ITEM_TYPE_WEAPON && item_w_damage_min_max(item, &weapon_damage_min, &weapon_damage_max) != -1 && melee_damage < weapon_damage_max) {
@@ -1528,8 +1515,6 @@ void combatai_check_retaliation(Object* critter, Object* candidate)
 // 0x4262A0
 bool is_within_perception(Object* critter1, Object* critter2)
 {
-    int max_distance;
-
     // Elevations share one hex grid, so obj_dist is elevation-blind. Without
     // this, critters on other Vault floors can "perceive" the player when their
     // tile numbers happen to be nearby (e.g. elev 2 rat vs elev 0 dude).
@@ -1537,6 +1522,7 @@ bool is_within_perception(Object* critter1, Object* critter2)
         return false;
     }
 
+    int max_distance;
     int distance = obj_dist(critter2, critter1);
     int perception = stat_level(critter1, STAT_PERCEPTION);
     if (can_see(critter1, critter2)) {
@@ -1580,19 +1566,18 @@ bool is_within_perception(Object* critter1, Object* critter2)
 // 0x426364
 static int combatai_load_messages()
 {
-    char path[COMPAT_MAX_PATH];
-    int language_filter = 0;
-
     if (!message_init(&ai_message_file)) {
         return -1;
     }
 
+    char path[COMPAT_MAX_PATH];
     snprintf(path, sizeof(path), "%s%s", msg_path, "combatai.msg");
 
     if (!message_load(&ai_message_file, path)) {
         return -1;
     }
 
+    int language_filter = 0;
     config_get_value(&game_config, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_LANGUAGE_FILTER_KEY, &language_filter);
 
     if (language_filter) {
@@ -1638,9 +1623,7 @@ void combatai_refresh_messages()
 // 0x426490
 void combatai_notify_onlookers(Object* critter)
 {
-    int index;
-
-    for (index = 0; index < curr_crit_num; index++) {
+    for (int index = 0; index < curr_crit_num; index++) {
         if (is_within_perception(curr_crit_list[index], critter)) {
             curr_crit_list[index]->data.critter.combat.maneuver |= CRITTER_MANEUVER_ENGAGING;
         }
@@ -1650,9 +1633,7 @@ void combatai_notify_onlookers(Object* critter)
 // 0x4264D8
 void combatai_delete_critter(Object* critter)
 {
-    int index;
-
-    for (index = 0; index < curr_crit_num; index++) {
+    for (int index = 0; index < curr_crit_num; index++) {
         if (critter == curr_crit_list[index]) {
             curr_crit_num--;
             curr_crit_list[index] = curr_crit_list[curr_crit_num];
