@@ -613,8 +613,6 @@ void map_get_name(char* name)
 // 0x474094
 int map_get_name_idx(char* name, int map)
 {
-    MessageListItem mesg;
-
     if (name == NULL) {
         return -1;
     }
@@ -625,6 +623,8 @@ int map_get_name_idx(char* name, int map)
     if (map == -1 || map > MAP_COUNT) {
         return -1;
     }
+
+    MessageListItem mesg;
 
     mesg.num = map;
     if (message_search(&map_msg_file, &mesg) != 1) {
@@ -639,8 +639,6 @@ int map_get_name_idx(char* name, int map)
 // 0x474104
 char* map_get_elev_idx(int map, int elevation)
 {
-    MessageListItem mesg;
-
     if (map < 0 || map >= MAP_COUNT) {
         return NULL;
     }
@@ -649,14 +647,14 @@ char* map_get_elev_idx(int map, int elevation)
         return NULL;
     }
 
+    MessageListItem mesg;
+
     return getmsg(&map_msg_file, &mesg, map * 3 + elevation + 200);
 }
 
 // 0x474158
 bool is_map_idx_same(int map1, int map2)
 {
-    int index;
-
     if (map1 < 0 || map1 >= MAP_COUNT) {
         return 0;
     }
@@ -665,7 +663,7 @@ bool is_map_idx_same(int map1, int map2)
         return 0;
     }
 
-    for (index = 0; index < 5; index++) {
+    for (int index = 0; index < 5; index++) {
         if (city_vs_city_idx_table[map1][index] == map2) {
             return true;
         }
@@ -868,16 +866,13 @@ void map_new_map()
 // 0x474614
 int map_load(char* file_name)
 {
-    int rc;
-    DB_FILE* stream;
-    char* extension;
-    char* file_path;
-
     compat_strupr(file_name);
 
-    rc = -1;
+    int rc = -1;
 
-    extension = strstr(file_name, ".MAP");
+    char* extension = strstr(file_name, ".MAP");
+    char* file_path;
+    DB_FILE* stream;
     if (extension != NULL) {
         strcpy(extension, ".SAV");
 
@@ -913,10 +908,9 @@ int map_load(char* file_name)
 // 0x4746E4
 int map_load_idx(int map)
 {
-    char name[16];
-
     scr_set_ext_param(map_script_id, map);
 
+    char name[16];
     if (map_get_name_idx(name, map) == -1) {
         return -1;
     }
@@ -931,9 +925,6 @@ int map_load_idx(int map)
 // 0x47471C
 int map_load_file(DB_FILE* stream)
 {
-    int rc = 0;
-    const char* error;
-
     map_save_in_game(true);
     gsound_background_play("wind2", 12, 13, 16);
     map_disable_bk_processes();
@@ -947,6 +938,7 @@ int map_load_file(DB_FILE* stream)
 
     map_script_id = -1;
 
+    const char* error;
     do {
         error = "Invalid file handle";
         if (stream == NULL) break;
@@ -1053,6 +1045,7 @@ int map_load_file(DB_FILE* stream)
         error = NULL;
     } while (0);
 
+    int rc = 0;
     if (error != NULL) {
         char message[100]; // TODO: Size is probably wrong.
         snprintf(message, sizeof(message), "%s while loading map, version = %d", error, map_data.version);
@@ -1542,19 +1535,16 @@ void map_setup_paths()
 int map_match_map_name(const char* name)
 {
     char temp[16];
-    char* extension;
-    int index;
-    char candidate[16];
-
     strcpy(temp, name);
     compat_strupr(temp);
 
-    extension = strstr(temp, ".SAV");
+    char* extension = strstr(temp, ".SAV");
     if (extension != NULL) {
         strcpy(extension, ".MAP");
     }
 
-    for (index = 0; index < MAP_COUNT; index++) {
+    for (int index = 0; index < MAP_COUNT; index++) {
+        char candidate[16];
         if (map_get_name_idx(candidate, index) == 0) {
             if (strcmp(temp, candidate) == 0) {
                 return index;
@@ -1568,11 +1558,6 @@ int map_match_map_name(const char* name)
 // 0x475B70
 static void map_match_map_number()
 {
-    char temp[16];
-    char* extension;
-    int index;
-    char candidate[16];
-
     if (strstr(map_data.name, ".sav") != NULL) {
         return;
     }
@@ -1581,15 +1566,17 @@ static void map_match_map_number()
         return;
     }
 
+    char temp[16];
     strcpy(temp, map_data.name);
     compat_strupr(temp);
 
-    extension = strstr(temp, ".SAV");
+    char* extension = strstr(temp, ".SAV");
     if (extension != NULL) {
         strcpy(extension, ".MAP");
     }
 
-    for (index = 0; index < MAP_COUNT; index++) {
+    for (int index = 0; index < MAP_COUNT; index++) {
+        char candidate[16];
         if (map_get_name_idx(candidate, index) == 0) {
             if (strcmp(temp, candidate) == 0) {
                 map_data.index = index;
@@ -1801,11 +1788,6 @@ static void square_reset()
 // 0x476084
 static int square_load(DB_FILE* stream, int flags)
 {
-    int v6;
-    int v7;
-    int v8;
-    int v9;
-
     square_reset();
 
     for (int elevation = 0; elevation < ELEVATION_COUNT; elevation++) {
@@ -1816,15 +1798,15 @@ static int square_load(DB_FILE* stream, int flags)
             }
 
             for (int tile = 0; tile < SQUARE_GRID_SIZE; tile++) {
-                v6 = arr[tile];
+                int v6 = arr[tile];
                 v6 &= ~(0xFFFF);
                 v6 >>= 16;
 
-                v7 = (v6 & 0xF000) >> 12;
+                int v7 = (v6 & 0xF000) >> 12;
                 v7 &= ~(0x01);
 
-                v8 = v6 & 0xFFF;
-                v9 = arr[tile] & 0xFFFF;
+                int v8 = v6 & 0xFFF;
+                int v9 = arr[tile] & 0xFFFF;
                 arr[tile] = ((v8 | (v7 << 12)) << 16) | v9;
             }
         }
