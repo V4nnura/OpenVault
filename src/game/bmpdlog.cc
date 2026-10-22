@@ -489,21 +489,32 @@ int dialog_out(const char* title, const char** body, int bodyLength, int x, int 
 
         int keyCode = get_input();
 
-        if (keyCode == 500) {
+        switch (keyCode) {
+        case 500:
             rc = 1;
-        } else if (keyCode == KEY_RETURN) {
+            break;
+        case KEY_RETURN:
             gsound_play_sfx_file("ib1p1xx1");
             rc = 1;
-        } else if (keyCode == KEY_ESCAPE || keyCode == 501) {
+            break;
+        case KEY_ESCAPE:
+        case 501:
             rc = 0;
-        } else {
+            break;
+        default:
             if ((flags & 0x10) != 0) {
-                if (keyCode == KEY_UPPERCASE_Y || keyCode == KEY_LOWERCASE_Y) {
+                switch (keyCode) {
+                case KEY_UPPERCASE_Y:
+                case KEY_LOWERCASE_Y:
                     rc = 1;
-                } else if (keyCode == KEY_UPPERCASE_N || keyCode == KEY_LOWERCASE_N) {
+                    break;
+                case KEY_UPPERCASE_N:
+                case KEY_LOWERCASE_N:
                     rc = 0;
+                    break;
                 }
             }
+            break;
         }
 
         if (game_user_wants_to_quit != 0) {
