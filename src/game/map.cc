@@ -1253,12 +1253,13 @@ int map_check_state()
     gmouse_3d_off();
     gmouse_set_cursor(MOUSE_CURSOR_NONE);
 
-    int town;
     WorldMapContext ctx;
+    int town;
 
-    if (map_state.map == 0) {
+    switch (map_state.map) {
+    case 0:
         return 0;
-    } else if (map_state.map == -1) {
+    case -1:
         if (!isInCombat()) {
             anim_stop();
 
@@ -1274,7 +1275,8 @@ int map_check_state()
             KillWorldWin();
             memset(&map_state, 0, sizeof(map_state));
         }
-    } else if (map_state.map == -2) {
+        break;
+    case -2:
         if (!isInCombat()) {
             anim_stop();
             ctx.state = 0;
@@ -1283,7 +1285,8 @@ int map_check_state()
             KillWorldWin();
             memset(&map_state, 0, sizeof(map_state));
         }
-    } else {
+        break;
+    default:
         if (!isInCombat()) {
             // NOTE: Uninline.
             map_load_idx(map_state.map);
@@ -1306,6 +1309,7 @@ int map_check_state()
                 debug_printf("\nError: couldn't make jump on worldmap for map jump!");
             }
         }
+        break;
     }
 
     return 0;
