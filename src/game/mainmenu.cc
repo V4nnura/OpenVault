@@ -357,20 +357,14 @@ int main_menu_loop()
                 rc = MAIN_MENU_SELFRUN;
                 continue;
             case KEY_PLUS:
-                IncGamma();
-                break;
             case KEY_EQUAL:
                 IncGamma();
                 break;
             case KEY_MINUS:
-                DecGamma();
-                break;
             case KEY_UNDERSCORE:
                 DecGamma();
                 break;
             case KEY_UPPERCASE_D:
-                rc = MAIN_MENU_SCREENSAVER;
-                continue;
             case KEY_LOWERCASE_D:
                 rc = MAIN_MENU_SCREENSAVER;
                 continue;
