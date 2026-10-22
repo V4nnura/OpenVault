@@ -150,12 +150,9 @@ int audioRead(int fileHandle, void* buffer, unsigned int size)
 // 0x419C20
 long audioSeek(int fileHandle, long offset, int origin)
 {
-    int pos;
-    unsigned char* buf;
-    int remainingBytesToSkip;
-
     Audio* audioFile = &(audio[fileHandle - 1]);
 
+    int pos;
     switch (origin) {
     case SEEK_SET:
         pos = static_cast<int>(offset);
@@ -178,6 +175,7 @@ long audioSeek(int fileHandle, long offset, int origin)
     }
 
     if ((audioFile->flags & AUDIO_FILE_COMPRESSED) != 0) {
+        unsigned char* buf;
         if (pos < audioFile->position) {
             AudioDecoder_Close(audioFile->audioDecoder);
             db_fseek(audioFile->stream, 0, SEEK_SET);
@@ -215,7 +213,7 @@ long audioSeek(int fileHandle, long offset, int origin)
             }
         } else {
             buf = (unsigned char*)mymalloc(1024, __FILE__, __LINE__); // "..\int\audio.c", 321
-            remainingBytesToSkip = pos - audioFile->position;
+            int remainingBytesToSkip = pos - audioFile->position;
             while (remainingBytesToSkip > 1024) {
                 remainingBytesToSkip -= 1024;
                 audioRead(fileHandle, buf, 1024);
