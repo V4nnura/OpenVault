@@ -352,17 +352,29 @@ int main_menu_loop()
         }
 
         if (rc == -1) {
-            if (keyCode == KEY_CTRL_R) {
+            switch (keyCode) {
+            case KEY_CTRL_R:
                 rc = MAIN_MENU_SELFRUN;
                 continue;
-            } else if (keyCode == KEY_PLUS || keyCode == KEY_EQUAL) {
+            case KEY_PLUS:
                 IncGamma();
-            } else if (keyCode == KEY_MINUS || keyCode == KEY_UNDERSCORE) {
+                break;
+            case KEY_EQUAL:
+                IncGamma();
+                break;
+            case KEY_MINUS:
                 DecGamma();
-            } else if (keyCode == KEY_UPPERCASE_D || keyCode == KEY_LOWERCASE_D) {
+                break;
+            case KEY_UNDERSCORE:
+                DecGamma();
+                break;
+            case KEY_UPPERCASE_D:
                 rc = MAIN_MENU_SCREENSAVER;
                 continue;
-            } else if (keyCode == 1111) {
+            case KEY_LOWERCASE_D:
+                rc = MAIN_MENU_SCREENSAVER;
+                continue;
+            case 1111:
                 if (!(mouse_get_buttons() & MOUSE_EVENT_LEFT_BUTTON_REPEAT)) {
                     // NOTE: Uninline.
                     main_menu_play_sound("nmselec0");
