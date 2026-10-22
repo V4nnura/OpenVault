@@ -186,7 +186,7 @@ typedef int(InterpretOutputFunc)(char* string);
 typedef unsigned int(InterpretTimerFunc)();
 typedef void(OpcodeHandler)(Program* program);
 
-void interpretSetTimeFunc(InterpretTimerFunc* timerFunc, int timerTick);
+void interpretSetTimeFunc();
 char* interpretMangleName(char* fileName);
 void interpretOutputFunc(InterpretOutputFunc* func);
 int interpretOutput(const char* format, ...);
