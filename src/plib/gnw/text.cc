@@ -95,9 +95,7 @@ int GNW_text_init()
     };
 
     int i;
-    int first_font;
-
-    first_font = -1;
+    int first_font = -1;
 
     for (i = 0; i < TEXT_FONT_MAX; i++) {
         font_alias_of[i] = -1;
@@ -153,9 +151,7 @@ static bool font_asset_exists(int n, const char* ext)
 // 0x4C168C
 void GNW_text_exit()
 {
-    int i;
-
-    for (i = 0; i < TEXT_FONT_MAX; i++) {
+    for (int i = 0; i < TEXT_FONT_MAX; i++) {
         if (font[i].num != 0 && font_alias_of[i] == i) {
             mem_free(font[i].info);
             mem_free(font[i].data);
@@ -250,8 +246,6 @@ out:
 // 0x4C1840
 int text_add_manager(FontMgrPtr mgr)
 {
-    int k;
-
     if (mgr == NULL) {
         return -1;
     }
@@ -261,7 +255,7 @@ int text_add_manager(FontMgrPtr mgr)
     }
 
     // Check if a font manager exists for any font in the specified range.
-    for (k = mgr->low_font_num; k < mgr->high_font_num; k++) {
+    for (int k = mgr->low_font_num; k < mgr->high_font_num; k++) {
         FontMgrPtr mgr;
         if (text_font_exists(k, &mgr)) {
             return -1;
@@ -278,10 +272,9 @@ int text_add_manager(FontMgrPtr mgr)
 int text_remove_manager(int font_num)
 {
     FontMgrPtr mgr;
-    int k;
 
     if (text_font_exists(font_num, &mgr)) {
-        for (k = 0; k < total_managers; k++) {
+        for (int k = 0; k < total_managers; k++) {
             if (&(font_managers[k]) == mgr) {
                 if (curr_font_num < font_managers[k].low_font_num || curr_font_num > font_managers[k].high_font_num) {
                     memmove(&(font_managers[k]), &(font_managers[k + 1]), sizeof(FontMgrPtr) * (total_managers - k) - sizeof(FontMgrPtr));
@@ -339,9 +332,7 @@ void text_font(int font_num)
 // 0x4C1A1C
 static bool text_font_exists(int font_num, FontMgrPtr* mgr)
 {
-    int k;
-
-    for (k = 0; k < total_managers; k++) {
+    for (int k = 0; k < total_managers; k++) {
         if (font_num >= font_managers[k].low_font_num && font_num <= font_managers[k].high_font_num) {
             *mgr = &(font_managers[k]);
             return true;
@@ -425,15 +416,11 @@ static int GNW_text_height()
 // 0x4C1C20
 static int GNW_text_width(const char* str)
 {
-    int i;
-    int len;
-    FontInfo* fi;
+    int len = 0;
 
-    len = 0;
-
-    for (i = 0; str[i] != '\0'; i++) {
+    for (int i = 0; str[i] != '\0'; i++) {
         if (str[i] < curr_font->num) {
-            fi = &(curr_font->info[str[i]]);
+            FontInfo* fi = &(curr_font->info[str[i]]);
             len += curr_font->spacing + fi->width;
         }
     }
@@ -468,14 +455,10 @@ static int GNW_text_size(const char* str)
 // 0x4C1CB8
 static int GNW_text_max()
 {
-    int i;
-    int len;
-    FontInfo* fi;
+    int len = 0;
 
-    len = 0;
-
-    for (i = 0; i < curr_font->num; i++) {
-        fi = &(curr_font->info[i]);
+    for (int i = 0; i < curr_font->num; i++) {
+        FontInfo* fi = &(curr_font->info[i]);
         if (len < fi->width) {
             len = fi->width;
         }
