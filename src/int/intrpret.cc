@@ -169,8 +169,8 @@ static unsigned int defaultTimerFunc()
     return get_time();
 }
 
-// 0x45B408
-void interpretSetTimeFunc()
+// Returns interpreter time in milliseconds. This is effectively just ticks, since interpreterTimerTick == 1000.
+static unsigned int interpretSetTimeFunc()
 {
     return 1000 * timerFunc() / timerTick;
 }
