@@ -228,7 +228,7 @@ bool heap_allocate(Heap* heap, int* handleIndexPtr, int size, int disallowSystem
     }
 
     void* block;
-    if (!heap_find_free_block(heap, size, &block, a4)) {
+    if (!heap_find_free_block(heap, size, &block, disallowSystemAllocation)) {
         goto err;
     }
 
