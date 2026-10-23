@@ -93,14 +93,11 @@ static unsigned int last_cycle_very_fast;
 // 0x428D60
 void cycle_init()
 {
-    bool colorCycling;
-    int index;
-    int cycleSpeedFactor;
-
     if (cycle_initialized) {
         return;
     }
 
+    bool colorCycling;
     if (!configGetBool(&game_config, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_COLOR_CYCLING_KEY, &colorCycling)) {
         colorCycling = true;
     }
@@ -109,6 +106,7 @@ void cycle_init()
         return;
     }
 
+    int index;
     for (index = 0; index < 12; index++) {
         slime[index] >>= 2;
     }
@@ -134,6 +132,7 @@ void cycle_init()
     cycle_initialized = true;
     cycle_enabled = true;
 
+    int cycleSpeedFactor;
     if (!config_get_value(&game_config, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_CYCLE_SPEED_FACTOR_KEY, &cycleSpeedFactor)) {
         cycleSpeedFactor = 1;
     }
