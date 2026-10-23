@@ -1250,15 +1250,17 @@ int map_leave_map(MapTransition* transition)
 // 0x4751A4
 int map_check_state()
 {
+    int town;
+    WorldMapContext ctx;
+
+    if (map_state.map == 0) {
+        return 0;
+    }
+
     gmouse_3d_off();
     gmouse_set_cursor(MOUSE_CURSOR_NONE);
 
-    WorldMapContext ctx;
-    int town;
-
     switch (map_state.map) {
-    case 0:
-        return 0;
     case -1:
         if (!isInCombat()) {
             anim_stop();
