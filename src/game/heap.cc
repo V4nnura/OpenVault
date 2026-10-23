@@ -217,6 +217,11 @@ bool heap_exit(Heap* heap)
 // 0x44A0B0
 bool heap_allocate(Heap* heap, int* handleIndexPtr, int size, int disallowSystemAllocation)
 {
+    HeapBlockHeader* blockHeader;
+    int state;
+    int blockSize;
+    HeapHandle* handle;
+
     size += sizeof(int) - size % sizeof(int);
 
     if (heap == NULL || handleIndexPtr == NULL || size == 0) {
@@ -232,16 +237,16 @@ bool heap_allocate(Heap* heap, int* handleIndexPtr, int size, int disallowSystem
         goto err;
     }
 
-    HeapBlockHeader* blockHeader = (HeapBlockHeader*)block;
-    int state = blockHeader->state;
+    blockHeader = (HeapBlockHeader*)block;
+    state = blockHeader->state;
 
     int handleIndex;
     if (!heap_acquire_handle(heap, &handleIndex)) {
         goto err_no_handle;
     }
 
-    int blockSize = blockHeader->size;
-    HeapHandle* handle = &(heap->handles[handleIndex]);
+    blockSize = blockHeader->size;
+    handle = &(heap->handles[handleIndex]);
 
     if (state == HEAP_BLOCK_STATE_SYSTEM) {
         // Bind block to handle.
