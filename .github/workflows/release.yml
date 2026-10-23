@@ -17,20 +17,20 @@ jobs:
 
     steps:
       - name: Clone
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 11
           cache: gradle
 
       - name: Cache cmake build
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: os/android/app/.cxx
-          key: android-cmake-v1
+          key: android-cmake-v101
 
       - name: Setup signing config
         if: env.KEYSTORE_FILE_BASE64 != '' && env.KEYSTORE_PROPERTIES_FILE_BASE64 != ''
@@ -59,17 +59,17 @@ jobs:
   ios:
     name: iOS
 
-    runs-on: macos-12
+    runs-on: macos-15
 
     steps:
       - name: Clone
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Cache cmake build
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: build
-          key: ios-cmake-v1
+          key: ios-cmake-v5
 
       - name: Configure
         run: |
@@ -107,7 +107,7 @@ jobs:
   linux:
     name: Linux (${{ matrix.arch }})
 
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
 
     strategy:
       fail-fast: false
@@ -118,7 +118,7 @@ jobs:
 
     steps:
       - name: Clone
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Dependencies (x86)
         if: matrix.arch == 'x86'
@@ -134,10 +134,10 @@ jobs:
           sudo apt install libsdl2-dev zlib1g-dev
 
       - name: Cache cmake build
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: build
-          key: linux-${{ matrix.arch }}-cmake-v1
+          key: linux-${{ matrix.arch }}-cmake-v101
 
       - name: Configure (x86)
         if: matrix.arch == 'x86'
@@ -186,7 +186,7 @@ jobs:
 
     steps:
       - name: Clone
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Dependencies (armhf)
         if: matrix.arch == 'armhf'
@@ -202,10 +202,10 @@ jobs:
           sudo apt install libsdl2-dev zlib1g-dev
 
       - name: Cache cmake build
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: build
-          key: linux-${{ matrix.arch }}-cmake-v1
+          key: linux-${{ matrix.arch }}-cmake-v101
 
       - name: Configure (armhf)
         if: matrix.arch == 'armhf'
@@ -247,23 +247,23 @@ jobs:
   macos:
     name: macOS
 
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - name: Clone
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Import code signing certificates
-        uses: apple-actions/import-codesign-certs@v2
+        uses: apple-actions/import-codesign-certs@v7
         with:
           p12-file-base64: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_P12_FILE_BASE64 }}
           p12-password: ${{ secrets.APPLE_DEVELOPER_CERTIFICATE_P12_PASSWORD }}
 
       - name: Cache cmake build
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: build
-          key: macos-cmake-v3
+          key: macos-cmake-v6
 
       - name: Configure
         run: |
@@ -318,7 +318,7 @@ jobs:
   windows:
     name: Windows (${{ matrix.arch }})
 
-    runs-on: windows-2019
+    runs-on: windows-2025
 
     strategy:
       fail-fast: false
@@ -331,13 +331,13 @@ jobs:
 
     steps:
       - name: Clone
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Cache cmake build
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: build
-          key: windows-${{ matrix.arch }}-cmake-v1
+          key: windows-${{ matrix.arch }}-cmake-v103
 
       - name: Configure
         run: |
