@@ -198,7 +198,7 @@ int interpretAddString(Program* program, char* string);
 void initInterpreter();
 void interpretClose();
 void interpretEnableInterpreter(int enabled);
-void interpret(Program* program, int a2);
+void interpret(Program* program, int numInstructions);
 void executeProc(Program* program, int procedureIndex);
 int interpretFindProcedure(Program* prg, const char* name);
 void executeProcedure(Program* program, int procedureIndex);
