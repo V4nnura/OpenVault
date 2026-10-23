@@ -225,9 +225,9 @@ bool heap_allocate(Heap* heap, int* handleIndexPtr, int size, int disallowSystem
     int blockState;
     int blockSize;
     HeapHandle* handle;
-    
+
     size += sizeof(int) - size % sizeof(int);
-    
+
     if (disallowSystemAllocation != 0 && disallowSystemAllocation != 1) {
         disallowSystemAllocation = 0;
     }
