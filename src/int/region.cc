@@ -52,65 +52,65 @@ bool pointInRegion(Region* region, int x, int y)
         return false;
     }
 
-    int v1;
+    int previousQuadrant;
 
     Point* prev = &(region->points[0]);
     if (x >= prev->x) {
         if (y >= prev->y) {
-            v1 = 2;
+            previousQuadrant = 2;
         } else {
-            v1 = 1;
+            previousQuadrant = 1;
         }
     } else {
         if (y >= prev->y) {
-            v1 = 3;
+            previousQuadrant = 3;
         } else {
-            v1 = 0;
+            previousQuadrant = 0;
         }
     }
 
-    int v4 = 0;
+    int winding = 0;
     for (int index = 0; index < region->pointsLength; index++) {
-        int v2;
+        int quadrant;
 
         Point* point = &(region->points[index + 1]);
         if (x >= point->x) {
             if (y >= point->y) {
-                v2 = 2;
+                quadrant = 2;
             } else {
-                v2 = 1;
+                quadrant = 1;
             }
         } else {
             if (y >= point->y) {
-                v2 = 3;
+                quadrant = 3;
             } else {
-                v2 = 0;
+                quadrant = 0;
             }
         }
 
-        int v3 = v2 - v1;
-        switch (v3) {
+        int quadrantDelta = quadrant - previousQuadrant;
+        switch (quadrantDelta) {
         case -3:
-            v3 = 1;
+            quadrantDelta = 1;
             break;
         case -2:
         case 2:
             if ((double)x < ((double)point->x - (double)(prev->x - point->x) / (double)(prev->y - point->y) * (double)(point->y - y))) {
-                v3 = -v3;
+                quadrantDelta = -quadrantDelta;
             }
             break;
         case 3:
-            v3 = -1;
+            quadrantDelta = -1;
             break;
         }
 
         prev = point;
-        v1 = v2;
+        previousQuadrant = quadrant;
 
-        v4 += v3;
+        winding += quadrantDelta;
     }
 
-    if (v4 == 4 || v4 == -4) {
+    if (winding == 4 || winding == -4) {
         return true;
     }
 
