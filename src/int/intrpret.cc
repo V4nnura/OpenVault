@@ -31,6 +31,7 @@ typedef struct ProgramListNode {
 } ProgramListNode;
 
 static unsigned int defaultTimerFunc();
+static unsigned int interpretGetTimeFunc();
 static char* defaultFilename(char* fileName);
 static int outputStr(char* string);
 static int checkWait(Program* program);
@@ -161,7 +162,7 @@ static Program* currentProgram;
 static ProgramListNode* head;
 
 // 0x59E794
-static bool suspendEvents;
+static int suspendEvents;
 
 // 0x45B400
 static unsigned int defaultTimerFunc()
@@ -170,7 +171,7 @@ static unsigned int defaultTimerFunc()
 }
 
 // Returns interpreter time in milliseconds. This is effectively just ticks, since interpreterTimerTick == 1000.
-static unsigned int interpretSetTimeFunc()
+static unsigned int interpretGetTimeFunc()
 {
     return 1000 * timerFunc() / timerTick;
 }
@@ -196,7 +197,7 @@ static int outputStr(char* string)
 // 0x45B428
 static int checkWait(Program* program)
 {
-    return interpretSetTimeFunc() <= program->waitEnd;
+    return interpretGetTimeFunc() <= program->waitEnd;
 }
 
 // 0x45B45C
@@ -644,7 +645,7 @@ static void op_call_at(Program* program)
 
     unsigned char* procedure_ptr = program->procedures + 4 + sizeof(Procedure) * data[0];
 
-    int delay = 1000 * data[1] + interpretSetTimeFunc();
+    int delay = 1000 * data[1] + interpretGetTimeFunc();
     int flags = fetchLong(procedure_ptr, offsetof(Procedure, flags));
 
     storeLong(delay, procedure_ptr, offsetof(Procedure, time));
@@ -672,7 +673,7 @@ static void op_wait(Program* program)
 {
     int data = programStackPopInteger(program);
 
-    program->waitStart = interpretSetTimeFunc();
+    program->waitStart = interpretGetTimeFunc();
     program->waitEnd = program->waitStart + data;
     program->checkWaitFunc = checkWait;
     program->flags |= PROGRAM_IS_WAITING;
@@ -1881,10 +1882,10 @@ static void op_bwxor(Program* program)
 // 0x45EB74
 static void op_swapa(Program* program)
 {
-    ProgramValue v1 = programReturnStackPopValue(program);
-    ProgramValue v2 = programReturnStackPopValue(program);
-    programReturnStackPushValue(program, v1);
-    programReturnStackPushValue(program, v2);
+    ProgramValue topValue = programReturnStackPopValue(program);
+    ProgramValue nextValue = programReturnStackPopValue(program);
+    programReturnStackPushValue(program, topValue);
+    programReturnStackPushValue(program, nextValue);
 }
 
 // 0x45EBF4
@@ -2555,7 +2556,7 @@ void interpret(Program* program, int numInstructions)
     }
 
     if (program->startTime == -1) {
-        program->startTime = interpretSetTimeFunc();
+        program->startTime = interpretGetTimeFunc();
     }
 
     currentProgram = program;
@@ -2823,7 +2824,7 @@ static void doEvents()
     }
 
     ProgramListNode* programListNode = head;
-    unsigned int time = interpretSetTimeFunc();
+    unsigned int time = interpretGetTimeFunc();
 
     while (programListNode != NULL) {
         int procedureCount = fetchLong(programListNode->program->procedures, 0);
