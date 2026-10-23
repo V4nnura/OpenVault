@@ -77,16 +77,16 @@ static bool heap_exit_handles(Heap* heap);
 static bool heap_acquire_handle(Heap* heap, int* handleIndexPtr);
 static bool heap_release_handle(Heap* heap, int handleIndex);
 static bool heap_clear_handles(Heap* heap, HeapHandle* handles, unsigned int count);
-static bool heap_find_free_block(Heap* heap, int size, void** blockPtr, int a4);
+static bool heap_find_free_block(Heap* heap, int size, void** blockPtr, int disallowSystemAllocation);
 static bool heap_build_free_list(Heap* heap);
 static bool heap_sort_free_list(Heap* heap);
-static int heap_qsort_compare_free(const void* a1, const void* a2);
+static int heap_qsort_compare_free(const void* leftPtr, const void* rightPtr);
 static bool heap_build_moveable_list(Heap* heap, int* moveableExtentsLengthPtr, int* maxBlocksLengthPtr);
 static bool heap_sort_moveable_list(Heap* heap, size_t count);
-static int heap_qsort_compare_moveable(const void* a1, const void* a2);
+static int heap_qsort_compare_moveable(const void* leftPtr, const void* rightPtr);
 static bool heap_build_subblock_list(int extentIndex);
 static bool heap_sort_subblock_list(size_t count);
-static int heap_qsort_compare_subblock(const void* a1, const void* a2);
+static int heap_qsort_compare_subblock(const void* leftPtr, const void* rightPtr);
 static bool heap_build_fake_move_list(size_t count);
 
 // An array of pointers to free heap blocks.
@@ -139,7 +139,7 @@ static size_t heap_fake_move_list_size = 0;
 static int heap_count = 0;
 
 // 0x449F54
-bool heap_init(Heap* heap, int a2)
+bool heap_init(Heap* heap, int initialSize)
 {
     if (heap == NULL) {
         return false;
@@ -154,7 +154,7 @@ bool heap_init(Heap* heap, int a2)
     memset(heap, 0, sizeof(*heap));
 
     if (heap_init_handles(heap)) {
-        int size = (a2 >> 10) + a2;
+        int size = (initialSize >> 10) + initialSize;
         heap->data = (unsigned char*)mem_malloc(size);
         if (heap->data != NULL) {
             heap->size = size;
@@ -215,21 +215,16 @@ bool heap_exit(Heap* heap)
 }
 
 // 0x44A0B0
-bool heap_allocate(Heap* heap, int* handleIndexPtr, int size, int a4)
+bool heap_allocate(Heap* heap, int* handleIndexPtr, int size, int disallowSystemAllocation)
 {
-    HeapBlockHeader* blockHeader;
-    int state;
-    int blockSize;
-    HeapHandle* handle;
-
     size += sizeof(int) - size % sizeof(int);
 
     if (heap == NULL || handleIndexPtr == NULL || size == 0) {
         goto err;
     }
 
-    if (a4 != 0 && a4 != 1) {
-        a4 = 0;
+    if (disallowSystemAllocation != 0 && disallowSystemAllocation != 1) {
+        disallowSystemAllocation = 0;
     }
 
     void* block;
@@ -237,16 +232,16 @@ bool heap_allocate(Heap* heap, int* handleIndexPtr, int size, int a4)
         goto err;
     }
 
-    blockHeader = (HeapBlockHeader*)block;
-    state = blockHeader->state;
+    HeapBlockHeader* blockHeader = (HeapBlockHeader*)block;
+    int state = blockHeader->state;
 
     int handleIndex;
     if (!heap_acquire_handle(heap, &handleIndex)) {
         goto err_no_handle;
     }
 
-    blockSize = blockHeader->size;
-    handle = &(heap->handles[handleIndex]);
+    int blockSize = blockHeader->size;
+    HeapHandle* handle = &(heap->handles[handleIndex]);
 
     if (state == HEAP_BLOCK_STATE_SYSTEM) {
         // Bind block to handle.
@@ -821,7 +816,7 @@ static bool heap_clear_handles(Heap* heap, HeapHandle* handles, unsigned int cou
 }
 
 // 0x44AB64
-static bool heap_find_free_block(Heap* heap, int size, void** blockPtr, int a4)
+static bool heap_find_free_block(Heap* heap, int size, void** blockPtr, int disallowSystemAllocation)
 {
     unsigned char* biggestFreeBlock;
     HeapBlockHeader* biggestFreeBlockHeader;
@@ -1064,7 +1059,7 @@ system:
             debug_printf("\n%s\n", stats);
         }
 
-        if (a4 == 0) {
+        if (!disallowSystemAllocation) {
             debug_printf("Allocating block from system memory...\n");
             unsigned char* block = (unsigned char*)mem_malloc(size + HEAP_BLOCK_OVERHEAD_SIZE);
             if (block == NULL) {
@@ -1162,10 +1157,10 @@ static bool heap_sort_free_list(Heap* heap)
 }
 
 // 0x44B2A0
-static int heap_qsort_compare_free(const void* a1, const void* a2)
+static int heap_qsort_compare_free(const void* leftPtr, const void* rightPtr)
 {
-    HeapBlockHeader* header1 = *(HeapBlockHeader**)a1;
-    HeapBlockHeader* header2 = *(HeapBlockHeader**)a2;
+    HeapBlockHeader* header1 = *(HeapBlockHeader**)leftPtr;
+    HeapBlockHeader* header2 = *(HeapBlockHeader**)rightPtr;
     return header1->size - header2->size;
 }
 
@@ -1262,11 +1257,11 @@ static bool heap_sort_moveable_list(Heap* heap, size_t count)
 }
 
 // 0x44B450
-static int heap_qsort_compare_moveable(const void* a1, const void* a2)
+static int heap_qsort_compare_moveable(const void* leftPtr, const void* rightPtr)
 {
-    HeapMoveableExtent* v1 = (HeapMoveableExtent*)a1;
-    HeapMoveableExtent* v2 = (HeapMoveableExtent*)a2;
-    return v1->size - v2->size;
+    HeapMoveableExtent* left = (HeapMoveableExtent*)leftPtr;
+    HeapMoveableExtent* right = (HeapMoveableExtent*)rightPtr;
+    return left->size - right->size;
 }
 
 // Build list of pointers to moveable blocks in given extent.
@@ -1307,10 +1302,10 @@ static bool heap_sort_subblock_list(size_t count)
 }
 
 // 0x44B2A0
-static int heap_qsort_compare_subblock(const void* a1, const void* a2)
+static int heap_qsort_compare_subblock(const void* leftPtr, const void* rightPtr)
 {
-    HeapBlockHeader* header1 = *(HeapBlockHeader**)a1;
-    HeapBlockHeader* header2 = *(HeapBlockHeader**)a2;
+    HeapBlockHeader* header1 = *(HeapBlockHeader**)leftPtr;
+    HeapBlockHeader* header2 = *(HeapBlockHeader**)rightPtr;
     return header1->size - header2->size;
 }
 
