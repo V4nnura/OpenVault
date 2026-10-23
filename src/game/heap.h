@@ -25,9 +25,9 @@ typedef struct Heap {
     unsigned char* data;
 } Heap;
 
-bool heap_init(Heap* heap, int a2);
+bool heap_init(Heap* heap, int initialSize);
 bool heap_exit(Heap* heap);
-bool heap_allocate(Heap* heap, int* handleIndexPtr, int size, int a3);
+bool heap_allocate(Heap* heap, int* handleIndexPtr, int size, int disallowSystemAllocation);
 bool heap_deallocate(Heap* heap, int* handleIndexPtr);
 bool heap_lock(Heap* heap, int handleIndex, unsigned char** bufferPtr);
 bool heap_unlock(Heap* heap, int handleIndex);
