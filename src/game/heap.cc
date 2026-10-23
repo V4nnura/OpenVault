@@ -217,17 +217,17 @@ bool heap_exit(Heap* heap)
 // 0x44A0B0
 bool heap_allocate(Heap* heap, int* handleIndexPtr, int size, int disallowSystemAllocation)
 {
-    HeapBlockHeader* blockHeader;
-    int state;
-    int blockSize;
-    HeapHandle* handle;
-
-    size += sizeof(int) - size % sizeof(int);
-
     if (heap == NULL || handleIndexPtr == NULL || size == 0) {
         goto err;
     }
 
+    HeapBlockHeader* blockHeader = (HeapBlockHeader*)block;
+    int blockState = blockHeader->state;
+    int blockSize = blockHeader->size;
+    HeapHandle* handle = &(heap->handles[handleIndex]);
+    
+    size += sizeof(int) - size % sizeof(int);
+    
     if (disallowSystemAllocation != 0 && disallowSystemAllocation != 1) {
         disallowSystemAllocation = 0;
     }
@@ -237,18 +237,12 @@ bool heap_allocate(Heap* heap, int* handleIndexPtr, int size, int disallowSystem
         goto err;
     }
 
-    blockHeader = (HeapBlockHeader*)block;
-    state = blockHeader->state;
-
     int handleIndex;
     if (!heap_acquire_handle(heap, &handleIndex)) {
         goto err_no_handle;
     }
 
-    blockSize = blockHeader->size;
-    handle = &(heap->handles[handleIndex]);
-
-    if (state == HEAP_BLOCK_STATE_SYSTEM) {
+    if (blockState == HEAP_BLOCK_STATE_SYSTEM) {
         // Bind block to handle.
         blockHeader->handle_index = handleIndex;
 
@@ -265,7 +259,7 @@ bool heap_allocate(Heap* heap, int* handleIndexPtr, int size, int disallowSystem
         return true;
     }
 
-    if (state == HEAP_BLOCK_STATE_FREE) {
+    if (blockState == HEAP_BLOCK_STATE_FREE) {
         int remainingSize = blockSize - size;
         if (remainingSize > HEAP_BLOCK_MIN_SIZE) {
             // The block we've just found is big enough for splitting, first
@@ -323,7 +317,7 @@ bool heap_allocate(Heap* heap, int* handleIndexPtr, int size, int disallowSystem
 err_no_handle:
 
     debug_printf("Heap Error: Could not acquire handle for new block.\n");
-    if (state == HEAP_BLOCK_STATE_SYSTEM) {
+    if (blockState == HEAP_BLOCK_STATE_SYSTEM) {
         mem_free(block);
     }
 
