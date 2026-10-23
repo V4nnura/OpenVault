@@ -24,6 +24,8 @@ You must own the game to play. Purchase your copy on [GOG](https://www.gog.com/g
 
 ### Windows
 
+- Since for now there is only a debug version of the program, see if you have these 3 DLLs in your system: `msvcp140d.dll`, `ucrtbased.dll` and `vcruntime140d.dll`. These files are necessary for this executable work on Windows.
+
 Download and copy `fallout-ce.exe` to your `Fallout` folder. It serves as a drop-in replacement for `falloutw.exe`.
 
 ### Linux
