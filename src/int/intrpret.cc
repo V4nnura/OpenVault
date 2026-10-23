@@ -131,7 +131,7 @@ static void removeProgList(ProgramListNode* programListNode);
 static void insertProgram(Program* program);
 
 // 0x51903C
-static int enabled = 1;
+static bool enabled = true;
 
 // 0x519040
 static InterpretTimerFunc* timerFunc = defaultTimerFunc;
@@ -161,7 +161,7 @@ static Program* currentProgram;
 static ProgramListNode* head;
 
 // 0x59E794
-static int suspendEvents;
+static bool suspendEvents;
 
 // 0x45B400
 static unsigned int defaultTimerFunc()
@@ -170,10 +170,9 @@ static unsigned int defaultTimerFunc()
 }
 
 // 0x45B408
-void interpretSetTimeFunc(InterpretTimerFunc* timerFunc, int timerTick)
+void interpretSetTimeFunc()
 {
-    timerFunc = timerFunc;
-    timerTick = timerTick;
+    return 1000 * timerFunc() / timerTick;
 }
 
 // 0x45B414
@@ -197,7 +196,7 @@ static int outputStr(char* string)
 // 0x45B428
 static int checkWait(Program* program)
 {
-    return 1000 * timerFunc() / timerTick <= program->waitEnd;
+    return interpretSetTimeFunc() <= program->waitEnd;
 }
 
 // 0x45B45C
@@ -500,19 +499,15 @@ char* interpretGetName(Program* program, int offset)
 // 0x45BC64
 int interpretAddString(Program* program, char* string)
 {
-    int v27;
-    unsigned char* v20;
-    unsigned char* v23;
-
     if (program == NULL) {
         return 0;
     }
 
-    v27 = strlen(string) + 1;
+    int bufferLength = strlen(string) + 1;
 
     // Align memory
-    if (v27 & 1) {
-        v27++;
+    if (bufferLength & 1) {
+        bufferLength++;
     }
 
     if (program->dynamicStrings != NULL) {
@@ -521,26 +516,26 @@ int interpretAddString(Program* program, char* string)
         while (*(unsigned short*)heap != 0x8000) {
             short v2 = *(short*)heap;
             if (v2 >= 0) {
-                if (v2 == v27) {
+                if (v2 == bufferLength) {
                     if (strcmp(string, (char*)(heap + 4)) == 0) {
                         return (heap + 4) - (program->dynamicStrings + 4);
                     }
                 }
             } else {
                 v2 = -v2;
-                if (v2 > v27) {
-                    if (v2 - v27 <= 4) {
+                if (v2 > bufferLength) {
+                    if (v2 - bufferLength <= 4) {
                         *(short*)heap = v2;
                     } else {
-                        *(short*)(heap + v27 + 6) = 0;
-                        *(short*)(heap + v27 + 4) = -(v2 - v27 - 4);
-                        *(short*)(heap) = v27;
+                        *(short*)(heap + bufferLength + 6) = 0;
+                        *(short*)(heap + bufferLength + 4) = -(v2 - bufferLength - 4);
+                        *(short*)(heap) = bufferLength;
                     }
 
                     *(short*)(heap + 2) = 0;
                     strcpy((char*)(heap + 4), string);
 
-                    *(heap + v27 + 3) = '\0';
+                    *(heap + bufferLength + 3) = '\0';
                     return (heap + 4) - (program->dynamicStrings + 4);
                 }
             }
@@ -553,26 +548,26 @@ int interpretAddString(Program* program, char* string)
         *(short*)(program->dynamicStrings + 6) = 1;
     }
 
-    program->dynamicStrings = (unsigned char*)myrealloc(program->dynamicStrings, *(int*)(program->dynamicStrings) + 8 + 4 + v27, __FILE__, __LINE__); // "..\int\INTRPRET.C", 466
+    program->dynamicStrings = (unsigned char*)myrealloc(program->dynamicStrings, *(int*)(program->dynamicStrings) + 8 + 4 + bufferLength, __FILE__, __LINE__); // "..\int\INTRPRET.C", 466
 
-    v20 = program->dynamicStrings + *(int*)(program->dynamicStrings) + 4;
-    if ((*(short*)v20 & 0xFFFF) != 0x8000) {
+    unsigned char* newBlock = program->dynamicStrings + *(int*)(program->dynamicStrings) + 4;
+    if ((*(short*)newBlock & 0xFFFF) != 0x8000) {
         interpretError("Internal consistancy error, string table mangled");
     }
 
-    *(int*)(program->dynamicStrings) += v27 + 4;
+    *(int*)(program->dynamicStrings) += bufferLength + 4;
 
-    *(short*)(v20) = v27;
-    *(short*)(v20 + 2) = 0;
+    *(short*)(newBlock) = bufferLength;
+    *(short*)(newBlock + 2) = 0;
 
-    strcpy((char*)(v20 + 4), string);
+    strcpy((char*)(newBlock + 4), string);
 
-    v23 = v20 + v27;
-    *(v23 + 3) = '\0';
-    *(unsigned short*)(v23 + 4) = 0x8000;
-    *(short*)(v23 + 6) = 1;
+    unsigned char* newTerminator = newBlock + bufferLength;
+    *(newTerminator + 3) = '\0';
+    *(unsigned short*)(newTerminator + 4) = 0x8000;
+    *(short*)(newTerminator + 6) = 1;
 
-    return v20 + 4 - (program->dynamicStrings + 4);
+    return newBlock + 4 - (program->dynamicStrings + 4);
 }
 
 // 0x45BDB4
@@ -649,7 +644,7 @@ static void op_call_at(Program* program)
 
     unsigned char* procedure_ptr = program->procedures + 4 + sizeof(Procedure) * data[0];
 
-    int delay = 1000 * data[1] + 1000 * timerFunc() / timerTick;
+    int delay = 1000 * data[1] + interpretSetTimeFunc();
     int flags = fetchLong(procedure_ptr, offsetof(Procedure, flags));
 
     storeLong(delay, procedure_ptr, offsetof(Procedure, time));
@@ -677,7 +672,7 @@ static void op_wait(Program* program)
 {
     int data = programStackPopInteger(program);
 
-    program->waitStart = 1000 * timerFunc() / timerTick;
+    program->waitStart = interpretSetTimeFunc();
     program->waitEnd = program->waitStart + data;
     program->checkWaitFunc = checkWait;
     program->flags |= PROGRAM_IS_WAITING;
@@ -2181,10 +2176,10 @@ static void op_store_global(Program* program)
 // 0x45F73C
 static void op_swap(Program* program)
 {
-    ProgramValue v1 = programStackPopValue(program);
-    ProgramValue v2 = programStackPopValue(program);
-    programStackPushValue(program, v1);
-    programStackPushValue(program, v2);
+    ProgramValue topValue = programStackPopValue(program);
+    ProgramValue nextValue = programStackPopValue(program);
+    programStackPushValue(program, topValue);
+    programStackPushValue(program, nextValue);
 }
 
 // 0x45F7BC
@@ -2434,7 +2429,7 @@ static void op_lookup_string_proc(Program* program)
 // 0x460190
 void initInterpreter()
 {
-    enabled = 1;
+    enabled = true;
 
     // NOTE: The original code has different sorting.
     interpretAddFunc(OPCODE_NOOP, op_noop);
@@ -2540,12 +2535,10 @@ void interpretEnableInterpreter(int value)
 }
 
 // 0x460658
-void interpret(Program* program, int a2)
+void interpret(Program* program, int numInstructions)
 {
     // 0x59E798
-    static int busy;
-
-    char err[260];
+    static bool busy;
 
     Program* oldCurrentProgram = currentProgram;
 
@@ -2562,7 +2555,7 @@ void interpret(Program* program, int a2)
     }
 
     if (program->startTime == -1) {
-        program->startTime = 1000 * timerFunc() / timerTick;
+        program->startTime = interpretSetTimeFunc();
     }
 
     currentProgram = program;
@@ -2574,11 +2567,11 @@ void interpret(Program* program, int a2)
         return;
     }
 
-    if ((program->flags & PROGRAM_FLAG_CRITICAL_SECTION) != 0 && a2 < 3) {
-        a2 = 3;
+    if ((program->flags & PROGRAM_FLAG_CRITICAL_SECTION) != 0 && numInstructions < 3) {
+        numInstructions = 3;
     }
 
-    while ((program->flags & PROGRAM_FLAG_CRITICAL_SECTION) != 0 || --a2 != -1) {
+    while ((program->flags & PROGRAM_FLAG_CRITICAL_SECTION) != 0 || --numInstructions != -1) {
         if ((program->flags & (PROGRAM_FLAG_EXITED | PROGRAM_FLAG_FATAL_ERROR | PROGRAM_FLAG_STOPPED | PROGRAM_FLAG_CHILD_CALL | PROGRAM_FLAG_FINISHED | PROGRAM_FLAG_CHILD_SPAWN)) != 0) {
             break;
         }
@@ -2588,16 +2581,16 @@ void interpret(Program* program, int a2)
         }
 
         if ((program->flags & PROGRAM_IS_WAITING) != 0) {
-            busy = 1;
+            busy = true;
 
             if (program->checkWaitFunc != NULL) {
                 if (!program->checkWaitFunc(program)) {
-                    busy = 0;
+                    busy = false;
                     continue;
                 }
             }
 
-            busy = 0;
+            busy = false;
             program->checkWaitFunc = NULL;
             program->flags &= ~PROGRAM_IS_WAITING;
         }
@@ -2609,6 +2602,7 @@ void interpret(Program* program, int a2)
         program->flags &= 0xFFFF;
         program->flags |= (opcode << 16);
 
+        char err[260];
         if (!((opcode >> 8) & 0x80)) {
             snprintf(err, sizeof(err), "Bad opcode %x %c %d.", opcode, opcode, opcode);
             interpretError(err);
@@ -2829,7 +2823,7 @@ static void doEvents()
     }
 
     ProgramListNode* programListNode = head;
-    unsigned int time = 1000 * timerFunc() / timerTick;
+    unsigned int time = interpretSetTimeFunc();
 
     while (programListNode != NULL) {
         int procedureCount = fetchLong(programListNode->program->procedures, 0);
@@ -3047,7 +3041,7 @@ void interpretSetFilenameFunc(InterpretMangleFunc* func)
 void interpretSuspendEvents()
 {
     suspendEvents++;
-    if (suspendEvents == 1) {
+    if (suspendEvents == true) {
         suspendTime = timerFunc();
     }
 }
@@ -3056,7 +3050,7 @@ void interpretSuspendEvents()
 void interpretResumeEvents()
 {
     int counter = suspendEvents;
-    if (suspendEvents != 0) {
+    if (suspendEvents != false) {
         suspendEvents--;
         if (counter == 1) {
             ProgramListNode* programListNode = head;
