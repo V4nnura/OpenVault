@@ -57,27 +57,28 @@ static int compare_faster(const void* critter1Ptr, const void* critter2Ptr);
 static void combat_sequence_init(Object* attacker, Object* defender);
 static void combat_sequence();
 static int combat_input();
-static int combat_turn(Object* a1, bool a2);
+static int combat_turn(Object* obj, bool a2);
 static bool combat_should_end();
 static bool check_ranged_miss(Attack* attack);
-static int shoot_along_path(Attack* attack, int a2, int a3, int anim);
+static int shoot_along_path(Attack* attack, int endTile, int rounds, int anim);
 static int compute_spray(Attack* attack, int accuracy, int* roundsHitMainTargetPtr, int* roundsSpentPtr, int anim);
 static int compute_attack(Attack* attack);
-static int attack_crit_success(Attack* a1);
+static int attack_crit_success(Attack* attack);
 static int attack_crit_failure(Attack* attack);
 static void do_random_cripple(int* flagsPtr);
 static int determine_to_hit_func(Object* attacker, Object* defender, int hitLocation, int hitMode, int check_range);
 static void compute_damage(Attack* attack, int ammoQuantity, int bonusDamageMultiplier);
-static void check_for_death(Object* a1, int a2, int* a3);
-static void set_new_results(Object* a1, int a2);
+static void check_for_death(Object* object, int damage, int* flags);
+static void set_new_results(Object* critter, int flags);
 static void damage_object(Object* obj, int damage, bool animated, bool a4);
-static void combat_display_hit(char* dest, size_t size, Object* critter_obj, int damage);
-static void combat_display_flags(char* a1, int flags, Object* a3);
-static void combat_standup(Object* a1);
-static void print_tohit(unsigned char* dest, int dest_pitch, int a3);
+static void combat_display_hit(char* dest, size_t size, Object* critter, int damage);
+static void combat_append_text(char* dest, size_t size, const char* text);
+static void combat_display_flags(char* dest, size_t size, int flags, Object* critter);
+static void combat_standup(Object* critter);
+static void print_tohit(unsigned char* dest, int destPitch, int accuracy);
 static char* combat_get_loc_name(Object* critter, int hitLocation);
-static void draw_loc_off(int a1, int a2);
-static void draw_loc_on(int a1, int a2);
+static void draw_loc_off(int btn, int input);
+static void draw_loc_on(int btn, int input);
 static void draw_loc(int eventCode, int color);
 static int get_called_shot_location(Object* critter, int* hitLocation, int hitMode);
 
@@ -3664,13 +3665,12 @@ void combat_display(Attack* attack)
 
     char* mainCritterName = _a_1;
 
-    char you[20];
-    you[0] = '\0';
+    char you[20] = {};
 
     // You (player)
     messageListItem.num = 506;
     if (message_search(&combat_message_file, &messageListItem)) {
-        strcpy(you, messageListItem.text);
+        snprintf(you, sizeof(you), "%s", messageListItem.text);
     }
 
     int baseMessageId;
@@ -3686,8 +3686,7 @@ void combat_display(Attack* attack)
         }
     }
 
-    char text[280];
-    text[0] = '\0';
+    char text[280] = {};
     if (attack->defender != NULL
         && attack->oops != NULL
         && attack->defender != attack->oops
@@ -3733,7 +3732,7 @@ void combat_display(Attack* attack)
         }
 
         if (text[0] != '\0') {
-            strcat(text, ".");
+            combat_append_text(text, sizeof(text), ".");
 
             display_print(text);
         }
@@ -3822,11 +3821,11 @@ void combat_display(Attack* attack)
                 if (combatMessages == 1 && (attack->attackerFlags & DAM_CRITICAL) != 0 && attack->criticalMessageId != -1) {
                     messageListItem.num = attack->criticalMessageId;
                     if (message_search(&combat_message_file, &messageListItem)) {
-                        strcat(text, messageListItem.text);
+                        combat_append_text(text, sizeof(text), messageListItem.text);
                     }
 
                     if ((attack->defenderFlags & DAM_DEAD) != 0) {
-                        strcat(text, ".");
+                        combat_append_text(text, sizeof(text), ".");
                         display_print(text);
 
                         if (attack->defender == obj_dude) {
@@ -3852,10 +3851,10 @@ void combat_display(Attack* attack)
                         }
                     }
                 } else {
-                    combat_display_flags(text, attack->defenderFlags, attack->defender);
+                    combat_display_flags(text, sizeof(text), attack->defenderFlags, attack->defender);
                 }
 
-                strcat(text, ".");
+                combat_append_text(text, sizeof(text), ".");
 
                 display_print(text);
             }
@@ -3892,9 +3891,9 @@ void combat_display(Attack* attack)
                 }
             }
 
-            combat_display_flags(text, attack->attackerFlags, attack->attacker);
+            combat_display_flags(text, sizeof(text), attack->attackerFlags, attack->attacker);
 
-            strcat(text, ".");
+            combat_append_text(text, sizeof(text), ".");
 
             display_print(text);
         }
@@ -3902,8 +3901,8 @@ void combat_display(Attack* attack)
         if ((attack->attackerFlags & DAM_HIT) != 0 || (attack->attackerFlags & DAM_CRITICAL) == 0) {
             if (attack->attackerDamage > 0) {
                 combat_display_hit(text, sizeof(text), attack->attacker, attack->attackerDamage);
-                combat_display_flags(text, attack->attackerFlags, attack->attacker);
-                strcat(text, ".");
+                combat_display_flags(text, sizeof(text), attack->attackerFlags, attack->attacker);
+                combat_append_text(text, sizeof(text), ".");
                 display_print(text);
             }
         }
@@ -3913,8 +3912,8 @@ void combat_display(Attack* attack)
         Object* critter = attack->extras[index];
         if ((critter->data.critter.combat.results & DAM_DEAD) == 0) {
             combat_display_hit(text, sizeof(text), critter, attack->extrasDamage[index]);
-            combat_display_flags(text, attack->extrasFlags[index], critter);
-            strcat(text, ".");
+            combat_display_flags(text, sizeof(text), attack->extrasFlags[index], critter);
+            combat_append_text(text, sizeof(text), ".");
 
             display_print(text);
         }
@@ -3937,7 +3936,7 @@ static void combat_display_hit(char* dest, size_t size, Object* critter, int dam
         // 506 - You
         messageListItem.num = messageId + 6;
         if (message_search(&combat_message_file, &messageListItem)) {
-            strcpy(text, messageListItem.text);
+            snprintf(text, sizeof(text), "%s", messageListItem.text);
         }
 
         name = text;
@@ -3977,7 +3976,16 @@ static void combat_display_hit(char* dest, size_t size, Object* critter, int dam
 }
 
 // 0x4231D0
-static void combat_display_flags(char* dest, int flags, Object* critter)
+static void combat_append_text(char* dest, size_t size, const char* text)
+{
+    size_t length = strlen(dest);
+    if (length < size) {
+        snprintf(dest + length, size - length, "%s", text);
+    }
+}
+
+// 0x4231D0
+static void combat_display_flags(char* dest, size_t size, int flags, Object* critter)
 {
     int num;
     if (critter == obj_dude) {
@@ -3999,13 +4007,13 @@ static void combat_display_flags(char* dest, int flags, Object* critter)
         // " and "
         messageListItem.num = 108;
         if (message_search(&combat_message_file, &messageListItem)) {
-            strcat(dest, messageListItem.text);
+            combat_append_text(dest, size, messageListItem.text);
         }
 
         // were killed
         messageListItem.num = num + 7;
         if (message_search(&combat_message_file, &messageListItem)) {
-            strcat(dest, messageListItem.text);
+            combat_append_text(dest, size, messageListItem.text);
         }
 
         return;
@@ -4023,23 +4031,23 @@ static void combat_display_flags(char* dest, int flags, Object* critter)
 
     if (flagsListLength != 0) {
         for (int index = 0; index < flagsListLength - 1; index++) {
-            strcat(dest, ", ");
+            combat_append_text(dest, size, ", ");
 
             messageListItem.num = num + flagsList[index];
             if (message_search(&combat_message_file, &messageListItem)) {
-                strcat(dest, messageListItem.text);
+                combat_append_text(dest, size, messageListItem.text);
             }
         }
 
         // " and "
         messageListItem.num = 108;
         if (message_search(&combat_message_file, &messageListItem)) {
-            strcat(dest, messageListItem.text);
+            combat_append_text(dest, size, messageListItem.text);
         }
 
         messageListItem.num = num + flagsList[flagsListLength - 1];
         if (message_search(&combat_message_file, &messageListItem)) {
-            strcat(dest, messageListItem.text);
+            combat_append_text(dest, size, messageListItem.text);
         }
     }
 }
