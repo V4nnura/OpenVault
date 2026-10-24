@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include <algorithm>
+#include <limits>
 #include <vector>
 
 #include "game/anim.h"
@@ -479,8 +480,7 @@ static int obj_load_func(DB_FILE* stream)
         return -1;
     }
 
-    if (objectCount < 0
-        || static_cast<size_t>(objectCount) > std::numeric_limits<size_t>::max() / sizeof(*preload_list)) {
+    if (objectCount < 0 || static_cast<size_t>(objectCount) > std::numeric_limits<size_t>::max() / sizeof(*preload_list)) {
         debug_printf("\nError loading objects: invalid object count %d.\n", objectCount);
         return -1;
     }
