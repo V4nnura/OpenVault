@@ -479,21 +479,34 @@ static int obj_load_func(DB_FILE* stream)
         return -1;
     }
 
+    if (objectCount < 0
+        || static_cast<size_t>(objectCount) > std::numeric_limits<size_t>::max() / sizeof(*preload_list)) {
+        debugPrint("\nError loading objects: invalid object count %d.\n", objectCount);
+        return -1;
+    }
+
     if (preload_list != NULL) {
         mem_free(preload_list);
+        preload_list = NULL;
     }
+    preload_list_index = 0;
 
     if (objectCount != 0) {
         preload_list = (int*)mem_malloc(sizeof(*preload_list) * objectCount);
         if (preload_list == NULL) {
             return -1;
         }
-        preload_list_index = 0;
+        memset(preload_list, 0, sizeof(*preload_list) * objectCount);
     }
 
     for (int elevation = 0; elevation < ELEVATION_COUNT; elevation++) {
         int objectCountAtElevation;
         if (db_freadInt(stream, &objectCountAtElevation) == -1) {
+            return -1;
+        }
+
+        if (objectCountAtElevation < 0 || objectCountAtElevation > objectCount - preload_list_index) {
+            debugPrint("\nError loading objects: invalid elevation object count %d.\n", objectCountAtElevation);
             return -1;
         }
 
@@ -580,6 +593,11 @@ static int obj_load_func(DB_FILE* stream)
                 inventory->items = NULL;
             }
         }
+    }
+
+    if (preload_list_index != objectCount) {
+        debugPrint("\nError loading objects: expected %d objects, read %d.\n", objectCount, preload_list_index);
+        return -1;
     }
 
     obj_rebuild_all_light();
