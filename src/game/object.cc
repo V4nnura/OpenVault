@@ -481,7 +481,7 @@ static int obj_load_func(DB_FILE* stream)
 
     if (objectCount < 0
         || static_cast<size_t>(objectCount) > std::numeric_limits<size_t>::max() / sizeof(*preload_list)) {
-        debugPrint("\nError loading objects: invalid object count %d.\n", objectCount);
+        debug_printf("\nError loading objects: invalid object count %d.\n", objectCount);
         return -1;
     }
 
@@ -506,7 +506,7 @@ static int obj_load_func(DB_FILE* stream)
         }
 
         if (objectCountAtElevation < 0 || objectCountAtElevation > objectCount - preload_list_index) {
-            debugPrint("\nError loading objects: invalid elevation object count %d.\n", objectCountAtElevation);
+            debug_printf("\nError loading objects: invalid elevation object count %d.\n", objectCountAtElevation);
             return -1;
         }
 
@@ -596,7 +596,7 @@ static int obj_load_func(DB_FILE* stream)
     }
 
     if (preload_list_index != objectCount) {
-        debugPrint("\nError loading objects: expected %d objects, read %d.\n", objectCount, preload_list_index);
+        debug_printf("\nError loading objects: expected %d objects, read %d.\n", objectCount, preload_list_index);
         return -1;
     }
 
