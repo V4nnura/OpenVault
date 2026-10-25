@@ -129,10 +129,11 @@ int dialog_out(const char* title, const char** body, int bodyLength, int x, int 
     MessageListItem messageListItem;
     int savedFont = text_curr();
 
-    bool v86 = false;
+    bool initializedButtons = false;
 
     bool hasTwoButtons = false;
     if (a8 != NULL) {
+        // TODO: a8 seems to be a way to customize "NO", but is unused.
         hasTwoButtons = true;
     }
 
@@ -144,7 +145,7 @@ int dialog_out(const char* title, const char** body, int bodyLength, int x, int 
     if ((flags & DIALOG_BOX_YES_NO) != 0) {
         hasTwoButtons = true;
         flags |= DIALOG_BOX_LARGE;
-        flags &= ~DIALOG_BOX_0x20;
+        flags &= ~DIALOG_BOX_NO_BUTTONS;
     }
 
     int maximumLineWidth = 0;
@@ -210,7 +211,7 @@ int dialog_out(const char* title, const char** body, int bodyLength, int x, int 
     CacheEntry* upButtonHandle = NULL;
     unsigned char* upButton = NULL;
 
-    if ((flags & DIALOG_BOX_0x20) == 0) {
+    if ((flags & DIALOG_BOX_NO_BUTTONS) == 0) {
         int doneBoxFid = art_id(OBJ_TYPE_INTERFACE, 209, 0, 0, 0);
         doneBox = art_lock(doneBoxFid, &doneBoxHandle, &doneBoxWidth, &doneBoxHeight);
         if (doneBox == NULL) {
@@ -281,13 +282,13 @@ int dialog_out(const char* title, const char** body, int bodyLength, int x, int 
             win_register_button_sound_func(btn, gsound_red_butt_press, gsound_red_butt_release);
         }
 
-        v86 = true;
+        initializedButtons = true;
     }
 
     if (hasTwoButtons && dialogType == DIALOG_TYPE_LARGE) {
-        if (v86) {
+        if (initializedButtons) {
             if ((flags & DIALOG_BOX_YES_NO) != 0) {
-                a8 = getmsg(&messageList, &messageListItem, 102);
+                a8 = getmsg(&messageList, &messageListItem, 102); // 102 - NO
             }
 
             text_font(103);
@@ -394,7 +395,7 @@ int dialog_out(const char* title, const char** body, int bodyLength, int x, int 
                 win_register_button_sound_func(btn, gsound_red_butt_press, gsound_red_butt_release);
             }
 
-            v86 = true;
+            initializedButtons = true;
         }
     }
 
@@ -529,7 +530,7 @@ int dialog_out(const char* title, const char** body, int bodyLength, int x, int 
     art_ptr_unlock(backgroundHandle);
     text_font(savedFont);
 
-    if (v86) {
+    if (initializedButtons) {
         art_ptr_unlock(doneBoxHandle);
         art_ptr_unlock(downButtonHandle);
         art_ptr_unlock(upButtonHandle);
