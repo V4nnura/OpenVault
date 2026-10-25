@@ -9,7 +9,7 @@ typedef enum DialogBoxOptions {
     DIALOG_BOX_NO_HORIZONTAL_CENTERING = 0x04,
     DIALOG_BOX_NO_VERTICAL_CENTERING = 0x08,
     DIALOG_BOX_YES_NO = 0x10,
-    DIALOG_BOX_0x20 = 0x20,
+    DIALOG_BOX_NO_BUTTONS = 0x20,
 } DialogBoxOptions;
 
 typedef enum DialogType {
