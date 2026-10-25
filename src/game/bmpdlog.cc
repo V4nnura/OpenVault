@@ -503,7 +503,7 @@ int dialog_out(const char* title, const char** body, int bodyLength, int x, int 
             rc = 0;
             break;
         default:
-            if ((flags & 0x10) != 0) {
+            if ((flags & DIALOG_BOX_YES_NO) != 0) {
                 switch (keyCode) {
                 case KEY_UPPERCASE_Y:
                 case KEY_LOWERCASE_Y:
