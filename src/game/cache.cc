@@ -525,8 +525,7 @@ static int cache_create_item(CacheEntry** cacheEntryPtr)
 {
     *cacheEntryPtr = (CacheEntry*)mem_malloc(sizeof(**cacheEntryPtr));
 
-    // FIXME: Wrong check, should be *cacheEntryPtr != NULL.
-    if (cacheEntryPtr != NULL) {
+    if (*cacheEntryPtr != NULL) {
         // NOTE: Uninline.
         return cache_init_item(*cacheEntryPtr);
     }
@@ -566,9 +565,9 @@ static bool cache_unlock_all(Cache* cache)
     for (int index = 0; index < cache->entriesLength; index++) {
         CacheEntry* cacheEntry = cache->entries[index];
 
-        // NOTE: Original code is slightly different. For unknown reason it uses
-        // inner loop to decrement `referenceCount` one by one. Probably using
-        // some inlined function.
+        // NOTE: Original code is slightly different. For unknown reason
+        // it uses inner loop to decrement `referenceCount` one by one.
+        // Probably using some inlined function.
         if (cacheEntry->referenceCount != 0) {
             heap_unlock(heap, cacheEntry->heapHandleIndex);
             cacheEntry->referenceCount = 0;
