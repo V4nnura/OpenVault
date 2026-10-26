@@ -43,9 +43,9 @@ typedef enum ScrollableDirections {
 } ScrollableDirections;
 
 typedef enum RefreshCursor {
-    REFRESH_BOUNCING_CURSOR = 0x01;
-    REFRESH_HEX_CURSOR = 0x02;
-    REFRESH_BOTH_CURSORS = REFRESH_BOUNCING_CURSOR | REFRESH_HEX_CURSOR;
+    REFRESH_BOUNCING_CURSOR = 0x01,
+    REFRESH_HEX_CURSOR = 0x02,
+    REFRESH_BOTH_CURSORS = REFRESH_BOUNCING_CURSOR | REFRESH_HEX_CURSOR,
 } RefreshCursor;
 
 static int gmouse_3d_init();
