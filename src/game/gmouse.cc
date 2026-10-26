@@ -42,6 +42,12 @@ typedef enum ScrollableDirections {
     SCROLLABLE_S = 0x08,
 } ScrollableDirections;
 
+typedef enum RefreshCursor {
+    REFRESH_BOUNCING_CURSOR = 0x01;
+    REFRESH_HEX_CURSOR = 0x02;
+    REFRESH_BOTH_CURSORS = REFRESH_BOUNCING_CURSOR | REFRESH_HEX_CURSOR;
+} RefreshCursor;
+
 static int gmouse_3d_init();
 static int gmouse_3d_reset();
 static void gmouse_3d_exit();
@@ -1142,7 +1148,7 @@ void gmouse_handle_event(int mouseX, int mouseY, int mouseState)
             || gmouse_3d_current_mode == GAME_MOUSE_MODE_USE_TRAPS
             || gmouse_3d_current_mode == GAME_MOUSE_MODE_USE_SCIENCE
             || gmouse_3d_current_mode == GAME_MOUSE_MODE_USE_REPAIR) {
-            Object* target = object_under_mouse(-1, 1, map_elevation);
+            Object* target = object_under_mouse(-1, true, map_elevation);
             if (target == NULL || action_use_skill_on(obj_dude, target, gmouse_skill_table[gmouse_3d_current_mode - FIRST_GAME_MOUSE_MODE_SKILL]) != -1) {
                 gmouse_set_cursor(MOUSE_CURSOR_NONE);
                 gmouse_3d_set_mode(GAME_MOUSE_MODE_MOVE);
@@ -1590,12 +1596,12 @@ int gmouse_3d_set_fid(int fid)
         return obj_change_fid(obj_mouse, fid, NULL);
     }
 
-    int v1 = 0;
+    int refreshFlags = 0;
 
     Rect oldRect;
     if (obj_mouse->fid != -1) {
         obj_bound(obj_mouse, &oldRect);
-        v1 |= 1;
+        refreshFlags |= REFRESH_BOUNCING_CURSOR;
     }
 
     int rc = -1;
@@ -1603,17 +1609,21 @@ int gmouse_3d_set_fid(int fid)
     Rect rect;
     if (obj_change_fid(obj_mouse, fid, &rect) == 0) {
         rc = 0;
-        v1 |= 2;
+        refreshFlags |= REFRESH_HEX_CURSOR;
     }
 
     if (gmouse_3d_is_on()) {
-        if (v1 == 1) {
+        switch (refreshFlags) {
+        case REFRESH_BOUNCING_CURSOR:
             tile_refresh_rect(&oldRect, map_elevation);
-        } else if (v1 == 2) {
+            break;
+        case REFRESH_HEX_CURSOR:
             tile_refresh_rect(&rect, map_elevation);
-        } else if (v1 == 3) {
+            break;
+        case REFRESH_BOTH_CURSORS:
             rect_min_bound(&oldRect, &rect, &oldRect);
             tile_refresh_rect(&oldRect, map_elevation);
+            break;
         }
     }
 
@@ -1644,49 +1654,49 @@ void gmouse_3d_on()
         return;
     }
 
-    int v2 = 0;
+    int refreshFlags = 0;
 
     Rect rect1;
     if (obj_turn_on(obj_mouse, &rect1) == 0) {
-        v2 |= 1;
+        refreshFlags |= REFRESH_BOUNCING_CURSOR;
     }
 
     Rect rect2;
     if (obj_turn_on(obj_mouse_flat, &rect2) == 0) {
-        v2 |= 2;
+        refreshFlags |= REFRESH_HEX_CURSOR;
     }
 
     Rect tmp;
     if (gmouse_3d_current_mode != GAME_MOUSE_MODE_MOVE) {
         if (obj_turn_off_outline(obj_mouse_flat, &tmp) == 0) {
-            if ((v2 & 2) != 0) {
+            if ((refreshFlags & REFRESH_HEX_CURSOR) != 0) {
                 rect_min_bound(&rect2, &tmp, &rect2);
             } else {
                 memcpy(&rect2, &tmp, sizeof(rect2));
-                v2 |= 2;
+                refreshFlags |= REFRESH_HEX_CURSOR;
             }
         }
     }
 
     if (gmouse_3d_reset_flat_fid(&tmp) == 0) {
-        if ((v2 & 2) != 0) {
+        if ((refreshFlags & REFRESH_HEX_CURSOR) != 0) {
             rect_min_bound(&rect2, &tmp, &rect2);
         } else {
             memcpy(&rect2, &tmp, sizeof(rect2));
-            v2 |= 2;
+            refreshFlags |= REFRESH_HEX_CURSOR;
         }
     }
 
-    if (v2 != 0) {
+    if (refreshFlags != 0) {
         Rect* rect;
-        switch (v2) {
-        case 1:
+        switch (refreshFlags) {
+        case REFRESH_BOUNCING_CURSOR:
             rect = &rect1;
             break;
-        case 2:
+        case REFRESH_HEX_CURSOR:
             rect = &rect2;
             break;
-        case 3:
+        case REFRESH_BOTH_CURSORS:
             rect_min_bound(&rect1, &rect2, &rect1);
             rect = &rect1;
             break;
@@ -1708,25 +1718,29 @@ void gmouse_3d_off()
         return;
     }
 
-    int v1 = 0;
+    int refreshFlags = 0;
 
     Rect rect1;
     if (obj_turn_off(obj_mouse, &rect1) == 0) {
-        v1 |= 1;
+        refreshFlags |= REFRESH_BOUNCING_CURSOR;
     }
 
     Rect rect2;
     if (obj_turn_off(obj_mouse_flat, &rect2) == 0) {
-        v1 |= 2;
+        refreshFlags |= REFRESH_HEX_CURSOR;
     }
 
-    if (v1 == 1) {
+    switch (refreshFlags) {
+    case REFRESH_BOUNCING_CURSOR:
         tile_refresh_rect(&rect1, map_elevation);
-    } else if (v1 == 2) {
+        break;
+    case REFRESH_HEX_CURSOR:
         tile_refresh_rect(&rect2, map_elevation);
-    } else if (v1 == 3) {
+        break;
+    case REFRESH_BOTH_CURSORS:
         rect_min_bound(&rect1, &rect2, &rect1);
         tile_refresh_rect(&rect1, map_elevation);
+        break;
     }
 }
 
@@ -1737,29 +1751,28 @@ bool gmouse_3d_is_on()
 }
 
 // 0x444958
-Object* object_under_mouse(int objectType, bool a2, int elevation)
+Object* object_under_mouse(int objectType, bool includeDude, int elevation)
 {
-    int mouseX;
-    int mouseY;
+    int mouseX, mouseY;
     mouse_get_position(&mouseX, &mouseY);
 
-    bool v13 = false;
+    bool intersectsRoof = false;
     if (objectType == -1) {
         if (square_roof_intersect(mouseX, mouseY, elevation)) {
             if (obj_intersects_with(obj_egg, mouseX, mouseY) == 0) {
-                v13 = true;
+                intersectsRoof = true;
             }
         }
     }
 
-    Object* v4 = NULL;
-    if (!v13) {
+    Object* found = NULL;
+    if (!intersectsRoof) {
         ObjectWithFlags* entries;
         int count = obj_create_intersect_list(mouseX, mouseY, elevation, objectType, &entries);
         for (int index = count - 1; index >= 0; index--) {
             ObjectWithFlags* ptr = &(entries[index]);
-            if (a2 || obj_dude != ptr->object) {
-                v4 = ptr->object;
+            if (includeDude || obj_dude != ptr->object) {
+                found = ptr->object;
                 if ((ptr->flags & 0x01) != 0) {
                     if ((ptr->flags & 0x04) == 0) {
                         if (FID_TYPE(ptr->object->fid) != OBJ_TYPE_CRITTER || (ptr->object->data.critter.combat.results & (DAM_KNOCKED_OUT | DAM_DEAD)) == 0) {
@@ -1774,7 +1787,7 @@ Object* object_under_mouse(int objectType, bool a2, int elevation)
             obj_delete_intersect_list(&entries);
         }
     }
-    return v4;
+    return found;
 }
 
 // 0x444A34
