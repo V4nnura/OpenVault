@@ -108,12 +108,15 @@ bool cache_lock(Cache* cache, int key, void** data, CacheEntry** cacheEntryPtr)
     *cacheEntryPtr = NULL;
 
     int index;
+    CacheEntry* cacheEntry;
     int rc = cache_find(cache, key, &index);
-    if (rc == 2) {
+    switch (rc) {
+    case 2:
         // Use existing cache entry.
-        CacheEntry* cacheEntry = cache->entries[index];
+        cacheEntry = cache->entries[index];
         cacheEntry->hits++;
-    } else if (rc == 3) {
+        break;
+    case 3:
         // New cache entry is required.
         if (cache->entriesLength >= INT_MAX) {
             debug_printf("cache_lock: cache is full, cannot create new entry for key %d\n", key);
@@ -129,11 +132,12 @@ bool cache_lock(Cache* cache, int key, void** data, CacheEntry** cacheEntryPtr)
         if (lock_sound_ticker == 0) {
             soundUpdate();
         }
-    } else {
+        break;
+    default:
         return false;
     }
 
-    CacheEntry* cacheEntry = cache->entries[index];
+    cacheEntry = cache->entries[index];
     if (cacheEntry->referenceCount == 0) {
         if (!heap_lock(&(cache->heap), cacheEntry->heapHandleIndex, &(cacheEntry->data))) {
             debug_printf("cache_lock: heap_lock failed for key %d\n", key);
