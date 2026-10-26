@@ -235,11 +235,7 @@ bool cache_flush(Cache* cache)
 // 0x41EE84
 int cache_size(Cache* cache, int* sizePtr)
 {
-    if (cache == NULL) {
-        return 0;
-    }
-
-    if (sizePtr == NULL) {
+    if (cache == NULL || sizePtr == NULL) {
         return 0;
     }
 
@@ -263,22 +259,14 @@ bool cache_stats(Cache* cache, char* dest, size_t size)
 // 0x41EEC0
 int cache_create_list(Cache* cache, unsigned int a2, int** tagsPtr, int* tagsLengthPtr)
 {
-    int cacheItemIndex;
-    int tagIndex;
-
-    if (cache == NULL) {
-        return 0;
-    }
-
-    if (tagsPtr == NULL) {
-        return 0;
-    }
-
-    if (tagsLengthPtr == NULL) {
+    if (cache == NULL || tagsPtr == NULL || tagsLengthPtr == NULL) {
         return 0;
     }
 
     *tagsLengthPtr = 0;
+
+    int cacheItemIndex;
+    int tagIndex;
 
     switch (a2) {
     case CACHE_LIST_REQUEST_TYPE_ALL_ITEMS:
