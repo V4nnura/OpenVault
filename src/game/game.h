@@ -29,7 +29,7 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
 void game_reset();
 void game_exit();
 int game_handle_input(int eventCode, bool isInCombatMode);
-void game_ui_disable(int a1);
+void game_ui_disable(int allowScrolling);
 void game_ui_enable();
 bool game_ui_is_disabled();
 int game_get_global_var(int var);
@@ -37,7 +37,7 @@ int game_set_global_var(int var, int value);
 int game_load_info();
 int game_load_info_vars(const char* path, const char* section, int* variablesListLengthPtr, int** variablesListPtr);
 int game_state();
-int game_state_request(int a1);
+int game_state_request(int new_game_state);
 void game_state_update();
 int game_quit_with_confirm();
 
