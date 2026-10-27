@@ -217,13 +217,8 @@ int skill_level(Object* critter, int skill)
     int value = skill_description->default_value + bonus + points * skill_description->points_modifier;
 
     if (critter == obj_dude) {
-        switch (skill) {
-        case tag_skill[0]:
-        case tag_skill[1]:
-        case tag_skill[2]:
-        case tag_skill[3]:
+        if (skill == tag_skill[0] || skill == tag_skill[1] || skill == tag_skill[2] || skill == tag_skill[3]) {
             value += 20 + points * skill_description->points_modifier;
-            break;
         }
 
         value += trait_adjust_skill(skill);
