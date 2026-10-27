@@ -455,7 +455,7 @@ void gmouse_set_click_to_scroll(bool value)
 }
 
 // 0x4430F4
-int gmouse_get_click_to_scroll()
+bool gmouse_get_click_to_scroll()
 {
     return gmouse_click_to_scroll;
 }
