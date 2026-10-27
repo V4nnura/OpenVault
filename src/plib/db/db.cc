@@ -226,13 +226,11 @@ DB_DATABASE* db_init(const char* datafile, const char* datafile_path, const char
 // 0x4AEF10
 int db_select(DB_DATABASE* db_handle)
 {
-    int index;
-
     if (db_handle == INVALID_DATABASE_HANDLE) {
         return -1;
     }
 
-    for (index = 0; index < DB_DATABASE_LIST_CAPACITY; index++) {
+    for (int index = 0; index < DB_DATABASE_LIST_CAPACITY; index++) {
         if (database_list[index] == db_handle) {
             current_database = database_list[index];
             return 0;
@@ -255,11 +253,8 @@ DB_DATABASE* db_current()
 // 0x4AEF6C
 int db_total()
 {
-    int index;
-    int count;
-
-    count = 0;
-    for (index = 0; index < DB_DATABASE_LIST_CAPACITY; index++) {
+    int count = 0;
+    for (int index = 0; index < DB_DATABASE_LIST_CAPACITY; index++) {
         if (database_list[index] != NULL) {
             count++;
         }
@@ -271,13 +266,11 @@ int db_total()
 // 0x4AEF88
 int db_close(DB_DATABASE* db_handle)
 {
-    int index;
-
     if (db_handle == NULL || db_handle == INVALID_DATABASE_HANDLE) {
         return -1;
     }
 
-    for (index = 0; index < DB_DATABASE_LIST_CAPACITY; index++) {
+    for (int index = 0; index < DB_DATABASE_LIST_CAPACITY; index++) {
         if (database_list[index] == (DB_DATABASE*)db_handle) {
             if (database_list[index] == current_database) {
                 current_database = NULL;
@@ -298,9 +291,7 @@ int db_close(DB_DATABASE* db_handle)
 // 0x4AF048
 void db_exit()
 {
-    int index;
-
-    for (index = 0; index < DB_DATABASE_LIST_CAPACITY; index++) {
+    for (int index = 0; index < DB_DATABASE_LIST_CAPACITY; index++) {
         if (database_list[index] != NULL) {
             db_close(database_list[index]);
         }
@@ -310,33 +301,20 @@ void db_exit()
 // 0x4AF068
 int db_dir_entry(const char* name, dir_entry* de)
 {
+    if (current_database == NULL || name == NULL || de == NULL) {
+        return -1;
+    }
+
     char path[COMPAT_MAX_PATH];
-    bool v2;
-    bool v3;
-    int value;
-    FILE* stream;
-
-    if (current_database == NULL) {
-        return -1;
-    }
-
-    if (name == NULL) {
-        return -1;
-    }
-
-    if (de == NULL) {
-        return -1;
-    }
-
-    v2 = true;
+    bool v2 = true;
     if (name[0] == '@') {
         strcpy(path, name + 1);
         v2 = false;
     }
 
     if (current_database->patches_path != NULL) {
-        stream = NULL;
-        v3 = false;
+        FILE* stream = NULL;
+        bool v3 = false;
 
         if (v2) {
             snprintf(path, sizeof(path), "%s%s", current_database->patches_path, name);
@@ -344,6 +322,7 @@ int db_dir_entry(const char* name, dir_entry* de)
 
         compat_windows_path_to_native(path);
 
+        int value;
         if (db_get_hash_value(current_database, path, PATH_SEP, &value) != 0 || value == 1) {
             v3 = true;
         }
@@ -388,40 +367,24 @@ int db_dir_entry(const char* name, dir_entry* de)
 // 0x4AF4F8
 int db_read_to_buf(const char* filename, unsigned char* buf)
 {
-    bool v1;
+    if (current_database == NULL || filename == NULL || buf == NULL) {
+        return -1;
+    }
+
     char path[COMPAT_MAX_PATH];
-    bool v3;
-    FILE* stream;
-    int hash_value;
-    int size;
-    size_t bytes_read;
-    int remaining_size;
-    int chunk_size;
-    dir_entry de;
-    unsigned char* end;
-    unsigned short v4;
-
-    if (current_database == NULL) {
-        return -1;
-    }
-
-    if (filename == NULL) {
-        return -1;
-    }
-
-    if (buf == NULL) {
-        return -1;
-    }
-
-    v1 = true;
+    bool v1 = true;
     if (filename[0] == '@') {
         strcpy(path, filename + 1);
         v1 = false;
     }
 
+    FILE* stream;
+    size_t bytes_read;
+    int remaining_size;
+    int chunk_size;
     if (current_database->patches_path != NULL) {
         stream = NULL;
-        v3 = false;
+        bool v3 = false;
 
         if (v1) {
             snprintf(path, sizeof(path), "%s%s", current_database->patches_path, filename);
@@ -429,6 +392,7 @@ int db_read_to_buf(const char* filename, unsigned char* buf)
 
         compat_windows_path_to_native(path);
 
+        int hash_value;
         if (db_get_hash_value(current_database, path, PATH_SEP, &hash_value) != 0 || hash_value == 1) {
             v3 = true;
         }
@@ -438,7 +402,7 @@ int db_read_to_buf(const char* filename, unsigned char* buf)
         }
 
         if (stream != NULL) {
-            size = getFileSize(stream);
+            int size = getFileSize(stream);
             if (read_callback != NULL) {
                 remaining_size = size;
                 chunk_size = read_threshold - read_count;
@@ -478,6 +442,7 @@ int db_read_to_buf(const char* filename, unsigned char* buf)
 
     compat_strupr(path);
 
+    dir_entry de;
     if (db_find_dir_entry(path, &de) == -1) {
         return -1;
     }
@@ -494,6 +459,8 @@ int db_read_to_buf(const char* filename, unsigned char* buf)
         de.flags = 16;
     }
 
+    unsigned char* end;
+    unsigned short v4;
     switch (de.flags & 0xF0) {
     case 16:
         lzss_decode_to_buf(current_database->stream, buf, de.field_C);
@@ -568,27 +535,7 @@ int db_read_to_buf(const char* filename, unsigned char* buf)
 // 0x4AF9C4
 DB_FILE* db_fopen(const char* filename, const char* mode)
 {
-    bool v1;
-    char path[COMPAT_MAX_PATH];
-    FILE* stream;
-    bool v2;
-    int hash_value;
-    int mode_value;
-    bool mode_is_text;
-    int flags;
-    int k;
-    dir_entry de;
-    unsigned char* buf;
-
-    if (current_database == NULL) {
-        return NULL;
-    }
-
-    if (filename == NULL) {
-        return NULL;
-    }
-
-    if (mode == NULL) {
+    if (current_database == NULL || filename == NULL || mode == NULL) {
         return NULL;
     }
 
@@ -596,9 +543,9 @@ DB_FILE* db_fopen(const char* filename, const char* mode)
         return NULL;
     }
 
-    mode_value = -1;
-    mode_is_text = true;
-    for (k = 0; mode[k] != '\0'; k++) {
+    int mode_value = -1;
+    bool mode_is_text = true;
+    for (int k = 0; mode[k] != '\0'; k++) {
         switch (mode[k]) {
         case 'b':
             mode_is_text = false;
@@ -618,20 +565,21 @@ DB_FILE* db_fopen(const char* filename, const char* mode)
         return NULL;
     }
 
-    stream = NULL;
-    flags = 1;
+    FILE* stream = NULL;
+    int flags = 1;
     if (mode_is_text) {
         flags = 2;
     }
 
-    v1 = true;
+    char path[COMPAT_MAX_PATH];
+    bool v1 = true;
     if (filename[0] == '@') {
         strcpy(path, filename + 1);
         v1 = false;
     }
 
     if (current_database->patches_path != NULL) {
-        v2 = false;
+        bool v2 = false;
 
         if (v1) {
             snprintf(path, sizeof(path), "%s%s", current_database->patches_path, filename);
@@ -643,6 +591,7 @@ DB_FILE* db_fopen(const char* filename, const char* mode)
             db_add_hash_entry_to_database(current_database, path, PATH_SEP);
             v2 = true;
         } else {
+            int hash_value;
             if (db_get_hash_value(current_database, path, PATH_SEP, &hash_value) != 0 || hash_value == 1) {
                 v2 = true;
             }
@@ -673,6 +622,7 @@ DB_FILE* db_fopen(const char* filename, const char* mode)
 
     compat_strupr(path);
 
+    dir_entry de;
     if (db_find_dir_entry(path, &de) == -1) {
         debug_printf("db_fopen: db_find_dir_entry failed for %s\n", path);
         return NULL;
@@ -692,6 +642,7 @@ DB_FILE* db_fopen(const char* filename, const char* mode)
         de.flags = 16;
     }
 
+    unsigned char* buf;
     switch (de.flags & 0xF0) {
     case 16:
         buf = (unsigned char*)internal_malloc(de.length);
@@ -725,12 +676,8 @@ size_t db_fread(void* ptr, size_t size, size_t count, DB_FILE* stream)
     long remaining_size;
     long chunk_size;
     size_t bytes_read;
-    unsigned char* buf;
-    size_t elements_read;
-    size_t v1;
-
-    buf = (unsigned char*)ptr;
-    elements_read = 0;
+    unsigned char* buf = (unsigned char*)ptr;
+    size_t elements_read = 0;
 
     if (stream != NULL) {
         if ((stream->flags & 0x4) != 0) {
@@ -761,6 +708,7 @@ size_t db_fread(void* ptr, size_t size, size_t count, DB_FILE* stream)
             }
         } else {
             if (ptr != NULL) {
+                size_t v1;
                 switch (stream->flags & 0xF0) {
                 case 16:
                     if (stream->field_10 != 0) {
@@ -937,12 +885,12 @@ size_t db_fread(void* ptr, size_t size, size_t count, DB_FILE* stream)
 int db_fgetc(DB_FILE* stream)
 {
     int ch = -1;
-    int next_ch;
 
     if (stream != NULL) {
         if ((stream->flags & 0x4) != 0) {
             ch = fgetc(stream->uncompressed_file_stream);
         } else {
+            int next_ch;
             switch (stream->flags & 0xF0) {
             case 16:
                 db_preload_buffer(stream);
@@ -1057,16 +1005,15 @@ int db_ungetc(int ch, DB_FILE* stream)
 char* db_fgets(char* string, size_t size, DB_FILE* stream)
 {
     char* res = NULL;
-    size_t index;
-    int ch;
 
     if (stream != NULL) {
         if ((stream->flags & 0x4) != 0) {
             res = fgets(string, size, stream->uncompressed_file_stream);
         } else {
             if (string != NULL) {
+                size_t index;
                 for (index = 0; index < size - 1; index++) {
-                    ch = db_fgetc(stream);
+                    int ch = db_fgetc(stream);
                     if (ch == -1) {
                         break;
                     }
@@ -1095,15 +1042,12 @@ char* db_fgets(char* string, size_t size, DB_FILE* stream)
 int db_fseek(DB_FILE* stream, long offset, int origin)
 {
     int rc = -1;
-    long current_offset;
-    unsigned char* v1;
-    int chunks;
 
     if (stream != NULL) {
         if ((stream->flags & 0x4) != 0) {
             rc = fseek(stream->uncompressed_file_stream, offset, origin);
         } else {
-            current_offset = db_ftell(stream);
+            long current_offset = db_ftell(stream);
 
             switch (origin) {
             case SEEK_SET:
@@ -1123,6 +1067,8 @@ int db_fseek(DB_FILE* stream, long offset, int origin)
                 return -1;
             }
 
+            unsigned char* v1;
+            int chunks;
             switch (stream->flags & 0xF0) {
             case 16:
                 stream->field_20 = stream->field_1C + offset;
@@ -1268,12 +1214,13 @@ int db_freadByte(DB_FILE* stream, unsigned char* c)
 int db_freadShort(DB_FILE* stream, unsigned short* s)
 {
     unsigned char high;
-    unsigned char low;
 
     // NOTE: Uninline.
     if (db_freadByte(stream, &high) == -1) {
         return -1;
     }
+
+    unsigned char low;
 
     // NOTE: Uninline.
     if (db_freadByte(stream, &low) == -1) {
@@ -1289,12 +1236,11 @@ int db_freadShort(DB_FILE* stream, unsigned short* s)
 int db_freadInt(DB_FILE* stream, int* i)
 {
     unsigned short high;
-    unsigned short low;
-
     if (db_freadShort(stream, &high) == -1) {
         return -1;
     }
 
+    unsigned short low;
     if (db_freadShort(stream, &low) == -1) {
         return -1;
     }
@@ -1308,7 +1254,6 @@ int db_freadInt(DB_FILE* stream, int* i)
 int db_freadLong(DB_FILE* stream, unsigned long* l)
 {
     int i;
-
     if (db_freadInt(stream, &i) == -1) {
         return -1;
     }
@@ -1322,7 +1267,6 @@ int db_freadLong(DB_FILE* stream, unsigned long* l)
 int db_freadFloat(DB_FILE* stream, float* q)
 {
     unsigned long l;
-
     if (db_freadLong(stream, &l) == -1) {
         return -1;
     }
@@ -1390,10 +1334,9 @@ int db_fwriteFloat(DB_FILE* stream, float q)
 // 0x4B09D4
 int db_freadByteCount(DB_FILE* stream, unsigned char* c, int count)
 {
-    int index;
-    unsigned char value;
+    for (int index = 0; index < count; index++) {
+        unsigned char value;
 
-    for (index = 0; index < count; index++) {
         // NOTE: Uninline.
         if (db_freadByte(stream, &value) == -1) {
             return -1;
@@ -1408,10 +1351,9 @@ int db_freadByteCount(DB_FILE* stream, unsigned char* c, int count)
 // 0x4B0A14
 int db_freadShortCount(DB_FILE* stream, unsigned short* s, int count)
 {
-    int index;
-    unsigned short value;
+    for (int index = 0; index < count; index++) {
+        unsigned short value;
 
-    for (index = 0; index < count; index++) {
         // NOTE: Uninline.
         if (db_freadShort(stream, &value) == -1) {
             return -1;
@@ -1426,10 +1368,9 @@ int db_freadShortCount(DB_FILE* stream, unsigned short* s, int count)
 // 0x4B0AB0
 int db_freadIntCount(DB_FILE* stream, int* i, int count)
 {
-    int index;
-    int value;
+    for (int index = 0; index < count; index++) {
+        int value;
 
-    for (index = 0; index < count; index++) {
         // NOTE: Uninline.
         if (db_freadInt(stream, &value) == -1) {
             return -1;
@@ -1444,10 +1385,9 @@ int db_freadIntCount(DB_FILE* stream, int* i, int count)
 // 0x4B0AB0
 int db_freadLongCount(DB_FILE* stream, unsigned long* l, int count)
 {
-    int index;
-    unsigned long value;
+    for (int index = 0; index < count; index++) {
+        unsigned long value;
 
-    for (index = 0; index < count; index++) {
         // NOTE: Uninline.
         if (db_freadLong(stream, &value) == -1) {
             return -1;
@@ -1462,10 +1402,9 @@ int db_freadLongCount(DB_FILE* stream, unsigned long* l, int count)
 // 0x4B0AB0
 int db_freadFloatCount(DB_FILE* stream, float* q, int count)
 {
-    int index;
-    float value;
+    for (int index = 0; index < count; index++) {
+        float value;
 
-    for (index = 0; index < count; index++) {
         // NOTE: Uninline.
         if (db_freadFloat(stream, &value) == -1) {
             return -1;
@@ -1480,9 +1419,7 @@ int db_freadFloatCount(DB_FILE* stream, float* q, int count)
 // 0x4B0B80
 int db_fwriteByteCount(DB_FILE* stream, unsigned char* c, int count)
 {
-    int index;
-
-    for (index = 0; index < count; index++) {
+    for (int index = 0; index < count; index++) {
         // NOTE: Uninline.
         if (db_fwriteByte(stream, c[index]) == -1) {
             return -1;
@@ -1495,9 +1432,7 @@ int db_fwriteByteCount(DB_FILE* stream, unsigned char* c, int count)
 // 0x4B0BC8
 int db_fwriteShortCount(DB_FILE* stream, unsigned short* s, int count)
 {
-    int index;
-
-    for (index = 0; index < count; index++) {
+    for (int index = 0; index < count; index++) {
         // NOTE: Uninline.
         if (db_fwriteShort(stream, s[index]) == -1) {
             return -1;
@@ -1510,9 +1445,7 @@ int db_fwriteShortCount(DB_FILE* stream, unsigned short* s, int count)
 // 0x4B0C3C
 int db_fwriteIntCount(DB_FILE* stream, int* i, int count)
 {
-    int index;
-
-    for (index = 0; index < count; index++) {
+    for (int index = 0; index < count; index++) {
         // NOTE: Uninline.
         if (db_fwriteInt(stream, i[index]) == -1) {
             return -1;
@@ -1525,9 +1458,7 @@ int db_fwriteIntCount(DB_FILE* stream, int* i, int count)
 // 0x4B0C9C
 int db_fwriteLongCount(DB_FILE* stream, unsigned long* l, int count)
 {
-    int index;
-
-    for (index = 0; index < count; index++) {
+    for (int index = 0; index < count; index++) {
         // NOTE: Uninline.
         if (db_fwriteLong(stream, l[index]) == -1) {
             return -1;
@@ -1540,9 +1471,7 @@ int db_fwriteLongCount(DB_FILE* stream, unsigned long* l, int count)
 // 0x4B0D54
 int db_fwriteFloatCount(DB_FILE* stream, float* q, int count)
 {
-    int index;
-
-    for (index = 0; index < count; index++) {
+    for (int index = 0; index < count; index++) {
         // NOTE: Uninline.
         if (db_fwriteFloat(stream, q[index]) == -1) {
             return -1;
@@ -1634,25 +1563,9 @@ int db_feof(DB_FILE* stream)
 // 0x4B0EF0
 int db_get_file_list(const char* filespec, char*** filelist, char*** desclist, int desclen)
 {
-    bool v1;
-    char path[COMPAT_MAX_PATH];
-    char* sep;
-    char* filename;
-    char* temp;
-    assoc_array ary;
-    int pos;
-    int index;
     int count = 0;
 
-    if (current_database == NULL) {
-        return 0;
-    }
-
-    if (filespec == NULL) {
-        return 0;
-    }
-
-    if (filelist == NULL) {
+    if (current_database == NULL || filespec == NULL || filelist == NULL) {
         return 0;
     }
 
@@ -1660,9 +1573,9 @@ int db_get_file_list(const char* filespec, char*** filelist, char*** desclist, i
     char* filespec_copy = filespec_copy_buffer;
     strcpy(filespec_copy, filespec);
 
-    temp = NULL;
+    char* temp = NULL;
 
-    v1 = true;
+    bool v1 = true;
     if (filespec_copy[0] == '@') {
         filespec_copy++;
         v1 = false;
@@ -1670,8 +1583,8 @@ int db_get_file_list(const char* filespec, char*** filelist, char*** desclist, i
 
     *filelist = NULL;
 
-    sep = strrchr(filespec_copy, '\\');
-    filename = sep != NULL ? sep + 1 : filespec_copy;
+    char* sep = strrchr(filespec_copy, '\\');
+    char* filename = sep != NULL ? sep + 1 : filespec_copy;
 
     if (strlen(filename) == 5 && filename[0] == '*' && filename[1] == '.') {
         if (desclist != NULL) {
@@ -1681,6 +1594,7 @@ int db_get_file_list(const char* filespec, char*** filelist, char*** desclist, i
             }
         }
 
+        assoc_array ary;
         if (assoc_init(&ary, 10, desclen, NULL) == -1) {
             if (temp != NULL) {
                 internal_free(temp);
@@ -1688,12 +1602,14 @@ int db_get_file_list(const char* filespec, char*** filelist, char*** desclist, i
             return 0;
         }
 
+        char path[COMPAT_MAX_PATH];
         if (!v1) {
             strcpy(path, filespec_copy);
         }
 
+        int index;
         if (current_database->datafile != NULL) {
-            pos = 0;
+            int pos = 0;
 
             if (v1) {
                 snprintf(path, sizeof(path), "%s%s", current_database->datafile_path, filespec_copy);
@@ -1847,7 +1763,6 @@ static int db_assoc_load_dir_entry(FILE* stream, void* buffer, size_t size, int 
 static int db_assoc_save_dir_entry(FILE* stream, void* buffer, size_t size, int flags)
 {
     dir_entry* de;
-
     if (size != sizeof(*de)) return -1;
 
     de = (dir_entry*)buffer;
@@ -1882,7 +1797,6 @@ static int db_assoc_load_db_dir_entry(DB_FILE* stream, void* buffer, size_t size
 static int db_assoc_save_db_dir_entry(DB_FILE* stream, void* buffer, size_t size, int flags)
 {
     dir_entry* de;
-
     if (size != sizeof(*de)) return -1;
 
     de = (dir_entry*)buffer;
@@ -1939,9 +1853,7 @@ void db_register_callback(db_read_callback* callback, size_t threshold)
 // 0x4B1B2C
 static int db_create_database(DB_DATABASE** database_ptr)
 {
-    int index;
-
-    for (index = 0; index < DB_DATABASE_LIST_CAPACITY; index++) {
+    for (int index = 0; index < DB_DATABASE_LIST_CAPACITY; index++) {
         if (database_list[index] == NULL) {
             database_list[index] = (DB_DATABASE*)internal_malloc(sizeof(DB_DATABASE));
             if (database_list[index] == NULL) {
@@ -1978,11 +1890,6 @@ static int db_destroy_database(DB_DATABASE** database_ptr)
 // 0x4B1BC4
 static int db_init_database(DB_DATABASE* database, const char* datafile, const char* datafile_path)
 {
-    assoc_func_list funcs;
-    int index;
-    const char* v1;
-    size_t v2;
-
     if (database == NULL) {
         return -1;
     }
@@ -2026,9 +1933,12 @@ static int db_init_database(DB_DATABASE* database, const char* datafile, const c
         return -1;
     }
 
+    assoc_func_list funcs;
+
     funcs.loadFunc = db_assoc_load_dir_entry;
     funcs.saveFunc = db_assoc_save_dir_entry;
 
+    int index;
     for (index = 0; index < database->root.size; index++) {
         if (assoc_init(&(database->entries[index]), 0, sizeof(dir_entry), &funcs) != 0) {
             break;
@@ -2052,6 +1962,7 @@ static int db_init_database(DB_DATABASE* database, const char* datafile, const c
         return -1;
     }
 
+    const char* v1;
     if (datafile_path != NULL && strlen(datafile_path) != 0) {
         v1 = datafile_path;
         if (datafile_path[0] == PATH_SEP) {
@@ -2061,7 +1972,7 @@ static int db_init_database(DB_DATABASE* database, const char* datafile, const c
         v1 = ".\\";
     }
 
-    v2 = strlen(v1);
+    size_t v2 = strlen(v1);
     database->datafile_path = (char*)internal_malloc(v2 + 2);
     if (database->datafile_path == NULL) {
         internal_free(database->entries);
@@ -2085,8 +1996,6 @@ static int db_init_database(DB_DATABASE* database, const char* datafile, const c
 // 0x4B1DE0
 static void db_exit_database(DB_DATABASE* database)
 {
-    int index;
-
     if (database == NULL) {
         return;
     }
@@ -2102,7 +2011,7 @@ static void db_exit_database(DB_DATABASE* database)
     }
 
     if (database->entries != NULL) {
-        for (index = 0; index < database->root.size; index++) {
+        for (int index = 0; index < database->root.size; index++) {
             assoc_free(&(database->entries[index]));
         }
         internal_free(database->entries);
@@ -2120,8 +2029,6 @@ static void db_exit_database(DB_DATABASE* database)
 // 0x4B1E70
 static int db_init_patches(DB_DATABASE* database, const char* path)
 {
-    size_t path_len;
-
     if (database == NULL) {
         return -1;
     }
@@ -2131,7 +2038,7 @@ static int db_init_patches(DB_DATABASE* database, const char* path)
         return 0;
     }
 
-    path_len = strlen(path);
+    size_t path_len = strlen(path);
     if (path_len == 0) {
         database->patches_path = empty_patches_path;
         return 0;
@@ -2202,11 +2109,7 @@ static int db_reset_hash_table(DB_DATABASE* database)
         return -1;
     }
 
-    if (database == NULL) {
-        return -1;
-    }
-
-    if (database->patches_path == NULL) {
+    if (database == NULL || database->patches_path == NULL) {
         return -1;
     }
 
@@ -2228,23 +2131,15 @@ static int db_reset_hash_table(DB_DATABASE* database)
 // 0x4B2028
 static int db_fill_hash_table(DB_DATABASE* database, const char* path)
 {
-    char pattern[COMPAT_MAX_PATH];
-    DB_FIND_DATA find_data;
-    bool is_directory;
-    char* filename;
-
     if (!hash_is_on) {
         return -1;
     }
 
-    if (database == NULL) {
+    if (database == NULL || database->hash_table == NULL) {
         return -1;
     }
 
-    if (database->hash_table == NULL) {
-        return -1;
-    }
-
+    char pattern[COMPAT_MAX_PATH];
 #if defined(_WIN32)
     snprintf(pattern, sizeof(pattern), "%s%s", path, "*.*");
 #else
@@ -2252,10 +2147,11 @@ static int db_fill_hash_table(DB_DATABASE* database, const char* path)
 #endif
     compat_windows_path_to_native(pattern);
 
+    DB_FIND_DATA find_data;
     if (db_findfirst(pattern, &find_data) != -1) {
         do {
-            is_directory = fileFindIsDirectory(&find_data);
-            filename = fileFindGetName(&find_data);
+            bool is_directory = fileFindIsDirectory(&find_data);
+            char* filename = fileFindGetName(&find_data);
 
             if (is_directory) {
                 if (strcmp(filename, ".") != 0 && strcmp(filename, "..") != 0) {
@@ -2276,13 +2172,11 @@ static int db_fill_hash_table(DB_DATABASE* database, const char* path)
 // 0x4B2154
 int db_reset_hash_tables()
 {
-    int index;
-
     if (!hash_is_on) {
         return -1;
     }
 
-    for (index = 0; index < DB_DATABASE_LIST_CAPACITY; index++) {
+    for (int index = 0; index < DB_DATABASE_LIST_CAPACITY; index++) {
         if (database_list[index] != NULL) {
             db_reset_hash_table(database_list[index]);
         }
@@ -2298,15 +2192,7 @@ int db_add_hash_entry(const char* path, int sep)
         return -1;
     }
 
-    if (current_database == NULL) {
-        return -1;
-    }
-
-    if (current_database->hash_table == NULL) {
-        return -1;
-    }
-
-    if (path == NULL) {
+    if (current_database == NULL || current_database->hash_table == NULL || path == NULL) {
         return -1;
     }
 
@@ -2316,8 +2202,6 @@ int db_add_hash_entry(const char* path, int sep)
 // 0x4B21E0
 static int db_add_hash_entry_to_database(DB_DATABASE* database, const char* path, int sep)
 {
-    unsigned int key;
-
     if (!hash_is_on) {
         return -1;
     }
@@ -2330,6 +2214,7 @@ static int db_add_hash_entry_to_database(DB_DATABASE* database, const char* path
         return -1;
     }
 
+    unsigned int key;
     if (db_hash_string_to_key(path, sep, &key) != 0) {
         return -1;
     }
@@ -2364,8 +2249,6 @@ static int db_set_hash_value(DB_DATABASE* database, unsigned int key, unsigned c
 // 0x4B2304
 static int db_get_hash_value(DB_DATABASE* database, const char* path, int sep, int* value_ptr)
 {
-    unsigned int key;
-
     if (!hash_is_on) {
         return -1;
     }
@@ -2378,6 +2261,7 @@ static int db_get_hash_value(DB_DATABASE* database, const char* path, int sep, i
         return -1;
     }
 
+    unsigned int key;
     if (db_hash_string_to_key(path, sep, &key) != 0) {
         return -1;
     }
@@ -2394,29 +2278,23 @@ static int db_get_hash_value(DB_DATABASE* database, const char* path, int sep, i
 // 0x4B2394
 static int db_hash_string_to_key(const char* path, int sep, unsigned int* key_ptr)
 {
-    char* copy;
-    char* pch;
-    char* filename;
-    size_t index;
-    unsigned int key;
-
-    key = 1;
-
     if (path == NULL) {
         return -1;
     }
 
-    copy = (char*)internal_strdup(path);
+    char* copy = (char*)internal_strdup(path);
     compat_strupr(copy);
 
-    pch = strrchr(copy, sep);
+    char* pch = strrchr(copy, sep);
+    char* filename;
     if (pch != NULL) {
         filename = pch + 1;
     } else {
         filename = copy;
     }
 
-    for (index = 0; index < strlen(filename); index++) {
+    unsigned int key = 1;
+    for (size_t index = 0; index < strlen(filename); index++) {
         key *= *filename++;
         key &= 0x7FFFFFFF;
     }
@@ -2440,10 +2318,9 @@ static void db_exit_hash_table(DB_DATABASE* database)
 // 0x4B2444
 static DB_FILE* db_add_fp_rec(FILE* stream, unsigned char* a2, int a3, int flags)
 {
-    DB_FILE* ptr;
+    DB_FILE* ptr = NULL;
     int pos;
 
-    ptr = NULL;
     if (current_database->files_length < DB_DATABASE_FILE_LIST_CAPACITY) {
         if (db_find_empty_position(&pos) == 0) {
             memset(&(current_database->files[pos]), 0, sizeof(*current_database->files));
@@ -2523,8 +2400,6 @@ static int db_delete_fp_rec(DB_FILE* stream)
 // 0x4B26D0
 static int db_find_empty_position(int* position_ptr)
 {
-    int index;
-
     if (position_ptr == NULL) {
         return -1;
     }
@@ -2533,7 +2408,7 @@ static int db_find_empty_position(int* position_ptr)
         return -1;
     }
 
-    for (index = 0; index < DB_DATABASE_FILE_LIST_CAPACITY; index++) {
+    for (int index = 0; index < DB_DATABASE_FILE_LIST_CAPACITY; index++) {
         if (current_database->files[index].field_8 == 0) {
             *position_ptr = index;
             return 0;
@@ -2546,13 +2421,6 @@ static int db_find_empty_position(int* position_ptr)
 // 0x4B2714
 static int db_find_dir_entry(char* path, dir_entry* de)
 {
-    char* normalized_path;
-    int pos;
-    int dir_index;
-    int entry_index;
-
-    normalized_path = path;
-
     if (current_database->datafile == NULL) {
         debug_printf("ERROR: db_find_dir_entry: current_database->datafile is NULL\n");
         return -1;
@@ -2568,6 +2436,7 @@ static int db_find_dir_entry(char* path, dir_entry* de)
         return -1;
     }
 
+    char* normalized_path = path;
     if (path[0] == '.') {
         normalized_path = path + 1;
         if (path[1] == '\\') {
@@ -2575,7 +2444,7 @@ static int db_find_dir_entry(char* path, dir_entry* de)
         }
     }
 
-    pos = strlen(normalized_path) - 1;
+    int pos = strlen(normalized_path) - 1;
     while (pos >= 0) {
         if (normalized_path[pos] == '\\') {
             break;
@@ -2583,6 +2452,7 @@ static int db_find_dir_entry(char* path, dir_entry* de)
         pos--;
     }
 
+    int dir_index;
     if (pos >= 0) {
         normalized_path[pos] = '\0';
         dir_index = assoc_search(&(current_database->root), normalized_path);
@@ -2598,7 +2468,7 @@ static int db_find_dir_entry(char* path, dir_entry* de)
         return -1;
     }
 
-    entry_index = assoc_search(&(current_database->entries[dir_index]), normalized_path + pos + 1);
+    int entry_index = assoc_search(&(current_database->entries[dir_index]), normalized_path + pos + 1);
     if (entry_index == -1) {
         if (pos >= 0) {
             normalized_path[pos] = '\\';
@@ -2751,12 +2621,11 @@ static void db_default_free(void* ptr)
 // 0x4B28B0
 static void db_preload_buffer(DB_FILE* stream)
 {
-    unsigned short v1;
-
     if ((stream->flags & 0x8) != 0 && (stream->flags & 0xF0) == 64) {
         if (stream->field_10 != 0) {
             if (stream->field_20 >= stream->field_1C + 0x4000) {
                 if (fseek(stream->database->stream, stream->field_18, SEEK_SET) == 0) {
+                    unsigned short v1;
                     if (fread_short(stream->database->stream, &v1) == 0) {
                         if ((v1 & 0x8000) != 0) {
                             v1 &= ~0x8000;
@@ -2777,15 +2646,12 @@ static void db_preload_buffer(DB_FILE* stream)
 // 0x4B2970
 static int fread_short(FILE* stream, unsigned short* s)
 {
-    int high;
-    int low;
-
-    high = fgetc(stream);
+    int high = fgetc(stream);
     if (high == -1) {
         return -1;
     }
 
-    low = fgetc(stream);
+    int low = fgetc(stream);
     if (low == -1) {
         return -1;
     }
