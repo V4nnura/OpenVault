@@ -886,9 +886,9 @@ int art_alias_fid(int fid)
         case ANIM_ELECTRIFIED_TO_NOTHING_SF:
         case ANIM_FIRE_DANCE:
         case ANIM_CALLED_SHOT_PIC:
-            // NOTE: Original code is slightly different. It uses many mutually
-            // mirrored bitwise operators. Probably result of some macros for
-            // getting/setting individual bits on fid.
+            // NOTE: Original code is slightly different. It uses many
+            // mutually mirrored bitwise operators. Probably result of
+            // some macros for getting/setting individual bits on fid.
             return (fid & 0x70000000) | ((anim << 16) & 0xFF0000) | 0x1000000 | (fid & 0xF000) | (anon_alias[fid & 0xFFF] & 0xFFF);
         }
     }
