@@ -58,21 +58,19 @@ static int pc_trait[PC_TRAIT_MAX];
 // 0x4A0490
 int trait_init()
 {
-    char path[COMPAT_MAX_PATH];
-    int trait;
-    MessageListItem messageListItem;
-
     if (!message_init(&trait_message_file)) {
         return -1;
     }
 
+    char path[COMPAT_MAX_PATH];
     snprintf(path, sizeof(path), "%s%s", msg_path, "trait.msg");
 
     if (!message_load(&trait_message_file, path)) {
         return -1;
     }
 
-    for (trait = 0; trait < TRAIT_COUNT; trait++) {
+    MessageListItem messageListItem;
+    for (int trait = 0; trait < TRAIT_COUNT; trait++) {
         messageListItem.num = 100 + trait;
         if (message_search(&trait_message_file, &messageListItem)) {
             trait_data[trait].name = messageListItem.text;
@@ -93,9 +91,7 @@ int trait_init()
 // 0x4A057C
 void trait_reset()
 {
-    int index;
-
-    for (index = 0; index < PC_TRAIT_MAX; index++) {
+    for (int index = 0; index < PC_TRAIT_MAX; index++) {
         pc_trait[index] = -1;
     }
 }
@@ -172,9 +168,7 @@ int trait_pic(int trait)
 // 0x4A0668
 int trait_level(int trait)
 {
-    int index;
-
-    for (index = 0; index < PC_TRAIT_MAX; index++) {
+    for (int index = 0; index < PC_TRAIT_MAX; index++) {
         if (pc_trait[index] == trait) {
             return 1;
         }
