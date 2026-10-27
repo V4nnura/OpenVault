@@ -899,12 +899,13 @@ int game_handle_input(int eventCode, bool isInCombatMode)
     return 0;
 }
 
+// Pass allowScrolling = 1 to allow scrolling.
 // 0x43C584
-void game_ui_disable(int a1)
+void game_ui_disable(int allowScrolling)
 {
     if (!game_ui_disabled) {
         gmouse_3d_off();
-        gmouse_disable(a1);
+        gmouse_disable(allowScrolling);
         kb_disable();
         intface_disable();
         game_ui_disabled = true;
