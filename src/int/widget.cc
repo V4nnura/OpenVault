@@ -126,10 +126,6 @@ static void textInputRegionDispatch(int btn, int inputEvent)
 // 0x4A1D14
 int win_add_text_input_region(int textRegionId, char* text, int a3, int a4)
 {
-    int textInputRegionIndex;
-    int oldFont;
-    int btn;
-
     if (textRegionId <= 0 || textRegionId > numTextRegions) {
         return 0;
     }
@@ -138,6 +134,7 @@ int win_add_text_input_region(int textRegionId, char* text, int a3, int a4)
         return 0;
     }
 
+    int textInputRegionIndex;
     for (textInputRegionIndex = 0; textInputRegionIndex < numTextInputRegions; textInputRegionIndex++) {
         if (textInputRegions[textInputRegionIndex].isUsed == 0) {
             break;
@@ -163,10 +160,10 @@ int win_add_text_input_region(int textRegionId, char* text, int a3, int a4)
     textInputRegions[textInputRegionIndex].deleteFunc = NULL;
     textInputRegions[textInputRegionIndex].deleteFuncUserData = NULL;
 
-    oldFont = text_curr();
+    int oldFont = text_curr();
     text_font(textRegions[textRegionId - 1].font);
 
-    btn = win_register_button(textRegions[textRegionId - 1].win,
+    int btn = win_register_button(textRegions[textRegionId - 1].win,
         textRegions[textRegionId - 1].x,
         textRegions[textRegionId - 1].y,
         textRegions[textRegionId - 1].width,
@@ -200,9 +197,7 @@ void windowSelectTextInputRegion(int textInputRegionId)
 // 0x4A1F10
 int win_delete_all_text_input_regions(int win)
 {
-    int index;
-
-    for (index = 0; index < numTextInputRegions; index++) {
+    for (int index = 0; index < numTextInputRegions; index++) {
         if (textRegions[textInputRegions[index].textRegionId - 1].win == win) {
             win_delete_text_input_region(index + 1);
         }
@@ -214,9 +209,7 @@ int win_delete_all_text_input_regions(int win)
 // 0x4A1F5C
 int win_delete_text_input_region(int textInputRegionId)
 {
-    int textInputRegionIndex;
-
-    textInputRegionIndex = textInputRegionId - 1;
+    int textInputRegionIndex = textInputRegionId - 1;
     if (textInputRegionIndex >= 0 && textInputRegionIndex < numTextInputRegions) {
         if (textInputRegions[textInputRegionIndex].isUsed != 0) {
             if (textInputRegions[textInputRegionIndex].deleteFunc != NULL) {
@@ -236,9 +229,7 @@ int win_delete_text_input_region(int textInputRegionId)
 // 0x4A2008
 int win_set_text_input_delete_func(int textInputRegionId, TextInputRegionDeleteFunc* deleteFunc, void* userData)
 {
-    int textInputRegionIndex;
-
-    textInputRegionIndex = textInputRegionId - 1;
+    int textInputRegionIndex = textInputRegionId - 1;
     if (textInputRegionIndex >= 0 && textInputRegionIndex < numTextInputRegions) {
         if (textInputRegions[textInputRegionIndex].isUsed != 0) {
             textInputRegions[textInputRegionIndex].deleteFunc = deleteFunc;
@@ -254,9 +245,6 @@ int win_set_text_input_delete_func(int textInputRegionId, TextInputRegionDeleteF
 int win_add_text_region(int win, int x, int y, int width, int font, int textAlignment, int textFlags, int backgroundColor)
 {
     int textRegionIndex;
-    int oldFont;
-    int height;
-
     for (textRegionIndex = 0; textRegionIndex < numTextRegions; textRegionIndex++) {
         if (textRegions[textRegionIndex].isUsed == 0) {
             break;
@@ -272,10 +260,10 @@ int win_add_text_region(int win, int x, int y, int width, int font, int textAlig
         numTextRegions++;
     }
 
-    oldFont = text_curr();
+    int oldFont = text_curr();
     text_font(font);
 
-    height = text_height();
+    int height = text_height();
 
     text_font(oldFont);
 
@@ -301,13 +289,10 @@ int win_add_text_region(int win, int x, int y, int width, int font, int textAlig
 // 0x4A2174
 int win_print_text_region(int textRegionId, char* string)
 {
-    int textRegionIndex;
-    int oldFont;
-
-    textRegionIndex = textRegionId - 1;
+    int textRegionIndex = textRegionId - 1;
     if (textRegionIndex >= 0 && textRegionIndex <= numTextRegions) {
         if (textRegions[textRegionIndex].isUsed != 0) {
-            oldFont = text_curr();
+            int oldFont = text_curr();
             text_font(textRegions[textRegionIndex].font);
 
             win_fill(textRegions[textRegionIndex].win,
@@ -339,13 +324,10 @@ int win_print_text_region(int textRegionId, char* string)
 // 0x4A2254
 int win_print_substr_region(int textRegionId, char* string, int stringLength)
 {
-    int textRegionIndex;
-    int oldFont;
-
-    textRegionIndex = textRegionId - 1;
+    int textRegionIndex = textRegionId - 1;
     if (textRegionIndex >= 0 && textRegionIndex <= numTextRegions) {
         if (textRegions[textRegionIndex].isUsed != 0) {
-            oldFont = text_curr();
+            int oldFont = text_curr();
             text_font(textRegions[textRegionIndex].font);
 
             win_fill(textRegions[textRegionIndex].win,
@@ -377,11 +359,9 @@ int win_print_substr_region(int textRegionId, char* string, int stringLength)
 // 0x4A2324
 int win_update_text_region(int textRegionId)
 {
-    int textRegionIndex;
-    Rect rect;
-
-    textRegionIndex = textRegionId - 1;
+    int textRegionIndex = textRegionId - 1;
     if (textRegionIndex >= 0 && textRegionIndex <= numTextRegions) {
+        Rect rect;
         if (textRegions[textRegionIndex].isUsed != 0) {
             rect.ulx = textRegions[textRegionIndex].x;
             rect.uly = textRegions[textRegionIndex].y;
@@ -398,9 +378,7 @@ int win_update_text_region(int textRegionId)
 // 0x4A23A4
 int win_delete_text_region(int textRegionId)
 {
-    int textRegionIndex;
-
-    textRegionIndex = textRegionId - 1;
+    int textRegionIndex = textRegionId - 1;
     if (textRegionIndex >= 0 && textRegionIndex <= numTextRegions) {
         if (textRegions[textRegionIndex].isUsed != 0) {
             textRegions[textRegionIndex].isUsed = 0;
@@ -414,9 +392,7 @@ int win_delete_text_region(int textRegionId)
 // 0x4A23E0
 int win_delete_all_update_regions(int win)
 {
-    int index;
-
-    for (index = 0; index < WIDGET_UPDATE_REGIONS_CAPACITY; index++) {
+    for (int index = 0; index < WIDGET_UPDATE_REGIONS_CAPACITY; index++) {
         if (updateRegions[index] != NULL) {
             if (win == updateRegions[index]->win) {
                 myfree(updateRegions[index], __FILE__, __LINE__); // "..\int\WIDGET.C", 722
@@ -431,20 +407,16 @@ int win_delete_all_update_regions(int win)
 // 0x4A2428
 int win_text_region_style(int textRegionId, int font, int textAlignment, int textFlags, int backgroundColor)
 {
-    int textRegionIndex;
-    int oldFont;
-    int height;
-
-    textRegionIndex = textRegionId - 1;
+    int textRegionIndex = textRegionId - 1;
     if (textRegionIndex >= 0 && textRegionIndex <= numTextRegions) {
         if (textRegions[textRegionIndex].isUsed != 0) {
             textRegions[textRegionIndex].font = font;
             textRegions[textRegionIndex].textAlignment = textAlignment;
 
-            oldFont = text_curr();
+            int oldFont = text_curr();
             text_font(font);
 
-            height = text_height();
+            int height = text_height();
 
             text_font(oldFont);
 
@@ -468,11 +440,9 @@ int win_text_region_style(int textRegionId, int font, int textAlignment, int tex
 // 0x4A24D8
 void win_delete_widgets(int win)
 {
-    int index;
-
     win_delete_all_text_input_regions(win);
 
-    for (index = 0; index < numTextRegions; index++) {
+    for (int index = 0; index < numTextRegions; index++) {
         if (textRegions[index].win == win) {
             // NOTE: Uninline.
             win_delete_text_region(index + 1);
@@ -485,9 +455,7 @@ void win_delete_widgets(int win)
 // 0x4A2544
 int widgetDoInput()
 {
-    int index;
-
-    for (index = 0; index < WIDGET_UPDATE_REGIONS_CAPACITY; index++) {
+    for (int index = 0; index < WIDGET_UPDATE_REGIONS_CAPACITY; index++) {
         if (updateRegions[index] != NULL) {
             showRegion(updateRegions[index]);
         }
@@ -499,11 +467,8 @@ int widgetDoInput()
 // 0x4A256C
 int win_center_str(int win, char* string, int y, int a4)
 {
-    int windowWidth;
-    int stringWidth;
-
-    windowWidth = win_width(win);
-    stringWidth = text_width(string);
+    int windowWidth = win_width(win);
+    int stringWidth = text_width(string);
     win_print(win, string, 0, (windowWidth - stringWidth) / 2, y, a4);
 
     return 1;
@@ -513,7 +478,6 @@ int win_center_str(int win, char* string, int y, int a4)
 static void showRegion(UpdateRegion* updateRegion)
 {
     float value;
-    char stringBuffer[80];
 
     switch (updateRegion->type & 0xFF) {
     case 1:
@@ -539,6 +503,8 @@ static void showRegion(UpdateRegion* updateRegion)
         debug_printf("Invalid input type given to win_register_update\n");
         return;
     }
+
+    char stringBuffer[80];
 
     switch (updateRegion->type & 0xFF00) {
     case 0x100:
@@ -571,9 +537,7 @@ static void showRegion(UpdateRegion* updateRegion)
 // 0x4A2724
 int draw_widgets()
 {
-    int index;
-
-    for (index = 0; index < WIDGET_UPDATE_REGIONS_CAPACITY; index++) {
+    for (int index = 0; index < WIDGET_UPDATE_REGIONS_CAPACITY; index++) {
         if (updateRegions[index] != NULL) {
             if ((updateRegions[index]->type & 0xFF00) == 0x800) {
                 updateRegions[index]->drawFunc(updateRegions[index]->value);
@@ -669,9 +633,7 @@ static void freeStatusBar()
 // 0x4A2920
 void initWidgets()
 {
-    int updateRegionIndex;
-
-    for (updateRegionIndex = 0; updateRegionIndex < WIDGET_UPDATE_REGIONS_CAPACITY; updateRegionIndex++) {
+    for (int updateRegionIndex = 0; updateRegionIndex < WIDGET_UPDATE_REGIONS_CAPACITY; updateRegionIndex++) {
         updateRegions[updateRegionIndex] = NULL;
     }
 
@@ -705,11 +667,8 @@ void widgetsClose()
 // 0x4A29B8
 static void drawStatusBar()
 {
-    Rect rect;
-    unsigned char* dest;
-
     if (statusBarActive) {
-        dest = win_get_buf(statusBar.win) + statusBar.y * win_width(statusBar.win) + statusBar.x;
+        unsigned char* dest = win_get_buf(statusBar.win) + statusBar.y * win_width(statusBar.win) + statusBar.x;
 
         buf_to_buf(statusBar.field_0,
             statusBar.width,
@@ -724,6 +683,8 @@ static void drawStatusBar()
             statusBar.width,
             dest,
             win_width(statusBar.win));
+
+        Rect rect;
 
         rect.ulx = statusBar.x;
         rect.uly = statusBar.y;
@@ -769,14 +730,11 @@ void real_win_increment_status_bar(float a1)
 // 0x4A2B58
 void real_win_add_status_bar(int win, int a2, char* a3, char* a4, int x, int y)
 {
-    int imageWidth1;
-    int imageHeight1;
-    int imageWidth2;
-    int imageHeight2;
-
     freeStatusBar();
 
+    int imageWidth1, imageHeight1;
     statusBar.field_0 = loadRawDataFile(a4, &imageWidth1, &imageHeight1);
+    int imageWidth2, imageHeight2;
     statusBar.field_4 = loadRawDataFile(a3, &imageWidth2, &imageHeight2);
 
     if (imageWidth2 == imageWidth1 && imageHeight2 == imageHeight1) {
