@@ -128,10 +128,15 @@ int gmovie_play(int game_movie, int game_movie_flags)
     win_draw(win);
 
     bool subtitlesEnabled = false;
-    if (game_movie == MOVIE_BOIL3 || game_movie == MOVIE_BOIL1 || game_movie == MOVIE_BOIL2) {
+    switch (game_movie) {
+    case MOVIE_BOIL1:
+    case MOVIE_BOIL2:
+    case MOVIE_BOIL3:
         subtitlesEnabled = true;
-    } else {
+        break;
+    default:
         configGetBool(&game_config, GAME_CONFIG_PREFERENCES_KEY, GAME_CONFIG_SUBTITLES_KEY, &subtitlesEnabled);
+        break;
     }
 
     int movie_flags = MOVIE_FLAG_DIRECT_CENTERED;
@@ -189,8 +194,7 @@ int gmovie_play(int game_movie, int game_movie_flags)
             break;
         }
 
-        int x;
-        int y;
+        int x, y;
         mouse_get_raw_state(&x, &y, &buttons);
 
         pressed |= buttons;
