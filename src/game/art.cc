@@ -510,18 +510,22 @@ int art_get_code(int animation, int weaponType, char* weaponCodePtr, char* animC
         *weaponCodePtr = 'b';
         return 0;
     } else if (animation == ANIM_THROW_ANIM) {
-        if (weaponType == WEAPON_ANIMATION_KNIFE) {
+        switch (weaponType) {
+        case WEAPON_ANIMATION_KNIFE:
             // knife
             *weaponCodePtr = 'd';
             *animCodePtr = 'm';
-        } else if (weaponType == WEAPON_ANIMATION_SPEAR) {
+            break;
+        case WEAPON_ANIMATION_SPEAR:
             // spear
             *weaponCodePtr = 'g';
             *animCodePtr = 'm';
-        } else {
+            break;
+        default:
             // other -> probably rock or grenade
             *weaponCodePtr = 'a';
             *animCodePtr = 's';
+            break;
         }
         return 0;
     } else if (animation == ANIM_DODGE_ANIM) {
@@ -871,16 +875,17 @@ int art_alias_num(int index)
 int art_alias_fid(int fid)
 {
     int type = FID_TYPE(fid);
-    int anim = FID_ANIM_TYPE(fid);
     if (type == OBJ_TYPE_CRITTER) {
-        if (anim == ANIM_ELECTRIFY
-            || anim == ANIM_BURNED_TO_NOTHING
-            || anim == ANIM_ELECTRIFIED_TO_NOTHING
-            || anim == ANIM_ELECTRIFY_SF
-            || anim == ANIM_BURNED_TO_NOTHING_SF
-            || anim == ANIM_ELECTRIFIED_TO_NOTHING_SF
-            || anim == ANIM_FIRE_DANCE
-            || anim == ANIM_CALLED_SHOT_PIC) {
+        int anim = FID_ANIM_TYPE(fid);
+        switch (anim) {
+        case ANIM_ELECTRIFY:
+        case ANIM_BURNED_TO_NOTHING:
+        case ANIM_ELECTRIFIED_TO_NOTHING:
+        case ANIM_ELECTRIFY_SF:
+        case ANIM_BURNED_TO_NOTHING_SF:
+        case ANIM_ELECTRIFIED_TO_NOTHING_SF:
+        case ANIM_FIRE_DANCE:
+        case ANIM_CALLED_SHOT_PIC:
             // NOTE: Original code is slightly different. It uses many mutually
             // mirrored bitwise operators. Probably result of some macros for
             // getting/setting individual bits on fid.
