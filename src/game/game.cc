@@ -63,8 +63,6 @@ namespace fallout {
 #define HELP_SCREEN_WIDTH 640
 #define HELP_SCREEN_HEIGHT 480
 
-#define SPLASH_WIDTH 640
-#define SPLASH_HEIGHT 480
 #define SPLASH_COUNT 10
 
 static int game_screendump(int width, int height, unsigned char* buffer, unsigned char* palette);
@@ -1353,7 +1351,7 @@ static void game_splash_screen()
     int screenWidth = screenGetWidth();
     int screenHeight = screenGetHeight();
 
-     if (size != 0 || screenWidth < width || screenHeight < height) {
+    if (size != 0 || screenWidth < width || screenHeight < height) {
         int scaledWidth;
         int scaledHeight;
 
