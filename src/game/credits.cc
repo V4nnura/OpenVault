@@ -308,20 +308,24 @@ static bool credits_get_next_line(char* dest, int* font, int* color)
     char string[256];
     while (db_fgets(string, 256, credits_file)) {
         char* pch;
-        if (string[0] == ';') {
+        switch (string[0]) {
+        case ';':
             continue;
-        } else if (string[0] == '@') {
+        case '@':
             *font = title_font;
             *color = title_color;
             pch = string + 1;
-        } else if (string[0] == '#') {
+            break;
+        case '#':
             *font = name_font;
             *color = colorTable[17969];
             pch = string + 1;
-        } else {
+            break;
+        default:
             *font = name_font;
             *color = name_color;
             pch = string;
+            break;
         }
 
         strcpy(dest, pch);
