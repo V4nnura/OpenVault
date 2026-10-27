@@ -151,12 +151,9 @@ int audiofRead(int fileHandle, void* buffer, unsigned int size)
 // 0x41A1B4
 long audiofSeek(int fileHandle, long offset, int origin)
 {
-    void* buf;
-    int remaining;
-    int targetPosition;
-
     AudioFile* audioFile = &(audiof[fileHandle - 1]);
 
+    int targetPosition;
     switch (origin) {
     case SEEK_SET:
         targetPosition = offset;
@@ -179,6 +176,7 @@ long audiofSeek(int fileHandle, long offset, int origin)
     }
 
     if ((audioFile->flags & AUDIO_FILE_COMPRESSED) != 0) {
+        void* buf;
         if (targetPosition <= audioFile->position) {
             AudioDecoder_Close(audioFile->audioDecoder);
             fseek(audioFile->stream, 0, SEEK_SET);
@@ -215,7 +213,7 @@ long audiofSeek(int fileHandle, long offset, int origin)
             }
         } else {
             buf = mymalloc(0x400, __FILE__, __LINE__); // "..\int\audiof.c", 315
-            remaining = targetPosition - audioFile->position;
+            int remaining = targetPosition - audioFile->position;
             while (remaining > 1024) {
                 audiofRead(fileHandle, buf, 1024);
                 remaining -= 1024;
