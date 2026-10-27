@@ -25,6 +25,13 @@ typedef enum WindowFlags {
     WINDOW_MANAGED = 0x100,
 } WindowFlags;
 
+enum DrawTextFlags {
+    DRAW_TEXT_FLAG_MONOSPACED = 0x040000,
+    DRAW_TEXT_FLAG_REFRESH = 0x01000000,
+    DRAW_TEXT_FLAG_NO_BG = 0x02000000,
+    DRAW_TEXT_FLAG_OVERFLOW = 0x04000000,
+};
+
 typedef enum ButtonFlags {
     // Button keeps a persistent checked state and uses the pressed image while checked.
     //
