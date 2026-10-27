@@ -245,10 +245,6 @@ void win_exit(void)
 // 0x4C22F8
 int win_add(int x, int y, int width, int height, int color, int flags)
 {
-    int v23;
-    int v25, v26;
-    Window* tmp;
-
     if (!GNW_win_init_flag) {
         debug_printf("win_add: window system not initialized\n");
         return -1;
@@ -323,26 +319,26 @@ int win_add(int x, int y, int width, int height, int color, int flags)
     w->flags = flags;
 
     if ((flags & WINDOW_MOVE_ON_TOP) == 0) {
-        v23 = num_windows - 2;
-        while (v23 > 0) {
-            if (!(window[v23]->flags & WINDOW_MOVE_ON_TOP)) {
+        int topWindowIndex = num_windows - 2;
+        while (topWindowIndex > 0) {
+            if (!(window[topWindowIndex]->flags & WINDOW_MOVE_ON_TOP)) {
                 break;
             }
-            v23--;
+            topWindowIndex--;
         }
 
-        if (v23 != num_windows - 2) {
-            v25 = v23 + 1;
-            v26 = num_windows - 1;
-            while (v26 > v25) {
-                tmp = window[v26 - 1];
-                window[v26] = tmp;
-                window_index[tmp->id] = v26;
-                v26--;
+        if (topWindowIndex != num_windows - 2) {
+            int insertionIndex = topWindowIndex + 1;
+            int shiftIndex = num_windows - 1;
+            while (shiftIndex > insertionIndex) {
+                Window* tmp = window[shiftIndex - 1];
+                window[shiftIndex] = tmp;
+                window_index[tmp->id] = shiftIndex;
+                shiftIndex--;
             }
 
-            window[v25] = w;
-            window_index[index] = v25;
+            window[insertionIndex] = w;
+            window_index[index] = insertionIndex;
         }
     }
 
@@ -365,12 +361,12 @@ void win_delete(int win)
     Rect rect;
     rectCopy(&rect, &(w->rect));
 
-    int v1 = window_index[w->id];
+    int windowIndex = window_index[w->id];
     win_free(win);
 
     window_index[win] = -1;
 
-    for (int index = v1; index < num_windows - 1; index++) {
+    for (int index = windowIndex; index < num_windows - 1; index++) {
         window[index] = window[index + 1];
         window_index[window[index]->id] = index;
     }
@@ -466,11 +462,8 @@ void win_set_bk_color(int color)
 }
 
 // 0x4C2908
-void win_print(int win, const char* str, int width, int x, int y, int color)
+void win_print(int win, const char* str, int maxWidth, int x, int y, int flags)
 {
-    unsigned char* buf;
-    int textColor;
-
     Window* w = GNW_find(win);
 
     if (!GNW_win_init_flag) {
@@ -481,51 +474,52 @@ void win_print(int win, const char* str, int width, int x, int y, int color)
         return;
     }
 
-    if (width == 0) {
-        if (color & 0x040000) {
-            width = text_mono_width(str);
+    if (maxWidth == 0) {
+        if (flags & DRAW_TEXT_FLAG_MONOSPACED) {
+            maxWidth = text_mono_width(str);
         } else {
-            width = text_width(str);
+            maxWidth = text_width(str);
         }
     }
 
-    if (width + x > w->width) {
-        if (!(color & 0x04000000)) {
+    if (maxWidth + x > w->width) {
+        if (!(flags & DRAW_TEXT_FLAG_OVERFLOW)) {
             return;
         }
 
-        width = w->width - x;
+        maxWidth = w->width - x;
     }
 
-    buf = w->buffer + x + y * w->width;
+    unsigned char* buf = w->buffer + x + y * w->width;
 
     if (text_height() + y > w->height) {
         return;
     }
 
-    if (!(color & 0x02000000)) {
+    if (!(flags & DRAW_TEXT_FLAG_NO_BG)) {
         if (w->color == 256 && GNW_texture != NULL) {
-            buf_texture(buf, width, text_height(), w->width, GNW_texture, w->tx + x, w->ty + y);
+            buf_texture(buf, maxWidth, text_height(), w->width, GNW_texture, w->tx + x, w->ty + y);
         } else {
-            buf_fill(buf, width, text_height(), w->width, w->color);
+            buf_fill(buf, maxWidth, text_height(), w->width, w->color);
         }
     }
 
-    if ((color & 0xFF00) != 0) {
-        int colorIndex = (color & 0xFF) - 1;
-        textColor = (color & ~0xFFFF) | colorTable[GNW_wcolor[colorIndex]];
+    int textColor;
+    if ((flags & 0xFF00) != 0) {
+        int colorIndex = (flags & 0xFF) - 1;
+        textColor = (flags & ~0xFFFF) | colorTable[GNW_wcolor[colorIndex]];
     } else {
-        textColor = color;
+        textColor = flags;
     }
 
-    text_to_buf(buf, str, width, w->width, textColor);
+    text_to_buf(buf, str, maxWidth, w->width, textColor);
 
-    if (color & 0x01000000) {
+    if (flags & DRAW_TEXT_FLAG_REFRESH) {
         // TODO: Check.
         Rect rect;
         rect.ulx = w->rect.ulx + x;
         rect.uly = w->rect.uly + y;
-        rect.lrx = rect.ulx + width;
+        rect.lrx = rect.ulx + maxWidth;
         rect.lry = rect.uly + text_height();
         GNW_win_refresh(w, &rect, NULL);
     }
@@ -549,9 +543,9 @@ void win_text(int win, char** fileNameList, int fileNameListLength, int maxWidth
     int lineHeight = text_height();
 
     int step = width * lineHeight;
-    int v1 = lineHeight / 2;
-    int v2 = v1 + 1;
-    int v3 = maxWidth - 1;
+    int separatorTop = lineHeight / 2;
+    int separatorBottom = separatorTop + 1;
+    int separatorRight = maxWidth - 1;
 
     for (int index = 0; index < fileNameListLength; index++) {
         char* fileName = fileNameList[index];
@@ -559,8 +553,8 @@ void win_text(int win, char** fileNameList, int fileNameListLength, int maxWidth
             win_print(win, fileName, maxWidth, x, y, color);
         } else {
             if (maxWidth != 0) {
-                draw_line(ptr, width, 0, v1, v3, v1, colorTable[GNW_wcolor[2]]);
-                draw_line(ptr, width, 0, v2, v3, v2, colorTable[GNW_wcolor[1]]);
+                draw_line(ptr, width, 0, separatorTop, separatorRight, separatorTop, colorTable[GNW_wcolor[2]]);
+                draw_line(ptr, width, 0, separatorBottom, separatorRight, separatorBottom, colorTable[GNW_wcolor[1]]);
             }
         }
 
@@ -1201,9 +1195,9 @@ int win_check_all_buttons()
         return -1;
     }
 
-    int v1 = -1;
+    int keyCode = -1;
     for (int index = num_windows - 1; index >= 1; index--) {
-        if (GNW_check_buttons(window[index], &v1) == 0) {
+        if (GNW_check_buttons(window[index], &keyCode) == 0) {
             break;
         }
 
@@ -1212,7 +1206,7 @@ int win_check_all_buttons()
         }
     }
 
-    return v1;
+    return keyCode;
 }
 
 // 0x4C3A94
