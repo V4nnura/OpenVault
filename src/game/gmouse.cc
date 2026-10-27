@@ -2775,6 +2775,7 @@ static void gmouse_accessibility_highlight_on()
                 }
                 obj_outline_object(obj, OUTLINE_TYPE_ITEM, NULL, true);
             }
+            break;
         case OBJ_TYPE_SCENERY:
             // Doors, stairs, ladders
             if (proto_ptr(obj->pid, &proto) == 0) {
