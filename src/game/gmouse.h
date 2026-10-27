@@ -80,7 +80,7 @@ void gmouse_disable(int a1);
 int gmouse_is_enabled();
 void gmouse_enable_scrolling();
 void gmouse_disable_scrolling();
-int gmouse_scrolling_is_enabled();
+bool gmouse_scrolling_is_enabled();
 void gmouse_set_click_to_scroll(bool value);
 bool gmouse_get_click_to_scroll();
 int gmouse_is_scrolling();
