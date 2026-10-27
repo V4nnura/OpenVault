@@ -64,16 +64,16 @@ static void gmouse_tooltip_update(Object* target, int mouseX, int mouseY);
 static bool gmouse_initialized = false;
 
 // 0x50525C
-static int gmouse_enabled = 0;
+static bool gmouse_enabled = false;
 
 // 0x505260
 static int gmouse_mapper_mode = 0;
 
 // 0x505264
-static int gmouse_click_to_scroll = 0;
+static bool gmouse_click_to_scroll = false;
 
 // 0x505268
-static int gmouse_scrolling_enabled = 1;
+static bool gmouse_scrolling_enabled = true;
 
 // 0x50526C
 static int gmouse_current_cursor = MOUSE_CURSOR_NONE;
@@ -339,7 +339,7 @@ int gmouse_init()
     }
 
     gmouse_initialized = true;
-    gmouse_enabled = 1;
+    gmouse_enabled = true;
 
     gmouse_set_cursor(MOUSE_CURSOR_ARROW);
 
@@ -361,11 +361,11 @@ int gmouse_reset()
     // NOTE: Uninline.
     gmouse_enable();
 
-    gmouse_scrolling_enabled = 1;
+    gmouse_scrolling_enabled = true;
     gmouse_set_cursor(MOUSE_CURSOR_ARROW);
     gmouse_wait_cursor_frame = 0;
     gmouse_wait_cursor_time = 0;
-    gmouse_clicked_on_edge = 0;
+    gmouse_clicked_on_edge = false;
 
     return 0;
 }
@@ -389,7 +389,7 @@ void gmouse_exit()
     }
     gmouse_current_cursor_key = INVALID_CACHE_ENTRY;
 
-    gmouse_enabled = 0;
+    gmouse_enabled = false;
     gmouse_initialized = false;
     gmouse_current_cursor = -1;
 }
@@ -400,23 +400,23 @@ void gmouse_enable()
     if (!gmouse_enabled) {
         gmouse_current_cursor = -1;
         gmouse_set_cursor(MOUSE_CURSOR_NONE);
-        gmouse_scrolling_enabled = 1;
-        gmouse_enabled = 1;
+        gmouse_scrolling_enabled = true;
+        gmouse_enabled = true;
         gmouse_bk_last_cursor = -1;
     }
 }
 
 // 0x44307C
-void gmouse_disable(int a1)
+void gmouse_disable(int allowScrolling)
 {
     if (gmouse_enabled) {
         gmouse_set_cursor(MOUSE_CURSOR_NONE);
-        gmouse_enabled = 0;
+        gmouse_enabled = false;
 
-        if (a1 & 1) {
-            gmouse_scrolling_enabled = 1;
+        if (allowScrolling & 1) {
+            gmouse_scrolling_enabled = true;
         } else {
-            gmouse_scrolling_enabled = 0;
+            gmouse_scrolling_enabled = false;
         }
     }
 }
@@ -430,26 +430,26 @@ int gmouse_is_enabled()
 // 0x4430BC
 void gmouse_enable_scrolling()
 {
-    gmouse_scrolling_enabled = 1;
+    gmouse_scrolling_enabled = true;
 }
 
 // 0x4430C8
 void gmouse_disable_scrolling()
 {
-    gmouse_scrolling_enabled = 0;
+    gmouse_scrolling_enabled = false;
 }
 
 // 0x4430D4
-int gmouse_scrolling_is_enabled()
+bool gmouse_scrolling_is_enabled()
 {
     return gmouse_scrolling_enabled;
 }
 
 // 0x4430DC
-void gmouse_set_click_to_scroll(int a1)
+void gmouse_set_click_to_scroll(bool value)
 {
-    if (a1 != gmouse_click_to_scroll) {
-        gmouse_click_to_scroll = a1;
+    if (value != gmouse_click_to_scroll) {
+        gmouse_click_to_scroll = value;
         gmouse_clicked_on_edge = 0;
     }
 }
@@ -466,8 +466,7 @@ int gmouse_is_scrolling()
     int is_scrolling = 0;
 
     if (gmouse_scrolling_enabled) {
-        int x;
-        int y;
+        int x, y;
         mouse_get_position(&x, &y);
         if (x == scr_size.ulx || x == scr_size.lrx || y == scr_size.uly || y == scr_size.lry) {
             switch (gmouse_current_cursor) {
@@ -505,8 +504,7 @@ void hide_roof_on_hover(int mouseX, int mouseY)
     static int gmouse_hover_roof_y = -1;
     static int gmouse_hover_roof_elev = -1;
 
-    int roofX;
-    int roofY;
+    int roofX, roofY;
     square_xy_roof(mouseX, mouseY, map_elevation, &roofX, &roofY);
 
     // Check bounds
@@ -600,8 +598,7 @@ void gmouse_bk_process()
     // Check accessibility highlight key state
     gmouse_accessibility_highlight_check();
 
-    int mouseX;
-    int mouseY;
+    int mouseX, mouseY;
 
     if (gmouse_current_cursor >= FIRST_GAME_MOUSE_ANIMATED_CURSOR) {
         mouse_info();
@@ -1228,8 +1225,7 @@ void gmouse_handle_event(int mouseX, int mouseY, int mouseState)
                             actionMenuItems[actionIndex] = 0;
                         }
 
-                        int v48;
-                        int v47;
+                        int v48, v47;
                         mouse_get_position(&v48, &v47);
 
                         if (abs(v47 - v33) > 10) {
@@ -1384,8 +1380,7 @@ int gmouse_set_cursor(int cursor)
     int width = art_frame_width(mouseCursorFrm, frame, 0);
     int height = art_frame_length(mouseCursorFrm, frame, 0);
 
-    int offsetX;
-    int offsetY;
+    int offsetX, offsetY;
     art_frame_hot(mouseCursorFrm, frame, 0, &offsetX, &offsetY);
 
     unsigned char* mouseCursorFrmData = art_frame_data(mouseCursorFrm, frame, 0);
@@ -1436,11 +1431,7 @@ int gmouse_3d_modes_are_enabled()
 // 0x4444AC
 void gmouse_3d_set_mode(int mode)
 {
-    if (!gmouse_initialized) {
-        return;
-    }
-
-    if (!gmouse_3d_modes_enabled) {
+    if (!gmouse_initialized || !gmouse_3d_modes_enabled) {
         return;
     }
 
@@ -1459,8 +1450,7 @@ void gmouse_3d_set_mode(int mode)
         return;
     }
 
-    int mouseX;
-    int mouseY;
+    int mouseX, mouseY;
     mouse_get_position(&mouseX, &mouseY);
 
     Rect r2;
@@ -1536,8 +1526,7 @@ void gmouse_3d_toggle_mode()
             }
         } else if (gmouse_3d_current_mode == GAME_MOUSE_MODE_CROSSHAIR) {
             // From CROSSHAIR: return to auto-determined mode
-            int mouseX;
-            int mouseY;
+            int mouseX, mouseY;
             mouse_get_position(&mouseX, &mouseY);
             mode = gmouse_3d_determine_auto_mode(mouseX, mouseY, map_elevation);
         } else {
@@ -2002,13 +1991,16 @@ int gmouse_3d_menu_frame_hot(int* x, int* y)
 // 0x4450BC
 int gmouse_3d_highlight_menu_frame(int menuItemIndex)
 {
+    CacheEntry* handle;
+    int fid;
+    Art* art;
+
     if (menuItemIndex < 0 || menuItemIndex >= gmouse_3d_menu_available_actions) {
         return -1;
     }
 
-    CacheEntry* handle;
-    int fid = art_id(OBJ_TYPE_INTERFACE, gmouse_3d_action_nums[gmouse_3d_menu_frame_actions[gmouse_3d_menu_current_action_index]], 0, 0, 0);
-    Art* art = art_ptr_lock(fid, &handle);
+    fid = art_id(OBJ_TYPE_INTERFACE, gmouse_3d_action_nums[gmouse_3d_menu_frame_actions[gmouse_3d_menu_current_action_index]], 0, 0, 0);
+    art = art_ptr_lock(fid, &handle);
     if (art == NULL) {
         return -1;
     }
@@ -2153,8 +2145,7 @@ static int gmouse_3d_init()
 
     obj_toggle_flat(obj_mouse_flat, NULL);
 
-    int x;
-    int y;
+    int x, y;
     mouse_get_position(&x, &y);
 
     Rect v9;
@@ -2766,16 +2757,17 @@ static void gmouse_accessibility_highlight_on()
 
     Object* obj = obj_find_first_at(map_elevation);
     while (obj != NULL) {
+        Proto* proto;
         int objType = PID_TYPE(obj->pid);
-
-        if (objType == OBJ_TYPE_CRITTER) {
+        switch (objType) {
+        case OBJ_TYPE_CRITTER:
             // Living NPCs (not dead, not player)
             if (obj != obj_dude && !critter_is_dead(obj)) {
                 obj_outline_object(obj, OUTLINE_TYPE_FRIENDLY, NULL, true);
             }
-        } else if (objType == OBJ_TYPE_ITEM) {
+            break;
+        case OBJ_TYPE_ITEM:
             // Ground items and containers
-            Proto* proto;
             if (proto_ptr(obj->pid, &proto) == 0) {
                 if (proto->item.type == ITEM_TYPE_CONTAINER && obj->data.inventory.length == 0) {
                     obj = obj_find_next_at();
@@ -2783,18 +2775,20 @@ static void gmouse_accessibility_highlight_on()
                 }
                 obj_outline_object(obj, OUTLINE_TYPE_ITEM, NULL, true);
             }
-        } else if (objType == OBJ_TYPE_SCENERY) {
+        case OBJ_TYPE_SCENERY:
             // Doors, stairs, ladders
-            Proto* proto;
             if (proto_ptr(obj->pid, &proto) == 0) {
                 int sceneryType = proto->scenery.type;
-                if (sceneryType == SCENERY_TYPE_DOOR
-                    || sceneryType == SCENERY_TYPE_STAIRS
-                    || sceneryType == SCENERY_TYPE_LADDER_UP
-                    || sceneryType == SCENERY_TYPE_LADDER_DOWN) {
+                switch (sceneryType) {
+                case SCENERY_TYPE_DOOR:
+                case SCENERY_TYPE_STAIRS:
+                case SCENERY_TYPE_LADDER_UP:
+                case SCENERY_TYPE_LADDER_DOWN:
                     obj_outline_object(obj, OUTLINE_TYPE_4, NULL, true);
+                    break;
                 }
             }
+            break;
         }
 
         obj = obj_find_next_at();
