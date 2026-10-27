@@ -7,10 +7,12 @@
 
 namespace fallout {
 
-#define COLOR_CYCLE_PERIOD_SLOW 200U
-#define COLOR_CYCLE_PERIOD_MEDIUM 142U
-#define COLOR_CYCLE_PERIOD_FAST 100U
-#define COLOR_CYCLE_PERIOD_VERY_FAST 33U
+typedef enum ColorCyclePeriod {
+    COLOR_CYCLE_PERIOD_SLOW = 1000 / 5,
+    COLOR_CYCLE_PERIOD_MEDIUM = 1000 / 7,
+    COLOR_CYCLE_PERIOD_FAST = 1000 / 10,
+    COLOR_CYCLE_PERIOD_VERY_FAST = 1000 / 30,
+} ColorCyclePeriod;
 
 static void cycle_colors();
 
