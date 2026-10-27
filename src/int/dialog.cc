@@ -380,15 +380,13 @@ static void drawStr(int win, char* str, int font, int width, int height, int lef
 // 0x430D40
 int dialogStart(Program* a1)
 {
-    STRUCT_56DAE0* ptr;
-
     if (tods == 3) {
         return 1;
     }
 
     tods++;
 
-    ptr = &(dialog[tods]);
+    STRUCT_56DAE0* ptr = &(dialog[tods]);
     ptr->field_0 = a1;
     ptr->field_4 = 0;
     ptr->field_8 = 0;
