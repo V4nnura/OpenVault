@@ -189,12 +189,16 @@ int win_register_button_image(int btn, unsigned char* up, unsigned char* down, u
     }
 
     unsigned char* data = button->currentImage;
-    if (data == button->normalImage) {
+    switch (data) {
+    case button->normalImage:
         button->currentImage = up;
-    } else if (data == button->pressedImage) {
+        break;
+    case button->pressedImage:
         button->currentImage = down;
-    } else if (data == button->hoverImage) {
+        break;
+    case button->hoverImage:
         button->currentImage = hover;
+        break;
     }
 
     button->normalImage = up;
