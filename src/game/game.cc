@@ -471,8 +471,7 @@ int game_handle_input(int eventCode, bool isInCombatMode)
 
     if (eventCode == -2) {
         int mouseState = mouse_get_buttons();
-        int mouseX;
-        int mouseY;
+        int mouseX, mouseY;
         mouse_get_position(&mouseX, &mouseY);
 
         if ((mouseState & MOUSE_EVENT_LEFT_BUTTON_DOWN) != 0) {
@@ -507,8 +506,7 @@ int game_handle_input(int eventCode, bool isInCombatMode)
     case -2:
         if (1) {
             int mouseEvent = mouse_get_buttons();
-            int mouseX;
-            int mouseY;
+            int mouseX, mouseY;
             mouse_get_position(&mouseX, &mouseY);
 
             if ((mouseEvent & MOUSE_EVENT_LEFT_BUTTON_DOWN) != 0) {
@@ -791,9 +789,7 @@ int game_handle_input(int eventCode, bool isInCombatMode)
         if (1) {
             gsound_play_sfx_file("ib1p1xx1");
 
-            int month;
-            int day;
-            int year;
+            int month, day, year;
             game_time_date(&month, &day, &year);
 
             MessageList messageList;
@@ -1235,18 +1231,17 @@ int game_quit_with_confirm()
 static int game_init_databases()
 {
     int hashing = 0;
-    char* main_file_name = NULL;
-    char* patch_file_name = NULL;
-
     if (config_get_value(&game_config, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_HASHING_KEY, &hashing)) {
         db_enable_hash_table();
     }
 
+    char* main_file_name = NULL;
     config_get_string(&game_config, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_DAT_KEY, &main_file_name);
     if (*main_file_name == '\0') {
         main_file_name = NULL;
     }
 
+    char* patch_file_name = NULL;
     config_get_string(&game_config, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_MASTER_PATCHES_KEY, &patch_file_name);
     if (*patch_file_name == '\0') {
         patch_file_name = NULL;
