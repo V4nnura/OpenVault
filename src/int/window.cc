@@ -178,10 +178,10 @@ int windowGetFont()
 }
 
 // 0x4A2C68
-int windowSetFont(int a1)
+int windowSetFont(int font)
 {
-    currentFont = a1;
-    text_font(a1);
+    currentFont = font;
+    text_font(font);
     return 1;
 }
 
@@ -202,9 +202,9 @@ int windowGetTextFlags()
 }
 
 // 0x4A2CA8
-int windowSetTextFlags(int a1)
+int windowSetTextFlags(int flags)
 {
-    currentTextFlags = a1;
+    currentTextFlags = flags;
     return 1;
 }
 
@@ -292,8 +292,7 @@ bool windowCheckRegion(int windowIndex, int mouseX, int mouseY, int mouseEvent)
 // 0x4A34E4
 bool windowRefreshRegions()
 {
-    int mouseX;
-    int mouseY;
+    int mouseX, mouseY;
     mouse_get_position(&mouseX, &mouseY);
 
     int win = win_get_top_win(mouseX, mouseY);
@@ -324,8 +323,7 @@ static bool checkAllRegions()
         return false;
     }
 
-    int mouseX;
-    int mouseY;
+    int mouseX, mouseY;
     mouse_get_position(&mouseX, &mouseY);
 
     int mouseEvent = mouse_get_buttons();
@@ -471,8 +469,12 @@ int getInput()
     static int said_quit = 1;
 
     int keyCode = get_input();
-    if (keyCode == KEY_CTRL_Q || keyCode == KEY_CTRL_X || keyCode == KEY_F10) {
+    switch (keyCode) {
+    case KEY_CTRL_Q:
+    case KEY_CTRL_X:
+    case KEY_F10:
         game_quit_with_confirm();
+        break;
     }
 
     if (game_user_wants_to_quit != 0) {
@@ -988,9 +990,7 @@ int selectWindow(const char* windowName)
 // 0x4A4DB4
 int windowGetDefined(const char* name)
 {
-    int index;
-
-    for (index = 0; index < MANAGED_WINDOW_COUNT; index++) {
+    for (int index = 0; index < MANAGED_WINDOW_COUNT; index++) {
         if (windows[index].window != -1 && compat_stricmp(windows[index].name, name) == 0) {
             return 1;
         }
@@ -1132,7 +1132,7 @@ void windowPrintBuf(int win, char* string, int stringLength, int width, int maxY
 }
 
 // 0x4A514C
-char** windowWordWrap(char* string, int maxLength, int a3, int* substringListLengthPtr)
+char** windowWordWrap(char* string, int maxLength, int indent, int* substringListLengthPtr)
 {
     if (string == NULL) {
         *substringListLengthPtr = 0;
@@ -1144,15 +1144,15 @@ char** windowWordWrap(char* string, int maxLength, int a3, int* substringListLen
 
     char* start = string;
     char* pch = string;
-    int v1 = a3;
+    int width = indent;
     while (*pch != '\0') {
-        v1 += text_char_width(*pch & 0xFF);
-        if (*pch != '\n' && v1 <= maxLength) {
-            v1 += text_spacing();
+        width += text_char_width(*pch & 0xFF);
+        if (*pch != '\n' && width <= maxLength) {
+            width += text_spacing();
             pch++;
         } else {
-            while (v1 > maxLength) {
-                v1 -= text_char_width(*pch & 0xFF);
+            while (width > maxLength) {
+                width -= text_char_width(*pch & 0xFF);
                 pch--;
             }
 
@@ -1178,7 +1178,7 @@ char** windowWordWrap(char* string, int maxLength, int a3, int* substringListLen
                 pch++;
             }
 
-            v1 = 0;
+            width = 0;
             start = pch;
             substringListLength++;
         }
@@ -1221,7 +1221,7 @@ void windowFreeWordList(char** substringList, int substringListLength)
 // Renders multiline string in the specified bounding box.
 //
 // 0x4A5368
-void windowWrapLineWithSpacing(int win, char* string, int width, int height, int x, int y, int flags, int textAlignment, int a9)
+void windowWrapLineWithSpacing(int win, char* string, int width, int height, int x, int y, int flags, int textAlignment, int spacing)
 {
     if (string == NULL) {
         return;
@@ -1231,7 +1231,7 @@ void windowWrapLineWithSpacing(int win, char* string, int width, int height, int
     char** substringList = windowWordWrap(string, width, 0, &substringListLength);
 
     for (int index = 0; index < substringListLength; index++) {
-        int v1 = y + index * (a9 + text_height());
+        int v1 = y + index * (spacing + text_height());
         windowPrintBuf(win, substringList[index], strlen(substringList[index]), width, height + y, x, v1, flags, textAlignment);
     }
 
@@ -1287,13 +1287,13 @@ int windowFormatMessageColor(char* string, int x, int y, int width, int height, 
 }
 
 // 0x4A5574
-bool windowPrint(char* string, int a2, int x, int y, int a5)
+bool windowPrint(char* string, int width, int x, int y, int color)
 {
     ManagedWindow* managedWindow = &(windows[currentWindow]);
     x = (int)(x * managedWindow->scaleX);
     y = (int)(y * managedWindow->scaleY);
 
-    win_print(managedWindow->window, string, a2, x, y, a5);
+    win_print(managedWindow->window, string, width, x, y, color);
 
     return true;
 }
@@ -1301,9 +1301,7 @@ bool windowPrint(char* string, int a2, int x, int y, int a5)
 // 0x4A55EC
 int windowPrintFont(char* string, int a2, int x, int y, int a5, int font)
 {
-    int oldFont;
-
-    oldFont = text_curr();
+    int oldFont = text_curr();
     text_font(font);
 
     windowPrint(string, a2, x, y, a5);
@@ -1356,8 +1354,7 @@ void displayInWindow(unsigned char* data, int width, int height, int pitch)
 // 0x4A5778
 void displayFile(char* fileName)
 {
-    int width;
-    int height;
+    int width, height;
     unsigned char* data = loadDataFile(fileName, &width, &height);
     if (data != NULL) {
         displayInWindow(data, width, height, width);
@@ -1368,8 +1365,7 @@ void displayFile(char* fileName)
 // 0x4A57B8
 void displayFileRaw(char* fileName)
 {
-    int width;
-    int height;
+    int width, height;
     unsigned char* data = loadRawDataFile(fileName, &width, &height);
     if (data != NULL) {
         displayInWindow(data, width, height, width);
@@ -1380,11 +1376,8 @@ void displayFileRaw(char* fileName)
 // 0x4A5918
 int windowDisplayRaw(char* fileName)
 {
-    int imageWidth;
-    int imageHeight;
-    unsigned char* imageData;
-
-    imageData = loadDataFile(fileName, &imageWidth, &imageHeight);
+    int imageWidth, imageHeight;
+    unsigned char* imageData = loadDataFile(fileName, &imageWidth, &imageHeight);
     if (imageData == NULL) {
         return 0;
     }
@@ -1399,8 +1392,7 @@ int windowDisplayRaw(char* fileName)
 // 0x4A595C
 bool windowDisplay(char* fileName, int x, int y, int width, int height)
 {
-    int imageWidth;
-    int imageHeight;
+    int imageWidth, imageHeight;
     unsigned char* imageData = loadDataFile(fileName, &imageWidth, &imageHeight);
     if (imageData == NULL) {
         return false;
@@ -1416,11 +1408,8 @@ bool windowDisplay(char* fileName, int x, int y, int width, int height)
 // 0x4A59AC
 int windowDisplayScaled(char* fileName, int x, int y, int width, int height)
 {
-    int imageWidth;
-    int imageHeight;
-    unsigned char* imageData;
-
-    imageData = loadDataFile(fileName, &imageWidth, &imageHeight);
+    int imageWidth, imageHeight;
+    unsigned char* imageData = loadDataFile(fileName, &imageWidth, &imageHeight);
     if (imageData == NULL) {
         return 0;
     }
@@ -1451,9 +1440,7 @@ bool windowDisplayBuf(unsigned char* src, int srcWidth, int srcHeight, int destX
 // 0x4A5A70
 int windowDisplayTransBuf(unsigned char* src, int srcWidth, int srcHeight, int destX, int destY, int destWidth, int destHeight)
 {
-    unsigned char* windowBuffer;
-
-    windowBuffer = win_get_buf(windows[currentWindow].window);
+    unsigned char* windowBuffer = win_get_buf(windows[currentWindow].window);
 
     trans_buf_to_buf(src,
         destWidth,
@@ -1468,9 +1455,7 @@ int windowDisplayTransBuf(unsigned char* src, int srcWidth, int srcHeight, int d
 // 0x4A5AE4
 int windowDisplayBufScaled(unsigned char* src, int srcWidth, int srcHeight, int destX, int destY, int destWidth, int destHeight)
 {
-    unsigned char* windowBuffer;
-
-    windowBuffer = win_get_buf(windows[currentWindow].window);
+    unsigned char* windowBuffer = win_get_buf(windows[currentWindow].window);
     drawScaled(windowBuffer + destY * windows[currentWindow].width + destX,
         destWidth,
         destHeight,
@@ -1501,7 +1486,7 @@ static void windowRemoveProgramReferences(Program* program)
     for (int index = 0; index < MANAGED_WINDOW_COUNT; index++) {
         ManagedWindow* managedWindow = &(windows[index]);
         if (managedWindow->window != -1) {
-            for (int index = 0; index < managedWindow->buttonsLength; index++) {
+            for (index = 0; index < managedWindow->buttonsLength; index++) {
                 ManagedButton* managedButton = &(managedWindow->buttons[index]);
                 if (program == managedButton->program) {
                     managedButton->program = NULL;
@@ -1512,7 +1497,7 @@ static void windowRemoveProgramReferences(Program* program)
                 }
             }
 
-            for (int index = 0; index < managedWindow->regionsLength; index++) {
+            for (index = 0; index < managedWindow->regionsLength; index++) {
                 Region* region = managedWindow->regions[index];
                 if (region != NULL) {
                     if (program == region->program) {
@@ -1549,7 +1534,7 @@ void initWindow(VideoOptions* video_options, int flags)
     yres = 640;
     xres = 480;
 
-    for (int i = 0; i < MANAGED_WINDOW_COUNT; i++) {
+    for (i = 0; i < MANAGED_WINDOW_COUNT; i++) {
         windows[i].window = -1;
     }
 
@@ -1771,9 +1756,7 @@ bool windowDeleteButton(const char* buttonName)
 // 0x4A6304
 void windowEnableButton(const char* buttonName, int enabled)
 {
-    int index;
-
-    for (index = 0; index < windows[currentWindow].buttonsLength; index++) {
+    for (int index = 0; index < windows[currentWindow].buttonsLength; index++) {
         if (compat_stricmp(windows[currentWindow].buttons[index].name, buttonName) == 0) {
             if (enabled) {
                 if (soundPressFunc != NULL || soundReleaseFunc != NULL) {
@@ -1795,9 +1778,7 @@ void windowEnableButton(const char* buttonName, int enabled)
 // 0x4A63D0
 int windowGetButtonID(const char* buttonName)
 {
-    int index;
-
-    for (index = 0; index < windows[currentWindow].buttonsLength; index++) {
+    for (int index = 0; index < windows[currentWindow].buttonsLength; index++) {
         if (compat_stricmp(windows[currentWindow].buttons[index].name, buttonName) == 0) {
             return windows[currentWindow].buttons[index].btn;
         }
@@ -2005,14 +1986,10 @@ bool windowAddButtonGfx(const char* buttonName, char* pressedFileName, char* nor
 // 0x4A6A40
 int windowAddButtonMask(const char* buttonName, unsigned char* buffer)
 {
-    int index;
-    ManagedButton* button;
-    unsigned char* copy;
-
-    for (index = 0; index < windows[currentWindow].buttonsLength; index++) {
-        button = &(windows[currentWindow].buttons[index]);
+    for (int index = 0; index < windows[currentWindow].buttonsLength; index++) {
+        ManagedButton* button = &(windows[currentWindow].buttons[index]);
         if (compat_stricmp(button->name, buttonName) == 0) {
-            copy = (unsigned char*)mymalloc(button->width * button->height, __FILE__, __LINE__); // "..\int\WINDOW.C, 1877
+            unsigned char* copy = (unsigned char*)mymalloc(button->width * button->height, __FILE__, __LINE__); // "..\int\WINDOW.C, 1877
             memcpy(copy, buffer, button->width * button->height);
             win_register_button_mask(button->btn, copy);
             button->field_50 = copy;
@@ -2026,11 +2003,8 @@ int windowAddButtonMask(const char* buttonName, unsigned char* buffer)
 // 0x4A6AC8
 int windowAddButtonBuf(const char* buttonName, unsigned char* normal, unsigned char* pressed, unsigned char* hover, int width, int height, int pitch)
 {
-    int index;
-    ManagedButton* button;
-
-    for (index = 0; index < windows[currentWindow].buttonsLength; index++) {
-        button = &(windows[currentWindow].buttons[index]);
+    for (int index = 0; index < windows[currentWindow].buttonsLength; index++) {
+        ManagedButton* button = &(windows[currentWindow].buttons[index]);
         if (compat_stricmp(button->name, buttonName) == 0) {
             if (normal != NULL) {
                 memset(button->normal, 0, button->width * button->height);
@@ -2318,13 +2292,10 @@ bool windowAddButtonTextWithOffsets(const char* buttonName, const char* text, in
 // 0x4A7194
 bool windowFill(float r, float g, float b)
 {
-    int colorIndex;
-    int wid;
-
-    colorIndex = ((int)(r * 31.0) << 10) | ((int)(g * 31.0) << 5) | (int)(b * 31.0);
+    int colorIndex = ((int)(r * 31.0) << 10) | ((int)(g * 31.0) << 5) | (int)(b * 31.0);
 
     // NOTE: Uninline.
-    wid = windowGetGNWID();
+    int wid = windowGetGNWID();
 
     win_fill(wid,
         0,
@@ -2339,20 +2310,16 @@ bool windowFill(float r, float g, float b)
 // 0x4A7230
 bool windowFillRect(int x, int y, int width, int height, float r, float g, float b)
 {
-    ManagedWindow* managedWindow;
-    int colorIndex;
-    int wid;
-
-    managedWindow = &(windows[currentWindow]);
+    ManagedWindow* managedWindow = &(windows[currentWindow]);
     x = (int)(x * managedWindow->scaleX);
     y = (int)(y * managedWindow->scaleY);
     width = (int)(width * managedWindow->scaleX);
     height = (int)(height * managedWindow->scaleY);
 
-    colorIndex = ((int)(r * 31.0) << 10) | ((int)(g * 31.0) << 5) | (int)(b * 31.0);
+    int colorIndex = ((int)(r * 31.0) << 10) | ((int)(g * 31.0) << 5) | (int)(b * 31.0);
 
     // NOTE: Uninline.
-    wid = windowGetGNWID();
+    int wid = windowGetGNWID();
 
     win_fill(wid,
         x,
@@ -2381,15 +2348,12 @@ void windowEndRegion()
 // 0x4A7380
 void* windowRegionGetUserData(const char* windowRegionName)
 {
-    int index;
-    char* regionName;
-
     if (currentWindow == -1) {
         return NULL;
     }
 
-    for (index = 0; index < windows[currentWindow].regionsLength; index++) {
-        regionName = windows[currentWindow].regions[index]->name;
+    for (int index = 0; index < windows[currentWindow].regionsLength; index++) {
+        char* regionName = windows[currentWindow].regions[index]->name;
         if (compat_stricmp(regionName, windowRegionName) == 0) {
             return regionGetUserData(windows[currentWindow].regions[index]);
         }
@@ -2401,15 +2365,12 @@ void* windowRegionGetUserData(const char* windowRegionName)
 // 0x4A73F0
 void windowRegionSetUserData(const char* windowRegionName, void* userData)
 {
-    int index;
-    char* regionName;
-
     if (currentWindow == -1) {
         return;
     }
 
-    for (index = 0; index < windows[currentWindow].regionsLength; index++) {
-        regionName = windows[currentWindow].regions[index]->name;
+    for (int index = 0; index < windows[currentWindow].regionsLength; index++) {
+        char* regionName = windows[currentWindow].regions[index]->name;
         if (compat_stricmp(regionName, windowRegionName) == 0) {
             regionSetUserData(windows[currentWindow].regions[index], userData);
             return;
@@ -2519,15 +2480,12 @@ int windowAddRegionRect(int a1, int a2, int a3, int a4, int a5)
 // 0x4A7774
 int windowAddRegionCfunc(const char* regionName, RegionMouseEventCallback* callback, void* userData)
 {
-    int index;
-    Region* region;
-
     if (currentWindow == -1) {
         return 0;
     }
 
-    for (index = 0; index < windows[currentWindow].regionsLength; index++) {
-        region = windows[currentWindow].regions[index];
+    for (int index = 0; index < windows[currentWindow].regionsLength; index++) {
+        Region* region = windows[currentWindow].regions[index];
         if (region != NULL && compat_stricmp(region->name, regionName) == 0) {
             region->mouseEventCallback = callback;
             region->mouseEventCallbackUserData = userData;
@@ -2541,15 +2499,12 @@ int windowAddRegionCfunc(const char* regionName, RegionMouseEventCallback* callb
 // 0x4A7804
 int windowAddRegionRightCfunc(const char* regionName, RegionMouseEventCallback* callback, void* userData)
 {
-    int index;
-    Region* region;
-
     if (currentWindow == -1) {
         return 0;
     }
 
-    for (index = 0; index < windows[currentWindow].regionsLength; index++) {
-        region = windows[currentWindow].regions[index];
+    for (int index = 0; index < windows[currentWindow].regionsLength; index++) {
+        Region* region = windows[currentWindow].regions[index];
         if (region != NULL && compat_stricmp(region->name, regionName) == 0) {
             region->rightMouseEventCallback = callback;
             region->rightMouseEventCallbackUserData = userData;
@@ -2672,9 +2627,11 @@ bool windowDeleteRegion(const char* regionName)
         return false;
     }
 
+    int index;
+    Region* region;
     if (regionName != NULL) {
-        for (int index = 0; index < managedWindow->regionsLength; index++) {
-            Region* region = managedWindow->regions[index];
+        for (index = 0; index < managedWindow->regionsLength; index++) {
+            region = managedWindow->regions[index];
             if (region != NULL) {
                 if (compat_stricmp(regionGetName(region), regionName) == 0) {
                     regionDelete(region);
@@ -2690,8 +2647,8 @@ bool windowDeleteRegion(const char* regionName)
     managedWindow->regionsVersion++;
 
     if (managedWindow->regions != NULL) {
-        for (int index = 0; index < managedWindow->regionsLength; index++) {
-            Region* region = managedWindow->regions[index];
+        for (index = 0; index < managedWindow->regionsLength; index++) {
+            region = managedWindow->regions[index];
             if (region != NULL) {
                 regionDelete(region);
             }
@@ -2734,10 +2691,8 @@ bool windowSetMovieFlags(int flags)
 // 0x4A7D20
 bool windowPlayMovie(char* filePath)
 {
-    int wid;
-
     // NOTE: Uninline.
-    wid = windowGetGNWID();
+    int wid = windowGetGNWID();
 
     if (movieRun(wid, filePath) != 0) {
         return false;
@@ -2749,10 +2704,8 @@ bool windowPlayMovie(char* filePath)
 // 0x4A7D54
 bool windowPlayMovieRect(char* filePath, int a2, int a3, int a4, int a5)
 {
-    int wid;
-
     // NOTE: Uninline.
-    wid = windowGetGNWID();
+    int wid = windowGetGNWID();
 
     if (movieRunRect(wid, filePath, a2, a3, a4, a5) != 0) {
         return false;
@@ -2782,13 +2735,16 @@ void drawScaled(unsigned char* dest, int destWidth, int destHeight, int destPitc
     int destSkip = destPitch - destWidth;
     int srcSkip = stepY * srcPitch;
 
+    int srcPosX = 0;
+    int srcPosY = 0;
+    int offset = 0;
+    int x = 0;
+    int y = 0;
+
     if (srcSkip != 0) {
         // Downscaling.
-        int srcPosY = 0;
-        for (int y = 0; y < destHeight; y++) {
-            int srcPosX = 0;
-            int offset = 0;
-            for (int x = 0; x < destWidth; x++) {
+        for (; y < destHeight; y++) {
+            for (; x < destWidth; x++) {
                 *dest++ = src[offset];
                 offset += stepX;
 
@@ -2809,14 +2765,9 @@ void drawScaled(unsigned char* dest, int destWidth, int destHeight, int destPitc
         }
     } else {
         // Upscaling.
-        int y = 0;
-        int srcPosY = 0;
         while (y < destHeight) {
             unsigned char* destPtr = dest;
-
-            int srcPosX = 0;
-            int offset = 0;
-            for (int x = 0; x < destWidth; x++) {
+            for (; x < destWidth; x++) {
                 *dest++ = src[offset];
                 offset += stepX;
 
@@ -2860,13 +2811,16 @@ void drawScaledBuf(unsigned char* dest, int destWidth, int destHeight, unsigned 
     int stepY = incrementY >> 16;
     int srcSkip = stepY * srcWidth;
 
+    int srcPosX = 0;
+    int srcPosY = 0;
+    int offset = 0;
+    int x = 0;
+    int y = 0;
+
     if (srcSkip != 0) {
         // Downscaling.
-        int srcPosY = 0;
-        for (int y = 0; y < destHeight; y++) {
-            int srcPosX = 0;
-            int offset = 0;
-            for (int x = 0; x < destWidth; x++) {
+        for (; y < destHeight; y++) {
+            for (; x < destWidth; x++) {
                 *dest++ = src[offset];
                 offset += stepX;
 
@@ -2886,14 +2840,9 @@ void drawScaledBuf(unsigned char* dest, int destWidth, int destHeight, unsigned 
         }
     } else {
         // Upscaling.
-        int y = 0;
-        int srcPosY = 0;
         while (y < destHeight) {
             unsigned char* destPtr = dest;
-
-            int srcPosX = 0;
-            int offset = 0;
-            for (int x = 0; x < destWidth; x++) {
+            for (; x < destWidth; x++) {
                 *dest++ = src[offset];
                 offset += stepX;
 
