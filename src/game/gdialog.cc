@@ -3631,33 +3631,17 @@ static void talk_to_blend_table_exit()
 // 0x442154
 static int about_init()
 {
-    int fid;
-    CacheEntry* background_key;
-    Art* background_frm;
-    unsigned char* background_data;
-    int background_width;
-    int background_height;
-    MessageList msg_file;
-    MessageListItem mesg;
-    int width;
-    Art* button_up_frm;
-    unsigned char* button_up_data;
-    Art* button_down_frm;
-    unsigned char* button_down_data;
-    int button_width;
-    int button_height;
-    int btn;
-
     if (about_win == -1) {
         about_old_font = text_curr();
 
-        fid = art_id(OBJ_TYPE_INTERFACE, 238, 0, 0, 0);
-        background_frm = art_ptr_lock(fid, &background_key);
+        int fid = art_id(OBJ_TYPE_INTERFACE, 238, 0, 0, 0);
+        CacheEntry* background_key;
+        Art* background_frm = art_ptr_lock(fid, &background_key);
         if (background_frm != NULL) {
-            background_data = art_frame_data(background_frm, 0, 0);
+            unsigned char* background_data = art_frame_data(background_frm, 0, 0);
             if (background_data != NULL) {
-                background_width = art_frame_width(background_frm, 0, 0);
-                background_height = art_frame_length(background_frm, 0, 0);
+                int background_width = art_frame_width(background_frm, 0, 0);
+                int background_height = art_frame_length(background_frm, 0, 0);
                 about_win_width = background_width;
                 about_win = win_add((screenGetWidth() - background_width) / 2,
                     (screenGetHeight() - GAME_DIALOG_WINDOW_HEIGHT) / 2 + 356,
@@ -3677,10 +3661,12 @@ static int about_init()
 
                         text_font(103);
 
+                        MessageList msg_file;
+                        MessageListItem mesg;
                         if (message_init(&msg_file) == 1 && message_load(&msg_file, "game\\misc.msg") == 1) {
                             mesg.num = 6000;
                             if (message_search(&msg_file, &mesg) == 1) {
-                                width = text_width(mesg.text);
+                                int width = text_width(mesg.text);
                                 text_to_buf(about_win_buf + background_width * 7 + (background_width - width) / 2,
                                     mesg.text,
                                     background_width - (background_width - width) / 2,
@@ -3709,19 +3695,19 @@ static int about_init()
                                             message_exit(&msg_file);
 
                                             fid = art_id(OBJ_TYPE_INTERFACE, 8, 0, 0, 0);
-                                            button_up_frm = art_ptr_lock(fid, &about_button_up_key);
+                                            Art* button_up_frm = art_ptr_lock(fid, &about_button_up_key);
                                             if (button_up_frm != NULL) {
-                                                button_up_data = art_frame_data(button_up_frm, 0, 0);
+                                                unsigned char* button_up_data = art_frame_data(button_up_frm, 0, 0);
                                                 if (button_up_data != NULL) {
                                                     fid = art_id(OBJ_TYPE_INTERFACE, 9, 0, 0, 0);
-                                                    button_down_frm = art_ptr_lock(fid, &about_button_down_key);
+                                                    Art* button_down_frm = art_ptr_lock(fid, &about_button_down_key);
                                                     if (button_down_frm != NULL) {
-                                                        button_down_data = art_frame_data(button_down_frm, 0, 0);
+                                                        unsigned char* button_down_data = art_frame_data(button_down_frm, 0, 0);
                                                         if (button_down_data != NULL) {
-                                                            button_width = art_frame_width(button_down_frm, 0, 0);
-                                                            button_height = art_frame_length(button_down_frm, 0, 0);
+                                                            int button_width = art_frame_width(button_down_frm, 0, 0);
+                                                            int button_height = art_frame_length(button_down_frm, 0, 0);
 
-                                                            btn = win_register_button(about_win,
+                                                            int btn = win_register_button(about_win,
                                                                 34,
                                                                 58,
                                                                 button_width,
