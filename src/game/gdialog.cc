@@ -1511,18 +1511,11 @@ static int gDialogProcessChoice(int a1)
 // 0x43F070
 static int gDialogProcessInit()
 {
-    int upBtn;
-    int downBtn;
-    int replyWindowX;
-    int replyWindowY;
-    int optionsWindowX;
-    int optionsWindowY;
-
     talkOldFont = text_curr();
     text_font(101);
 
-    replyWindowX = (screenGetWidth() - GAME_DIALOG_WINDOW_WIDTH) / 2 + GAME_DIALOG_REPLY_WINDOW_X;
-    replyWindowY = (screenGetHeight() - GAME_DIALOG_WINDOW_HEIGHT) / 2 + GAME_DIALOG_REPLY_WINDOW_Y;
+    int replyWindowX = (screenGetWidth() - GAME_DIALOG_WINDOW_WIDTH) / 2 + GAME_DIALOG_REPLY_WINDOW_X;
+    int replyWindowY = (screenGetHeight() - GAME_DIALOG_WINDOW_HEIGHT) / 2 + GAME_DIALOG_REPLY_WINDOW_Y;
     gReplyWin = win_add(replyWindowX,
         replyWindowY,
         GAME_DIALOG_REPLY_WINDOW_WIDTH,
@@ -1534,7 +1527,7 @@ static int gDialogProcessInit()
     }
 
     // Top part of the reply window - scroll up.
-    upBtn = win_register_button(gReplyWin,
+    int upBtn = win_register_button(gReplyWin,
         1,
         1,
         377,
@@ -1553,7 +1546,7 @@ static int gDialogProcessInit()
     }
 
     // Bottom part of the reply window - scroll down.
-    downBtn = win_register_button(gReplyWin,
+    int downBtn = win_register_button(gReplyWin,
         1,
         29,
         377,
@@ -1571,8 +1564,8 @@ static int gDialogProcessInit()
         win_register_button_func(downBtn, reply_arrow_down, reply_arrow_restore, 0, 0);
     }
 
-    optionsWindowX = (screenGetWidth() - GAME_DIALOG_WINDOW_WIDTH) / 2 + GAME_DIALOG_OPTIONS_WINDOW_X;
-    optionsWindowY = (screenGetHeight() - GAME_DIALOG_WINDOW_HEIGHT) / 2 + GAME_DIALOG_OPTIONS_WINDOW_Y;
+    int optionsWindowX = (screenGetWidth() - GAME_DIALOG_WINDOW_WIDTH) / 2 + GAME_DIALOG_OPTIONS_WINDOW_X;
+    int optionsWindowY = (screenGetHeight() - GAME_DIALOG_WINDOW_HEIGHT) / 2 + GAME_DIALOG_OPTIONS_WINDOW_Y;
     gOptionWin = win_add(optionsWindowX,
         optionsWindowY,
         GAME_DIALOG_OPTIONS_WINDOW_WIDTH,
@@ -2159,13 +2152,10 @@ void talk_to_critter_reacts(int a1)
 // 0x43FF34
 static void talk_to_scroll_subwin(int win, int a2, unsigned char* a3, unsigned char* a4, unsigned char* a5, int a6, int a7)
 {
-    int v7;
-    unsigned char* v9;
+    int v7 = a6;
+    unsigned char* v9 = a4;
     Rect rect;
     unsigned int tick;
-
-    v7 = a6;
-    v9 = a4;
 
     if (a2 == 1) {
         rect.ulx = 0;
@@ -2719,10 +2709,6 @@ void barter_end_to_talk_to()
 // 0x440A58
 static int talk_to_create_barter_win()
 {
-    int fid;
-    unsigned char* normal;
-    unsigned char* pressed;
-
     dialogue_state = 4;
 
     int backgroundFid = art_id(OBJ_TYPE_INTERFACE, 111, 0, 0, 0);
@@ -2763,14 +2749,16 @@ static int talk_to_create_barter_win()
 
     art_ptr_unlock(backgroundHandle);
 
+    int fid;
+
     fid = art_id(OBJ_TYPE_INTERFACE, 96, 0, 0, 0);
-    normal = art_ptr_lock_data(fid, 0, 0, &dialogue_redbut_Key1);
+    unsigned char* normal = art_ptr_lock_data(fid, 0, 0, &dialogue_redbut_Key1);
     if (normal == NULL) {
         return -1;
     }
 
     fid = art_id(OBJ_TYPE_INTERFACE, 95, 0, 0, 0);
-    pressed = art_ptr_lock_data(fid, 0, 0, &dialogue_redbut_Key2);
+    unsigned char* pressed = art_ptr_lock_data(fid, 0, 0, &dialogue_redbut_Key2);
     if (pressed == NULL) {
         return -1;
     }
@@ -2941,12 +2929,10 @@ static void talk_to_pressed_barter(int btn, int keyCode)
 static void talk_to_pressed_about(int btn, int keyCode)
 {
     MessageListItem mesg;
-    int reaction;
-    int reaction_level;
 
     if (PID_TYPE(dialog_target->pid) == OBJ_TYPE_CRITTER) {
-        reaction = reaction_get(dialog_target);
-        reaction_level = reaction_to_level(reaction);
+        int reaction = reaction_get(dialog_target);
+        int reaction_level = reaction_to_level(reaction);
         if (reaction_level != 0) {
             if (map_data.index != 35) {
                 if (gdialog_speech_playing == 1) {
@@ -3287,13 +3273,16 @@ static void talk_to_set_up_fidget(int headFrmId, int reaction)
         return;
     }
 
-    int anim = HEAD_ANIMATION_NEUTRAL_PHONEMES;
+    int anim;
     switch (reaction) {
     case FIDGET_GOOD:
         anim = HEAD_ANIMATION_GOOD_PHONEMES;
         break;
     case FIDGET_BAD:
         anim = HEAD_ANIMATION_BAD_PHONEMES;
+        break;
+    default:
+        anim = HEAD_ANIMATION_NEUTRAL_PHONEMES;
         break;
     }
 
@@ -3922,15 +3911,12 @@ static int about_process_input(int input)
 // 0x442800
 static void about_update_display(unsigned char should_redraw)
 {
-    int old_font;
-    int width;
-    int skip = 0;
-
-    old_font = text_curr();
+    int old_font = text_curr();
     about_clear_display(0);
     text_font(101);
 
-    width = text_width(about_input_string) - 244;
+    int width = text_width(about_input_string) - 244;
+    int skip = 0;
     while (width > 0) {
         width -= text_char_width(about_input_string[skip++]);
     }
@@ -3970,18 +3956,12 @@ static void about_reset_string()
 static void about_process_string()
 {
     static const char* delimeters = " \t.,";
-    int found = 0;
-    char* tok;
-    Script* scr;
-    int count;
-    int message_id;
-    char* str;
-    int random_msg_num;
 
     about_input_string[about_input_index] = '\0';
 
     if (about_input_string[0] != '\0') {
-        tok = strtok(about_input_string, delimeters);
+        char* tok = strtok(about_input_string, delimeters);
+        int found = 0;
         while (tok != NULL) {
             if (about_lookup_word(tok) || about_lookup_name(tok)) {
                 found = 1;
@@ -3991,8 +3971,11 @@ static void about_process_string()
         }
 
         if (!found) {
+            Script* scr;
             if (scr_ptr(dialog_target->sid, &scr) != -1) {
-                count = 0;
+                int message_id;
+                char* str;
+                int count = 0;
                 for (message_id = 980; message_id < 1000; message_id++) {
                     str = scr_get_msg_str(scr->scr_script_idx + 1, message_id);
                     if (str != NULL && compat_stricmp(str, "error") != 0) {
@@ -4000,6 +3983,7 @@ static void about_process_string()
                     }
                 }
 
+                int random_msg_num;
                 if (count != 0) {
                     random_msg_num = roll_random(1, count);
                     for (message_id = 980; message_id < 1000; message_id++) {
@@ -4091,18 +4075,11 @@ static int about_lookup_word(const char* search)
 // 0x442C58
 static int about_lookup_name(const char* search)
 {
-    const char* name;
-    Script* scr;
-    int message_id;
-    char* str;
-    int count;
-    int random_msg_num;
-
     if (PID_TYPE(dialog_target->pid) != OBJ_TYPE_CRITTER) {
         return 0;
     }
 
-    name = critter_name(dialog_target);
+    const char* name = critter_name(dialog_target);
     if (name == NULL) {
         return 0;
     }
@@ -4113,11 +4090,14 @@ static int about_lookup_name(const char* search)
         return 0;
     }
 
+    Script* scr;
     if (scr_ptr(dialog_target->sid, &scr) == -1) {
         return 0;
     }
 
-    count = 0;
+    int message_id;
+    char* str;
+    int count = 0;
     for (message_id = 970; message_id < 980; message_id++) {
         str = scr_get_msg_str(scr->scr_script_idx + 1, message_id);
         if (str != NULL && compat_stricmp(str, "error") != 0) {
@@ -4125,6 +4105,7 @@ static int about_lookup_name(const char* search)
         }
     }
 
+    int random_msg_num;
     if (count != 0) {
         random_msg_num = roll_random(1, count);
         for (message_id = 970; message_id < 980; message_id++) {
