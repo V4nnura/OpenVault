@@ -1747,15 +1747,17 @@ static bool anim_can_use_door(Object* critter, Object* door)
 }
 
 // 0x4159D4
-int make_path(Object* object, int from, int to, unsigned char* rotations, int a5)
+int make_path(Object* object, int from, int to, unsigned char* rotations, int requireEmptyDest)
 {
-    return make_path_func(object, from, to, rotations, a5, obj_blocking_at);
+    return make_path_func(object, from, to, rotations, requireEmptyDest, obj_blocking_at);
 }
 
+// If requireEmptyDest == 1, will not return a path if the destination tile is blocked (according to `callback`).
+// Returns path length, or 0 if no path is available.
 // 0x4159E8
-int make_path_func(Object* object, int from, int to, unsigned char* rotations, int a5, PathBuilderCallback* callback)
+int make_path_func(Object* object, int from, int to, unsigned char* rotations, int requireEmptyDest, PathBuilderCallback* callback)
 {
-    if (a5) {
+    if (requireEmptyDest) {
         if (callback(object, to, object->elevation) != NULL) {
             return 0;
         }
