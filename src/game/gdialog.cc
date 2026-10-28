@@ -3308,6 +3308,10 @@ static void talk_to_set_up_fidget(int headFrmId, int reaction)
         }
     }
 
+    if (lipsFp == NULL) {
+        lipsFID = 0;
+    }
+
     if (lipsFID == 0) {
         phone_anim = anim;
         lipsFID = art_id(OBJ_TYPE_HEAD, headFrmId, anim, 0, 0);
