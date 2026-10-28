@@ -1828,6 +1828,10 @@ int make_path_func(Object* object, int from, int to, unsigned char* rotations, i
 
         for (int rotation = 0; rotation < ROTATION_COUNT; rotation++) {
             int tile = tile_num_in_direction(temp.tile, rotation, 1);
+            if (tile < 0 || tile >= HEX_GRID_SIZE) {
+                continue;
+            }
+
             int bit = 1 << (tile & 7);
             if ((seen[tile / 8] & bit) != 0) {
                 continue;
@@ -1847,6 +1851,10 @@ int make_path_func(Object* object, int from, int to, unsigned char* rotations, i
                 if (child[v25].tile == -1) {
                     break;
                 }
+            }
+
+            if (v25 == 2000) {
+                return 0;
             }
 
             openPathNodeListLength += 1;
