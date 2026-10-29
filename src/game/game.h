@@ -37,7 +37,7 @@ int game_set_global_var(int var, int value);
 int game_load_info();
 int game_load_info_vars(const char* path, const char* section, int* variablesListLengthPtr, int** variablesListPtr);
 int game_state();
-int game_state_request(int new_game_state);
+int game_state_request(int newGameState);
 void game_state_update();
 int game_quit_with_confirm();
 
