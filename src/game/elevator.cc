@@ -434,7 +434,7 @@ static int elevator_start(int elevator)
             art_ptr_unlock(grph_key[ELEVATOR_FRM_PANEL]);
         }
 
-        for (int index = 0; index < ELEVATOR_FRM_STATIC_COUNT; index++) {
+        for (index = 0; index < ELEVATOR_FRM_STATIC_COUNT; index++) {
             art_ptr_unlock(grph_key[index]);
         }
 
@@ -465,7 +465,7 @@ static int elevator_start(int elevator)
             art_ptr_unlock(grph_key[ELEVATOR_FRM_PANEL]);
         }
 
-        for (int index = 0; index < ELEVATOR_FRM_STATIC_COUNT; index++) {
+        for (index = 0; index < ELEVATOR_FRM_STATIC_COUNT; index++) {
             art_ptr_unlock(grph_key[index]);
         }
 
