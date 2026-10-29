@@ -20,7 +20,6 @@ extern int* game_global_vars;
 extern int num_game_global_vars;
 extern const char* msg_path;
 extern int game_user_wants_to_quit;
-extern int splash_screen_scaling;
 
 extern MessageList misc_message_file;
 extern DB_DATABASE* master_db_handle;
