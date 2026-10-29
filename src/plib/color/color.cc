@@ -349,14 +349,16 @@ bool loadColorTable(const char* path)
 
     for (int index = 0; index < 256; index++) {
         unsigned char r;
-        unsigned char g;
-        unsigned char b;
 
         // NOTE: Uninline.
         db_fread(&r, sizeof(r), 1, stream);
 
+        unsigned char g;
+
         // NOTE: Uninline.
         db_fread(&g, sizeof(g), 1, stream);
+
+        unsigned char b;
 
         // NOTE: Uninline.
         db_fread(&b, sizeof(b), 1, stream);
@@ -443,16 +445,12 @@ void getColorPaletteEntry(int entry, unsigned char* r, unsigned char* g, unsigne
 // 0x4C06CC
 static void buildBlendTable(unsigned char* ptr, unsigned char ch)
 {
-    int r, g, b;
     int i, j;
-    int mixedR, mixedG, mixedB;
-    unsigned char* beg;
+    unsigned char* beg = ptr;
 
-    beg = ptr;
-
-    r = (Color2RGB(ch) & 0x7C00) >> 10;
-    g = (Color2RGB(ch) & 0x3E0) >> 5;
-    b = (Color2RGB(ch) & 0x1F);
+    int r = (Color2RGB(ch) & 0x7C00) >> 10;
+    int g = (Color2RGB(ch) & 0x3E0) >> 5;
+    int b = (Color2RGB(ch) & 0x1F);
 
     for (i = 0; i < 256; i++) {
         ptr[i] = i;
@@ -471,9 +469,9 @@ static void buildBlendTable(unsigned char* ptr, unsigned char ch)
 
     for (j = 0; j < 7; j++) {
         for (i = 0; i < 256; i++) {
-            mixedR = (Color2RGB(i) & 0x7C00) >> 10;
-            mixedG = (Color2RGB(i) & 0x3E0) >> 5;
-            mixedB = (Color2RGB(i) & 0x1F);
+            int mixedR = (Color2RGB(i) & 0x7C00) >> 10;
+            int mixedG = (Color2RGB(i) & 0x3E0) >> 5;
+            int mixedB = (Color2RGB(i) & 0x1F);
             int index = 0;
             index |= (r_2 + mixedR * blendWeight) / 7 << 10;
             index |= (g_2 + mixedG * blendWeight) / 7 << 5;
