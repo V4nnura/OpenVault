@@ -128,9 +128,10 @@ int CompLZS(unsigned char* a1, unsigned char* a2, int a3)
 
     memset(text_buf, ' ', 4078);
 
+    int index;
     int count = 0;
     int v30 = 0;
-    for (int index = 4078; index < 4096; index++) {
+    for (index = 4078; index < 4096; index++) {
         text_buf[index] = *a1++;
         int v8 = v30++;
         if (v8 > a3) {
@@ -141,7 +142,7 @@ int CompLZS(unsigned char* a1, unsigned char* a2, int a3)
 
     textsize = count;
 
-    for (int index = 4077; index > 4059; index--) {
+    for (index = 4077; index > 4059; index--) {
         InsertNode(index);
     }
 
@@ -267,11 +268,13 @@ int CompLZS(unsigned char* a1, unsigned char* a2, int a3)
 // 0x446F20
 static void InitTree()
 {
-    for (int index = 4097; index < 4353; index++) {
+    int index;
+
+    for (index = 4097; index < 4353; index++) {
         rson[index] = 4096;
     }
 
-    for (int index = 0; index < 4096; index++) {
+    for (index = 0; index < 4096; index++) {
         dad[index] = 4096;
     }
 }
