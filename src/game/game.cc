@@ -116,6 +116,8 @@ int game_user_wants_to_quit = 0;
 // 0x58CC10
 MessageList misc_message_file;
 
+int gSplashScreenScaling = 0;
+
 // 0x58CC18
 DB_DATABASE* master_db_handle;
 
@@ -182,6 +184,7 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
             config_get_value(&resolutionConfig, "IFACE", "IFACE_BAR_WIDTH", &gInterfaceBarWidth);
             config_get_value(&resolutionConfig, "IFACE", "IFACE_BAR_SIDE_ART", &gInterfaceSidePanelsImageId);
             configGetBool(&resolutionConfig, "IFACE", "IFACE_BAR_SIDES_ORI", &gInterfaceSidePanelsExtendFromScreenEdge);
+            config_get_value(&resolutionConfig, "STATIC_SCREENS", "SPLASH_SCRN_SIZE", &gSplashScreenScaling);
         }
         config_exit(&resolutionConfig);
     }
@@ -1333,16 +1336,7 @@ static void game_splash_screen()
     db_fread(data, 1, width * height, stream);
     db_fclose(stream);
 
-    int size = 0;
-
-    Config config;
-    if (config_init(&config)) {
-        if (config_load(&config, "f1_res.ini", false)) {
-            config_get_value(&config, "STATIC_SCREENS", "SPLASH_SCRN_SIZE", &size);
-        }
-
-        config_exit(&config);
-    }
+    int size = gSplashScreenScaling;
 
     int screenWidth = screenGetWidth();
     int screenHeight = screenGetHeight();
