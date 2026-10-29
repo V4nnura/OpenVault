@@ -678,11 +678,13 @@ bool setup_inventory(int inventoryWindowType)
         display_msg = gdialog_display_msg;
     }
 
-    if (inventoryWindowType == INVENTORY_WINDOW_TYPE_LOOT) {
+    int index, btn;
+    switch (inventoryWindowType) {
+    case INVENTORY_WINDOW_TYPE_LOOT:
         // Create invsibile buttons representing character's inventory item
         // slots.
-        for (int index = 0; index < inven_cur_disp; index++) {
-            int btn = win_register_button(i_wid,
+        for (index = 0; index < inven_cur_disp; index++) {
+            btn = win_register_button(i_wid,
                 INVENTORY_LOOT_LEFT_SCROLLER_X,
                 INVENTORY_LOOT_LEFT_SCROLLER_Y + index * INVENTORY_SLOT_HEIGHT,
                 INVENTORY_SLOT_WIDTH,
@@ -700,8 +702,8 @@ bool setup_inventory(int inventoryWindowType)
             }
         }
 
-        for (int index = 0; index < 6; index++) {
-            int btn = win_register_button(i_wid,
+        for (index = 0; index < 6; index++) {
+            btn = win_register_button(i_wid,
                 INVENTORY_LOOT_RIGHT_SCROLLER_X,
                 INVENTORY_LOOT_RIGHT_SCROLLER_Y + index * INVENTORY_SLOT_HEIGHT,
                 INVENTORY_SLOT_WIDTH,
@@ -718,12 +720,11 @@ bool setup_inventory(int inventoryWindowType)
                 win_register_button_func(btn, inven_hover_on, inven_hover_off, NULL, NULL);
             }
         }
-    } else if (inventoryWindowType == INVENTORY_WINDOW_TYPE_TRADE) {
-        int y1 = INVENTORY_TRADE_SCROLLER_Y;
-        int y2 = INVENTORY_TRADE_INNER_SCROLLER_Y;
-
-        for (int index = 0; index < inven_cur_disp; index++) {
-            int btn;
+        break;
+    case INVENTORY_WINDOW_TYPE_TRADE:
+        for (index = 0; index < inven_cur_disp; index++) {
+            int y1 = INVENTORY_TRADE_SCROLLER_Y;
+            int y2 = INVENTORY_TRADE_INNER_SCROLLER_Y;
 
             // Invsibile button representing left inventory slot.
             btn = win_register_button(i_wid,
@@ -800,10 +801,11 @@ bool setup_inventory(int inventoryWindowType)
             y1 += INVENTORY_SLOT_HEIGHT;
             y2 += INVENTORY_SLOT_HEIGHT;
         }
-    } else {
+        break;
+    default:
         // Create invisible buttons representing item slots.
-        for (int index = 0; index < inven_cur_disp; index++) {
-            int btn = win_register_button(i_wid,
+        for (index = 0; index < inven_cur_disp; index++) {
+            btn = win_register_button(i_wid,
                 INVENTORY_SCROLLER_X,
                 INVENTORY_SLOT_HEIGHT * index + INVENTORY_SCROLLER_Y,
                 INVENTORY_SLOT_WIDTH,
@@ -820,11 +822,10 @@ bool setup_inventory(int inventoryWindowType)
                 win_register_button_func(btn, inven_hover_on, inven_hover_off, NULL, NULL);
             }
         }
+        break;
     }
 
     if (inventoryWindowType == INVENTORY_WINDOW_TYPE_NORMAL) {
-        int btn;
-
         // Item2 slot
         btn = win_register_button(i_wid,
             INVENTORY_RIGHT_HAND_SLOT_X,
@@ -883,7 +884,6 @@ bool setup_inventory(int inventoryWindowType)
     memset(ikey, 0, sizeof(ikey));
 
     int fid;
-    int btn;
     unsigned char* buttonUpData;
     unsigned char* buttonDownData;
 
@@ -1286,7 +1286,7 @@ bool setup_inventory(int inventoryWindowType)
     i_worn = NULL;
     i_lhand = NULL;
 
-    for (int index = 0; index < pud->length; index++) {
+    for (index = 0; index < pud->length; index++) {
         InventoryItem* inventoryItem = &(pud->items[index]);
         Object* item = inventoryItem->item;
         if ((item->flags & OBJECT_IN_LEFT_HAND) != 0) {
