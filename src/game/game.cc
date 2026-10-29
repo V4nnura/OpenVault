@@ -1026,25 +1026,25 @@ int game_state()
 }
 
 // 0x43C7B4
-int game_state_request(int new_game_state)
+int game_state_request(int newGameState)
 {
-    switch (new_game_state) {
+    switch (newGameState) {
     case GAME_STATE_0:
-        new_game_state = GAME_STATE_1;
+        newGameState = GAME_STATE_1;
         break;
     case GAME_STATE_2:
-        new_game_state = GAME_STATE_3;
+        newGameState = GAME_STATE_3;
         break;
     case GAME_STATE_4:
-        new_game_state = GAME_STATE_5;
+        newGameState = GAME_STATE_5;
         break;
     }
 
-    if (game_state_cur != GAME_STATE_4 || new_game_state != GAME_STATE_5) {
+    if (game_state_cur != GAME_STATE_4 || newGameState != GAME_STATE_5) {
         return -1;
     }
 
-    game_state_cur = new_game_state;
+    game_state_cur = newGameState;
     return 0;
 }
 
