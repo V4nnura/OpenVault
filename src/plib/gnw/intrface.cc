@@ -16,6 +16,9 @@
 
 namespace fallout {
 
+// Maximum number of timed messages.
+static constexpr int timed_msgs = 5;
+
 static int create_pull_down(char** stringList, int stringListLength, int x, int y, int foregroundColor, int backgroundColor, Rect* rect);
 static void win_debug_delete(int btn, int keyCode);
 static int find_first_letter(int ch, char** stringList, int stringListLength);
@@ -25,7 +28,7 @@ static void tm_watch_msgs();
 static void tm_kill_msg();
 static void tm_kill_out_of_order(int queueIndex);
 static void tm_click_response(int btn);
-static int tm_index_active(int queueIndex);
+static bool tm_index_active(int queueIndex);
 
 // 0x53A268
 static int wd = -1;
@@ -315,8 +318,7 @@ int win_list_select_at(const char* title, char** items, int itemsLength, SelectF
         sharedFpsLimiter.mark();
 
         int keyCode = get_input();
-        int mouseX;
-        int mouseY;
+        int mouseX, mouseY;
         mouse_get_position(&mouseX, &mouseY);
 
         if (keyCode == KEY_RETURN || (keyCode >= 1024 && keyCode < listViewCapacity + 1024)) {
@@ -1189,9 +1191,6 @@ static int calc_max_field_chars_wcursor(int value1, int value2)
 // 0x4C97CC
 void GNW_intr_init()
 {
-    int v1, v2;
-    int i;
-
     tm_persistence = 3000;
     tm_add = 0;
     tm_kill = -1;
@@ -1207,12 +1206,12 @@ void GNW_intr_init()
 
     tm_h = 2 * tm_text_y + text_height();
 
-    v1 = scr_size.lry >> 3;
-    v2 = scr_size.lry >> 2;
+    int spacing = scr_size.lry >> 3;
+    int top = scr_size.lry >> 2;
 
-    for (i = 0; i < 5; i++) {
-        tm_location[i].y = v1 * i + v2;
-        tm_location[i].taken = 0;
+    for (int index = 0; index < 5; index++) {
+        tm_location[index].y = spacing * index + top;
+        tm_location[index].taken = false;
     }
 }
 
@@ -1238,7 +1237,7 @@ static void tm_watch_msgs()
         return;
     }
 
-    tm_watch_active = 1;
+    tm_watch_active = true;
     while (tm_kill != -1) {
         if (elapsed_time(tm_queue[tm_kill].created) < tm_persistence) {
             break;
@@ -1246,40 +1245,32 @@ static void tm_watch_msgs()
 
         tm_kill_msg();
     }
-    tm_watch_active = 0;
+    tm_watch_active = false;
 }
 
 // 0x4C9A9C
 static void tm_kill_msg()
 {
-    int v0;
-
-    v0 = tm_kill;
-    if (v0 != -1) {
+    if (tm_kill != -1) {
         win_delete(tm_queue[tm_kill].id);
         tm_location[tm_queue[tm_kill].location].taken = 0;
 
-        if (v0 == 5) {
-            v0 = 0;
+        tm_kill++;
+        if (tm_kill == timed_msgs) {
+            tm_kill = 0;
         }
 
-        if (v0 == tm_add) {
+        if (tm_kill == tm_add) {
             tm_add = 0;
             tm_kill = -1;
             remove_bk_process(tm_watch_msgs);
-            v0 = tm_kill;
         }
     }
-
-    tm_kill = v0;
 }
 
 // 0x4C9B20
 static void tm_kill_out_of_order(int queueIndex)
 {
-    int v7;
-    int v6;
-
     if (tm_kill == -1) {
         return;
     }
@@ -1290,22 +1281,22 @@ static void tm_kill_out_of_order(int queueIndex)
 
     win_delete(tm_queue[queueIndex].id);
 
-    tm_location[tm_queue[queueIndex].location].taken = 0;
+    tm_location[tm_queue[queueIndex].location].taken = false;
 
-    if (queueIndex != tm_kill) {
-        v6 = queueIndex;
-        do {
-            v7 = v6 - 1;
-            if (v7 < 0) {
-                v7 = 4;
-            }
 
-            tm_queue[v6] = tm_queue[v7];
-            v6 = v7;
-        } while (v7 != tm_kill);
-    }
+    int copy_to = queueIndex;
+    while (copy_to != tm_kill) {
+        int copy_from = copy_to - 1;
+        if (copy_from < 0) {
+            copy_from = 4;
+        }
 
-    if (++tm_kill == 5) {
+        tm_queue[copy_to] = tm_queue[copy_from];
+        copy_to = copy_from;
+    };
+
+    tm_kill++;
+    if (tm_kill == timed_msgs) {
         tm_kill = 0;
     }
 
@@ -1319,18 +1310,15 @@ static void tm_kill_out_of_order(int queueIndex)
 // 0x4C9C04
 static void tm_click_response(int btn)
 {
-    int win;
-    int queueIndex;
-
     if (tm_kill == -1) {
         return;
     }
 
-    win = win_button_winID(btn);
-    queueIndex = tm_kill;
+    int win = win_button_winID(btn);
+    int queueIndex = tm_kill;
     while (win != tm_queue[queueIndex].id) {
         queueIndex++;
-        if (queueIndex == 5) {
+        if (queueIndex == timed_msgs) {
             queueIndex = 0;
         }
 
@@ -1342,17 +1330,18 @@ static void tm_click_response(int btn)
 }
 
 // 0x4C9C48
-static int tm_index_active(int queueIndex)
+static bool tm_index_active(int queueIndex)
 {
-    if (tm_kill != tm_add) {
-        if (tm_kill >= tm_add) {
-            if (queueIndex >= tm_add && queueIndex < tm_kill)
-                return 0;
-        } else if (queueIndex < tm_kill || queueIndex >= tm_add) {
-            return 0;
-        }
+    if (tm_kill == tm_add) {
+        return true;
     }
-    return 1;
+
+    
+    if (tm_kill < tm_add) {
+        return queueIndex >= tm_kill && queueIndex < tm_add;
+    }
+
+    return queueIndex < tm_add || queueIndex >= tm_kill;
 }
 
 } // namespace fallout
