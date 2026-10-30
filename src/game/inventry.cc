@@ -5405,19 +5405,19 @@ static int exit_move_timer_win(int inventoryWindowType)
 }
 
 // 0x469BA0
-int inven_set_timer(Object* a1)
+int inven_set_timer(Object* item)
 {
-    bool v1 = inven_is_initialized;
+    bool isInitialized = inven_is_initialized;
 
-    if (!v1) {
+    if (!isInitialized) {
         if (inven_init() == -1) {
             return -1;
         }
     }
 
-    int seconds = do_move_timer(INVENTORY_WINDOW_TYPE_SET_TIMER, a1, 180);
+    int seconds = do_move_timer(INVENTORY_WINDOW_TYPE_SET_TIMER, item, 180);
 
-    if (!v1) {
+    if (!isInitialized) {
         // NOTE: Uninline.
         inven_exit();
     }
