@@ -1090,7 +1090,7 @@ int win_input_str(int win, char* dest, int maxLength, int x, int y, int textColo
                 return -1;
             }
 
-            switch (keyCode)
+            switch (keyCode) {
             case KEY_BACKSPACE:
                 if (cursorPos > 0) {
                     stringWidth = text_width(dest);
