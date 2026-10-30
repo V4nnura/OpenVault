@@ -1533,8 +1533,6 @@ bool obj_get_player_roof_info(int* outRoofX, int* outRoofY, int* outElev)
 // 0x47C624
 int obj_change_fid(Object* obj, int fid, Rect* dirtyRect)
 {
-    Rect new_rect;
-
     if (obj == NULL) {
         return -1;
     }
@@ -1544,6 +1542,7 @@ int obj_change_fid(Object* obj, int fid, Rect* dirtyRect)
 
         obj->fid = fid;
 
+        Rect new_rect;
         obj_bound(obj, &new_rect);
         rect_min_bound(dirtyRect, &new_rect, dirtyRect);
     } else {
@@ -1558,21 +1557,17 @@ int obj_change_fid(Object* obj, int fid, Rect* dirtyRect)
 // 0x47C66C
 int obj_set_frame(Object* obj, int frame, Rect* rect)
 {
-    Rect new_rect;
-    Art* art;
-    CacheEntry* cache_entry;
-    int framesPerDirection;
-
     if (obj == NULL) {
         return -1;
     }
 
-    art = art_ptr_lock(obj->fid, &cache_entry);
+    CacheEntry* cache_entry;
+    Art* art = art_ptr_lock(obj->fid, &cache_entry);
     if (art == NULL) {
         return -1;
     }
 
-    framesPerDirection = art->frameCount;
+    int framesPerDirection = art->frameCount;
 
     art_ptr_unlock(cache_entry);
 
@@ -1583,6 +1578,7 @@ int obj_set_frame(Object* obj, int frame, Rect* rect)
     if (rect != NULL) {
         obj_bound(obj, rect);
         obj->frame = frame;
+        Rect new_rect;
         obj_bound(obj, &new_rect);
         rect_min_bound(rect, &new_rect, rect);
     } else {
@@ -1595,25 +1591,21 @@ int obj_set_frame(Object* obj, int frame, Rect* rect)
 // 0x47C6D8
 int obj_inc_frame(Object* obj, Rect* dirtyRect)
 {
-    Art* art;
-    CacheEntry* cache_entry;
-    int framesPerDirection;
-    int nextFrame;
-
     if (obj == NULL) {
         return -1;
     }
 
-    art = art_ptr_lock(obj->fid, &cache_entry);
+    CacheEntry* cache_entry;
+    Art* art = art_ptr_lock(obj->fid, &cache_entry);
     if (art == NULL) {
         return -1;
     }
 
-    framesPerDirection = art->frameCount;
+    int framesPerDirection = art->frameCount;
 
     art_ptr_unlock(cache_entry);
 
-    nextFrame = obj->frame + 1;
+    int nextFrame = obj->frame + 1;
     if (nextFrame >= framesPerDirection) {
         nextFrame = 0;
     }
@@ -1638,26 +1630,21 @@ int obj_inc_frame(Object* obj, Rect* dirtyRect)
 //
 int obj_dec_frame(Object* obj, Rect* dirtyRect)
 {
-    Art* art;
-    CacheEntry* cache_entry;
-    int framesPerDirection;
-    int prevFrame;
-    Rect newRect;
-
     if (obj == NULL) {
         return -1;
     }
 
-    art = art_ptr_lock(obj->fid, &cache_entry);
+    CacheEntry* cache_entry;
+    Art* art = art_ptr_lock(obj->fid, &cache_entry);
     if (art == NULL) {
         return -1;
     }
 
-    framesPerDirection = art->frameCount;
+    int framesPerDirection = art->frameCount;
 
     art_ptr_unlock(cache_entry);
 
-    prevFrame = obj->frame - 1;
+    int prevFrame = obj->frame - 1;
     if (prevFrame < 0) {
         prevFrame = framesPerDirection - 1;
     }
@@ -1665,6 +1652,7 @@ int obj_dec_frame(Object* obj, Rect* dirtyRect)
     if (dirtyRect != NULL) {
         obj_bound(obj, dirtyRect);
         obj->frame = prevFrame;
+        Rect newRect;
         obj_bound(obj, &newRect);
         rect_min_bound(dirtyRect, &newRect, dirtyRect);
     } else {
@@ -2230,11 +2218,7 @@ Object* obj_find_next_at()
 // 0x47D108
 void obj_bound(Object* obj, Rect* rect)
 {
-    if (obj == NULL) {
-        return;
-    }
-
-    if (rect == NULL) {
+    if (obj == NULL || rect == NULL) {
         return;
     }
 
@@ -2262,8 +2246,8 @@ void obj_bound(Object* obj, Rect* rect)
         rect->lrx = obj->sx + width - 1;
         rect->lry = obj->sy + height - 1;
     } else {
-        int tileScreenY;
         int tileScreenX;
+        int tileScreenY;
         if (tile_coord(obj->tile, &tileScreenX, &tileScreenY, obj->elevation) == 0) {
             tileScreenX += 16;
             tileScreenY += 8;
@@ -2330,9 +2314,10 @@ Object* obj_blocking_at(Object* a1, int tile, int elev)
         if (v7->elevation == elev) {
             if ((v7->flags & OBJECT_HIDDEN) == 0 && (v7->flags & OBJECT_NO_BLOCK) == 0 && v7 != a1) {
                 type = FID_TYPE(v7->fid);
-                if (type == OBJ_TYPE_CRITTER
-                    || type == OBJ_TYPE_SCENERY
-                    || type == OBJ_TYPE_WALL) {
+                switch (type) {
+                case OBJ_TYPE_CRITTER:
+                case OBJ_TYPE_SCENERY:
+                case OBJ_TYPE_WALL:
                     return v7;
                 }
             }
@@ -2350,9 +2335,10 @@ Object* obj_blocking_at(Object* a1, int tile, int elev)
                     if (v7->elevation == elev) {
                         if ((v7->flags & OBJECT_HIDDEN) == 0 && (v7->flags & OBJECT_NO_BLOCK) == 0 && v7 != a1) {
                             type = FID_TYPE(v7->fid);
-                            if (type == OBJ_TYPE_CRITTER
-                                || type == OBJ_TYPE_SCENERY
-                                || type == OBJ_TYPE_WALL) {
+                            switch (type) {
+                            case OBJ_TYPE_CRITTER:
+                            case OBJ_TYPE_SCENERY:
+                            case OBJ_TYPE_WALL:
                                 return v7;
                             }
                         }
@@ -2438,9 +2424,10 @@ int obj_create_list(int tile, int elevation, int objectType, Object*** objectLis
         return -1;
     }
 
+    int index;
     int count = 0;
     if (tile == -1) {
-        for (int index = 0; index < HEX_GRID_SIZE; index++) {
+        for (index = 0; index < HEX_GRID_SIZE; index++) {
             ObjectListNode* objectListNode = objectTable[index];
             while (objectListNode != NULL) {
                 Object* obj = objectListNode->obj;
@@ -2475,7 +2462,7 @@ int obj_create_list(int tile, int elevation, int objectType, Object*** objectLis
     }
 
     if (tile == -1) {
-        for (int index = 0; index < HEX_GRID_SIZE; index++) {
+        for (index = 0; index < HEX_GRID_SIZE; index++) {
             ObjectListNode* objectListNode = objectTable[index];
             while (objectListNode) {
                 Object* obj = objectListNode->obj;
@@ -2827,20 +2814,13 @@ void obj_set_seen(int tile)
 // 0x47DE84
 void obj_process_seen()
 {
-    int i;
-    int v7;
-    int v8;
-    int v5;
-    int v0;
-    int v3;
-    ObjectListNode* obj_entry;
-
     memset(obj_seen_check, 0, 5001);
 
-    v0 = 400;
+    int i;
+    int v0 = 400;
     for (i = 0; i < 5001; i++) {
         if (obj_seen[i] != 0) {
-            for (v3 = i - 400; v3 != v0; v3 += 25) {
+            for (int v3 = i - 400; v3 != v0; v3 += 25) {
                 if (v3 >= 0 && v3 < 5001) {
                     obj_seen_check[v3] = -1;
                     if (v3 > 0) {
@@ -2861,13 +2841,14 @@ void obj_process_seen()
         v0++;
     }
 
-    v7 = 0;
+    int v7 = 0;
     for (i = 0; i < 5001; i++) {
         if (obj_seen_check[i] != 0) {
-            v8 = 1;
-            for (v5 = v7; v5 < v7 + 8; v5++) {
+            int v8 = 1;
+            for (int v5 = v7; v5 < v7 + 8; v5++) {
                 if (v8 & obj_seen_check[i]) {
                     if (v5 < 40000) {
+                        ObjectListNode* obj_entry;
                         for (obj_entry = objectTable[v5]; obj_entry != NULL; obj_entry = obj_entry->next) {
                             if (obj_entry->obj->elevation == obj_dude->elevation) {
                                 obj_entry->obj->flags |= OBJECT_SEEN;
@@ -2917,9 +2898,10 @@ void obj_preload_art_cache(int flags)
 
     unsigned char arr[4096];
     memset(arr, 0, sizeof(arr));
+    int i;
 
     if ((flags & 0x02) == 0) {
-        for (int i = 0; i < SQUARE_GRID_SIZE; i++) {
+        for (i = 0; i < SQUARE_GRID_SIZE; i++) {
             int v3 = square[0]->field_0[i];
             arr[v3 & 0xFFF] = 1;
             arr[(v3 >> 16) & 0xFFF] = 1;
@@ -2927,7 +2909,7 @@ void obj_preload_art_cache(int flags)
     }
 
     if ((flags & 0x04) == 0) {
-        for (int i = 0; i < SQUARE_GRID_SIZE; i++) {
+        for (i = 0; i < SQUARE_GRID_SIZE; i++) {
             int v3 = square[1]->field_0[i];
             arr[v3 & 0xFFF] = 1;
             arr[(v3 >> 16) & 0xFFF] = 1;
@@ -2935,7 +2917,7 @@ void obj_preload_art_cache(int flags)
     }
 
     if ((flags & 0x08) == 0) {
-        for (int i = 0; i < SQUARE_GRID_SIZE; i++) {
+        for (i = 0; i < SQUARE_GRID_SIZE; i++) {
             int v3 = square[2]->field_0[i];
             arr[v3 & 0xFFF] = 1;
             arr[(v3 >> 16) & 0xFFF] = 1;
@@ -2962,7 +2944,7 @@ void obj_preload_art_cache(int flags)
         art_ptr_unlock(cache_handle);
     }
 
-    for (int i = 1; i < v11; i++) {
+    for (i = 1; i < v11; i++) {
         if (preload_list[i - 1] != preload_list[i]) {
             if (art_ptr_lock(preload_list[i], &cache_handle) != NULL) {
                 art_ptr_unlock(cache_handle);
@@ -2970,7 +2952,7 @@ void obj_preload_art_cache(int flags)
         }
     }
 
-    for (int i = 0; i < 4096; i++) {
+    for (i = 0; i < 4096; i++) {
         if (arr[i] != 0) {
             int fid = art_id(OBJ_TYPE_TILE, i, 0, 0, 0);
             if (art_ptr_lock(fid, &cache_handle) != NULL) {
@@ -2979,7 +2961,7 @@ void obj_preload_art_cache(int flags)
         }
     }
 
-    for (int i = v11; i < preload_list_index; i++) {
+    for (i = v11; i < preload_list_index; i++) {
         if (preload_list[i - 1] != preload_list[i]) {
             if (art_ptr_lock(preload_list[i], &cache_handle) != NULL) {
                 art_ptr_unlock(cache_handle);
@@ -2996,9 +2978,7 @@ void obj_preload_art_cache(int flags)
 // 0x47E250
 static int obj_object_table_init()
 {
-    int tile;
-
-    for (tile = 0; tile < HEX_GRID_SIZE; tile++) {
+    for (int tile = 0; tile < HEX_GRID_SIZE; tile++) {
         objectTable[tile] = NULL;
     }
 
