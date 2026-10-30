@@ -156,8 +156,7 @@ static void op_fillwin3x3(Program* program)
     char* fileName = programStackPopString(program);
     char* mangledFileName = interpretMangleName(fileName);
 
-    int imageWidth;
-    int imageHeight;
+    int imageWidth, imageHeight;
     unsigned char* imageData = loadDataFile(mangledFileName, &imageWidth, &imageHeight);
     if (imageData == NULL) {
         interpretError("cannot load 3x3 file '%s'", mangledFileName);
@@ -271,7 +270,6 @@ static void op_tokenize(Program* program)
         break;
     default:
         interpretError("Error, invalid arg 2 to tokenize. (string)");
-        break;
     }
 
     char* string = programStackPopString(program);
@@ -391,24 +389,17 @@ static void op_displayraw(Program* program)
 // 0x457574
 static void interpretFadePaletteBK(unsigned char* oldPalette, unsigned char* newPalette, int a3, float duration, int shouldProcessBk)
 {
-    unsigned int time;
-    unsigned int previousTime;
-    unsigned int delta;
-    int step;
-    int steps;
-    int index;
     unsigned char palette[256 * 3];
-
-    time = get_time();
-    previousTime = time;
-    steps = (int)duration;
-    step = 0;
-    delta = 0;
+    unsigned int time = get_time();
+    unsigned int previousTime = time;
+    int steps = (int)duration;
+    int step = 0;
+    unsigned int delta = 0;
 
     if (duration != 0.0) {
         while (step < steps) {
             if (delta != 0) {
-                for (index = 0; index < 768; index++) {
+                for (int index = 0; index < 768; index++) {
                     palette[index] = oldPalette[index] - (oldPalette[index] - newPalette[index]) * step / steps;
                 }
 
@@ -447,9 +438,7 @@ int intlibGetFadeIn()
 // 0x457690
 void interpretFadeOut(float duration)
 {
-    int cursorWasHidden;
-
-    cursorWasHidden = mouse_hidden();
+    int cursorWasHidden = mouse_hidden();
     mouse_hide();
 
     interpretFadePaletteBK(getSystemPalette(), blackPal, 64, duration, 1);
@@ -468,9 +457,7 @@ void interpretFadeIn(float duration)
 // 0x4576EC
 void interpretFadeOutNoBK(float duration)
 {
-    int cursorWasHidden;
-
-    cursorWasHidden = mouse_hidden();
+    int cursorWasHidden = mouse_hidden();
     mouse_hide();
 
     interpretFadePaletteBK(getSystemPalette(), blackPal, 64, duration, 0);
@@ -832,18 +819,22 @@ static void op_sayoption(Program* program)
     } else {
         v1 = NULL;
     }
-    if ((v3.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_STRING) {
+
+    switch(v3.opcode & VALUE_TYPE_MASK) {
+    case VALUE_TYPE_STRING:
         const char* v2 = interpretGetString(program, v3.opcode, v3.integerValue);
         if (dialogOption(v1, v2) != 0) {
             program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
             interpretError("Error setting option.");
         }
-    } else if ((v3.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_INT) {
+        break;
+    case VALUE_TYPE_INT:
         if (dialogOptionProc(v1, v3.integerValue) != 0) {
             program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
             interpretError("Error setting option.");
         }
-    } else {
+        break;
+    default:
         interpretError("Invalid arg 2 to sayOption");
     }
 
@@ -1369,13 +1360,14 @@ static void op_settextflags(Program* program)
 static void op_settextcolor(Program* program)
 {
     ProgramValue value[3];
+    int arg;
 
     // NOTE: Original code does not use loops.
-    for (int arg = 0; arg < 3; arg++) {
+    for (arg = 0; arg < 3; arg++) {
         value[arg] = programStackPopValue(program);
     }
 
-    for (int arg = 0; arg < 3; arg++) {
+    for (arg = 0; arg < 3; arg++) {
         if ((value[arg].opcode & VALUE_TYPE_MASK) != VALUE_TYPE_FLOAT
             && (value[arg].opcode & VALUE_TYPE_MASK) == VALUE_TYPE_INT
             && value[arg].integerValue != 0) {
@@ -1396,13 +1388,14 @@ static void op_settextcolor(Program* program)
 static void op_sayoptioncolor(Program* program)
 {
     ProgramValue value[3];
+    int arg;
 
     // NOTE: Original code does not use loops.
-    for (int arg = 0; arg < 3; arg++) {
+    for (arg = 0; arg < 3; arg++) {
         value[arg] = programStackPopValue(program);
     }
 
-    for (int arg = 0; arg < 3; arg++) {
+    for (arg = 0; arg < 3; arg++) {
         if ((value[arg].opcode & VALUE_TYPE_MASK) != VALUE_TYPE_FLOAT
             && (value[arg].opcode & VALUE_TYPE_MASK) == VALUE_TYPE_INT
             && value[arg].integerValue != 0) {
@@ -1423,13 +1416,14 @@ static void op_sayoptioncolor(Program* program)
 static void op_sayreplycolor(Program* program)
 {
     ProgramValue value[3];
+    int arg;
 
     // NOTE: Original code does not use loops.
-    for (int arg = 0; arg < 3; arg++) {
+    for (arg = 0; arg < 3; arg++) {
         value[arg] = programStackPopValue(program);
     }
 
-    for (int arg = 0; arg < 3; arg++) {
+    for (arg = 0; arg < 3; arg++) {
         if ((value[arg].opcode & VALUE_TYPE_MASK) != VALUE_TYPE_FLOAT
             && (value[arg].opcode & VALUE_TYPE_MASK) == VALUE_TYPE_INT
             && value[arg].integerValue != 0) {
@@ -1450,13 +1444,14 @@ static void op_sayreplycolor(Program* program)
 static void op_sethighlightcolor(Program* program)
 {
     ProgramValue value[3];
+    int arg;
 
     // NOTE: Original code does not use loops.
-    for (int arg = 0; arg < 3; arg++) {
+    for (arg = 0; arg < 3; arg++) {
         value[arg] = programStackPopValue(program);
     }
 
-    for (int arg = 0; arg < 3; arg++) {
+    for (arg = 0; arg < 3; arg++) {
         if ((value[arg].opcode & VALUE_TYPE_MASK) != VALUE_TYPE_FLOAT
             && (value[arg].opcode & VALUE_TYPE_MASK) == VALUE_TYPE_INT
             && value[arg].integerValue != 0) {
@@ -1717,9 +1712,9 @@ static void op_sayrestart(Program* program)
 }
 
 // 0x45A4A4
-static void soundCallbackInterpret(void* userData, int a2)
+static void soundCallbackInterpret(void* userData, int event)
 {
-    if (a2 == 1) {
+    if (event == SOUND_CALLBACK_EVENT_DONE) {
         Sound** sound = (Sound**)userData;
         *sound = NULL;
     }
@@ -1758,9 +1753,7 @@ static int soundDeleteInterpret(int value)
 // 0x45A528
 void soundCloseInterpret()
 {
-    int index;
-
-    for (index = 0; index < INT_LIB_SOUNDS_CAPACITY; index++) {
+    for (int index = 0; index < INT_LIB_SOUNDS_CAPACITY; index++) {
         if (interpretSounds[index] != NULL) {
             soundDeleteInterpret(index | 0xA0000000);
         }
@@ -1827,7 +1820,9 @@ int soundStartInterpret(char* fileName, int mode)
         soundSetChannel(sound, 3);
     }
 
-    int rc = soundLoad(sound, fileName);
+    int rc;
+
+    rc = soundLoad(sound, fileName);
     if (rc != SOUND_NO_ERROR) {
         goto err;
     }
@@ -2199,7 +2194,8 @@ void interpretRegisterProgramDeleteCallback(IntLibProgramDeleteCallback* callbac
 // 0x45B39C
 void removeProgramReferences(Program* program)
 {
-    for (int index = 0; index < INT_LIB_KEY_HANDLERS_CAPACITY; index++) {
+    int index;
+    for (index = 0; index < INT_LIB_KEY_HANDLERS_CAPACITY; index++) {
         if (program == inputProc[index].program) {
             inputProc[index].program = NULL;
         }
@@ -2207,7 +2203,7 @@ void removeProgramReferences(Program* program)
 
     intExtraRemoveProgramReferences(program);
 
-    for (int index = 0; index < numCallbacks; index++) {
+    for (index = 0; index < numCallbacks; index++) {
         IntLibProgramDeleteCallback* callback = callbacks[index];
         if (callback != NULL) {
             callback(program);
