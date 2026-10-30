@@ -821,7 +821,7 @@ static void op_sayoption(Program* program)
     }
 
     const char* v2;
-    switch (v3.opcode & VALUE_TYPE_MASK)
+    switch (v3.opcode & VALUE_TYPE_MASK) {
     case VALUE_TYPE_STRING:
         v2 = interpretGetString(program, v3.opcode, v3.integerValue);
         if (dialogOption(v1, v2) != 0) {
