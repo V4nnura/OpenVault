@@ -452,7 +452,7 @@ static bool config_strip_white_space(char* string)
         return false;
     }
 
-    int length = static_cast<int>(strlen(string));
+    size_t length = strlen(string);
     if (length == 0) {
         return true;
     }
