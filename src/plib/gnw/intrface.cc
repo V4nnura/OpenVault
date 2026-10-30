@@ -23,7 +23,6 @@ static int create_pull_down(char** stringList, int stringListLength, int x, int 
 static void win_debug_delete(int btn, int keyCode);
 static int find_first_letter(int ch, char** stringList, int stringListLength);
 static int process_pull_down(int win, Rect* rect, char** items, int itemsLength, int foregroundColor, int backgroundColor, MenuBar* menuBar, int pulldownIndex);
-static int calc_max_field_chars_wcursor(int value1, int value2);
 static void tm_watch_msgs();
 static void tm_kill_msg();
 static void tm_kill_out_of_order(int queueIndex);
@@ -1060,7 +1059,7 @@ int win_input_str(int win, char* dest, int maxLength, int x, int y, int textColo
     Window* window = GNW_find(win);
     unsigned char* buffer = window->buffer + window->width * y + x;
 
-    int cursorPos = strlen(dest);
+    size_t cursorPos = strlen(dest);
     dest[cursorPos] = '_';
     dest[cursorPos + 1] = '\0';
 
@@ -1173,7 +1172,7 @@ int win_input_str(int win, char* dest, int maxLength, int x, int y, int textColo
 // Calculates max length of string needed to represent value1 or value2.
 //
 // 0x4C941C
-static int calc_max_field_chars_wcursor(int value1, int value2)
+size_t calc_max_field_chars_wcursor(int value1, int value2)
 {
     char* str = (char*)mem_malloc(17);
     if (str == NULL) {
@@ -1181,10 +1180,10 @@ static int calc_max_field_chars_wcursor(int value1, int value2)
     }
 
     snprintf(str, 17, "%d", value1);
-    int len1 = strlen(str);
+    size_t len1 = strlen(str);
 
     snprintf(str, 17, "%d", value2);
-    int len2 = strlen(str);
+    size_t len2 = strlen(str);
 
     mem_free(str);
 
