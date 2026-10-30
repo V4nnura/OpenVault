@@ -2373,7 +2373,6 @@ static int construct_box_bar_win()
     }
 
     MessageList messageList;
-    MessageListItem messageListItem;
     int rc = 0;
     if (!message_init(&messageList)) {
         rc = -1;
@@ -2393,10 +2392,9 @@ static int construct_box_bar_win()
         return -1;
     }
 
-    CacheEntry* indicatorBoxFrmHandle;
-    int width;
-    int height;
     int indicatorBoxFid = art_id(OBJ_TYPE_INTERFACE, 126, 0, 0, 0);
+    CacheEntry* indicatorBoxFrmHandle;
+    int width, height;
     unsigned char* indicatorBoxFrmData = art_lock(indicatorBoxFid, &indicatorBoxFrmHandle, &width, &height);
     if (indicatorBoxFrmData == NULL) {
         debug_printf("\nINTRFACE: Error initializing indicator box graphics! **\n");
@@ -2428,6 +2426,7 @@ static int construct_box_bar_win()
         IndicatorDescription* indicator = &(bbox[index]);
 
         char text[1024];
+        MessageListItem messageListItem;
         strcpy(text, getmsg(&messageList, &messageListItem, indicator->title));
 
         int color = indicator->isBad ? colorTable[31744] : colorTable[992];
