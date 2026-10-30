@@ -106,7 +106,7 @@ static void op_sayscrollup(Program* program);
 static void op_sayscrolldown(Program* program);
 static void op_saysetspacing(Program* program);
 static void op_sayrestart(Program* program);
-static void soundCallbackInterpret(void* userData, int a2);
+static void soundCallbackInterpret(void* userData, int event);
 static int soundDeleteInterpret(int value);
 static int soundPauseInterpret(int value);
 static int soundRewindInterpret(int value);
@@ -820,21 +820,18 @@ static void op_sayoption(Program* program)
         v1 = NULL;
     }
 
-    switch(v3.opcode & VALUE_TYPE_MASK) {
-    case VALUE_TYPE_STRING:
+    if ((v3.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_STRING) {
         const char* v2 = interpretGetString(program, v3.opcode, v3.integerValue);
         if (dialogOption(v1, v2) != 0) {
             program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
             interpretError("Error setting option.");
         }
-        break;
-    case VALUE_TYPE_INT:
+    } else if ((v3.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_INT) {
         if (dialogOptionProc(v1, v3.integerValue) != 0) {
             program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
             interpretError("Error setting option.");
         }
-        break;
-    default:
+    } else {
         interpretError("Invalid arg 2 to sayOption");
     }
 
