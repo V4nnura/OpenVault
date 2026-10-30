@@ -1,6 +1,8 @@
 #ifndef FALLOUT_PLIB_GNW_INTRFACE_H_
 #define FALLOUT_PLIB_GNW_INTRFACE_H_
 
+#include <stddef.h>
+
 #include "plib/gnw/rect.h"
 
 namespace fallout {
