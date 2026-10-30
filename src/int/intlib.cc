@@ -811,27 +811,31 @@ static void op_sayoption(Program* program)
     program->flags |= PROGRAM_FLAG_CHILD_CALL;
 
     ProgramValue v3 = programStackPopValue(program);
-    ProgramValue v2 = programStackPopValue(program);
+    ProgramValue v4 = programStackPopValue(program);
 
     const char* v1;
-    if ((v2.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_STRING) {
-        v1 = interpretGetString(program, v2.opcode, v2.integerValue);
+    if ((v4.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_STRING) {
+        v1 = interpretGetString(program, v4.opcode, v4.integerValue);
     } else {
         v1 = NULL;
     }
 
-    if ((v3.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_STRING) {
-        const char* v2 = interpretGetString(program, v3.opcode, v3.integerValue);
+    const char* v2;
+    switch (v3.opcode & VALUE_TYPE_MASK)
+    case VALUE_TYPE_STRING:
+        v2 = interpretGetString(program, v3.opcode, v3.integerValue);
         if (dialogOption(v1, v2) != 0) {
             program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
             interpretError("Error setting option.");
         }
-    } else if ((v3.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_INT) {
+        break;
+    case VALUE_TYPE_INT:
         if (dialogOptionProc(v1, v3.integerValue) != 0) {
             program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
             interpretError("Error setting option.");
         }
-    } else {
+        break;
+    default:
         interpretError("Invalid arg 2 to sayOption");
     }
 
