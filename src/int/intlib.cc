@@ -258,23 +258,25 @@ static void op_selectfilelist(Program* program)
 // 0x4570DC
 static void op_tokenize(Program* program)
 {
-    int ch = programStackPopInteger(program);
-
     ProgramValue prevValue = programStackPopValue(program);
-
     char* prev = NULL;
-    if ((prevValue.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_INT) {
+    switch (prevValue.opcode & VALUE_TYPE_MASK) {
+    case VALUE_TYPE_INT:
         if (prevValue.integerValue != 0) {
             interpretError("Error, invalid arg 2 to tokenize. (only accept 0 for int value)");
         }
-    } else if ((prevValue.opcode & VALUE_TYPE_MASK) == VALUE_TYPE_STRING) {
+        break;
+    case VALUE_TYPE_STRING:
         prev = interpretGetString(program, prevValue.opcode, prevValue.integerValue);
-    } else {
+        break;
+    default:
         interpretError("Error, invalid arg 2 to tokenize. (string)");
+        break;
     }
 
     char* string = programStackPopString(program);
     char* temp = NULL;
+    int ch = programStackPopInteger(program);
 
     if (prev != NULL) {
         char* start = strstr(string, prev);
@@ -285,7 +287,7 @@ static void op_tokenize(Program* program)
             }
         }
 
-        if (*start == ch) {
+        if (start != NULL && *start == ch) {
             int length = 0;
             char* end = start + 1;
             while (*end != ch && *end != '\0') {
@@ -299,7 +301,7 @@ static void op_tokenize(Program* program)
         } else {
             programStackPushInteger(program, 0);
         }
-    } else {
+    } else if (string != NULL) {
         int length = 0;
         char* end = string;
         while (*end != ch && *end != '\0') {
@@ -307,13 +309,11 @@ static void op_tokenize(Program* program)
             length++;
         }
 
-        if (string != NULL) {
-            temp = (char*)mycalloc(1, length + 1, __FILE__, __LINE__); // "..\\int\\INTLIB.C", 248
-            strncpy(temp, string, length);
-            programStackPushString(program, temp);
-        } else {
-            programStackPushInteger(program, 0);
-        }
+        temp = (char*)mycalloc(1, length + 1, __FILE__, __LINE__); // "..\\int\\INTLIB.C", 248
+        strncpy(temp, string, length);
+        programStackPushString(program, temp);
+    } else {
+        programStackPushInteger(program, 0);
     }
 
     if (temp != NULL) {
