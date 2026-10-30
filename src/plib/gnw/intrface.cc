@@ -1283,7 +1283,6 @@ static void tm_kill_out_of_order(int queueIndex)
 
     tm_location[tm_queue[queueIndex].location].taken = false;
 
-
     int copy_to = queueIndex;
     while (copy_to != tm_kill) {
         int copy_from = copy_to - 1;
@@ -1335,7 +1334,6 @@ static bool tm_index_active(int queueIndex)
     if (tm_kill == tm_add) {
         return true;
     }
-
     
     if (tm_kill < tm_add) {
         return queueIndex >= tm_kill && queueIndex < tm_add;
