@@ -40,14 +40,14 @@ static bool tm_watch_active = false;
 static struct {
     int taken;
     int y;
-} tm_location[5];
+} tm_location[timed_msgs];
 
 // 0x6B06F8
 static struct {
     int created;
     int id;
     int location;
-} tm_queue[5];
+} tm_queue[timed_msgs];
 
 // 0x6B0734
 static int tm_text_y;
