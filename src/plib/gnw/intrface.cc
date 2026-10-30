@@ -635,9 +635,8 @@ int win_msg(const char* string, int x, int y, int color)
 
     int textColor;
     if ((color & 0xFF00) != 0) {
-        int index = (color & 0xFF) - 1;
-        textColor = colorTable[GNW_wcolor[index]];
-        textColor |= color & ~0xFFFF;
+        int colorIndex = (color & 0xFF) - 1;
+        textColor = (color & ~0xFFFF) | colorTable[GNW_wcolor[colorIndex]];
     } else {
         textColor = color;
     }
@@ -725,6 +724,12 @@ int win_debug(char* string)
     if (!GNW_win_init_flag) {
         return -1;
     }
+
+    // CE: Debug window metrics were designed for default DOS-style font (0).
+    // We don't expect caller to properly set one, so without manually forcing
+    // it debug window might contain mixed fonts.
+    int oldFont = text_curr();
+    text_font(0);
 
     int lineHeight = text_height();
 
@@ -831,6 +836,9 @@ int win_debug(char* string)
     }
 
     win_draw(wd);
+
+    // CE: Restore font.
+    text_font(oldFont);
 
     return 0;
 }
