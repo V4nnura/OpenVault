@@ -1090,7 +1090,8 @@ int win_input_str(int win, char* dest, int maxLength, int x, int y, int textColo
                 return -1;
             }
 
-            if (keyCode == KEY_BACKSPACE) {
+            switch (keyCode)
+            case KEY_BACKSPACE:
                 if (cursorPos > 0) {
                     stringWidth = text_width(dest);
 
@@ -1127,9 +1128,10 @@ int win_input_str(int win, char* dest, int maxLength, int x, int y, int textColo
                 } else {
                     cursorPos--;
                 }
-            } else if (keyCode == KEY_RETURN) {
                 break;
-            } else {
+            case KEY_RETURN:
+                break;
+            default:
                 if (cursorPos == maxLength) {
                     cursorPos = maxLength - 1;
                 } else {
@@ -1153,6 +1155,7 @@ int win_input_str(int win, char* dest, int maxLength, int x, int y, int textColo
                         cursorPos--;
                     }
                 }
+                break;
             }
         } else {
             cursorPos--;
@@ -1334,7 +1337,7 @@ static bool tm_index_active(int queueIndex)
     if (tm_kill == tm_add) {
         return true;
     }
-    
+
     if (tm_kill < tm_add) {
         return queueIndex >= tm_kill && queueIndex < tm_add;
     }
