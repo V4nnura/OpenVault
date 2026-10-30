@@ -98,6 +98,7 @@ static CacheEntry* background_key;
 // 0x472F80
 int main_menu_create()
 {
+    int index;
     int fid;
     MessageListItem msg;
     int len;
@@ -169,11 +170,11 @@ int main_menu_create()
         return main_menu_fatal_error();
     }
 
-    for (int index = 0; index < MAIN_MENU_BUTTON_COUNT; index++) {
+    for (index = 0; index < MAIN_MENU_BUTTON_COUNT; index++) {
         buttons[index] = -1;
     }
 
-    for (int index = 0; index < MAIN_MENU_BUTTON_COUNT; index++) {
+    for (index = 0; index < MAIN_MENU_BUTTON_COUNT; index++) {
         buttons[index] = win_register_button(main_window,
             425,
             index * 42 - index + 45,
@@ -197,7 +198,7 @@ int main_menu_create()
 
     text_font(104);
 
-    for (int index = 0; index < MAIN_MENU_BUTTON_COUNT; index++) {
+    for (index = 0; index < MAIN_MENU_BUTTON_COUNT; index++) {
         msg.num = 9 + index;
         if (message_search(&misc_message_file, &msg)) {
             len = text_width(msg.text);
