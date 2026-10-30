@@ -712,10 +712,10 @@ static int process_pull_down(int win, Rect* rect, char** items, int itemsLength,
         unsigned char* parentWindowBuffer = GNW_find(menuBar->win)->buffer;
         MenuPulldown* pulldown = &(menuBar->pulldowns[pulldownIndex]);
 
-        int x = pulldown->rect.left;
-        int y = pulldown->rect.top;
-        int width = pulldown->rect.right - x + 1;
-        int height = pulldown->rect.bottom - y + 1;
+        int x = pulldown->rect.ulx;
+        int y = pulldown->rect.uly;
+        int width = pulldown->rect.lrx - x + 1;
+        int height = pulldown->rect.lry - y + 1;
 
         int color1 = menuBar->foregroundColor;
         if ((color1 & 0xFF00) != 0) {
@@ -780,11 +780,11 @@ static int process_pull_down(int win, Rect* rect, char** items, int itemsLength,
 
         if (input == -2) {
             if (menuBar != NULL) {
-                if (mouse_click_in(menuBar->rect.left, menuBar->rect.top, menuBar->rect.right, menuBar->rect.bottom)) {
+                if (mouse_click_in(menuBar->rect.ulx, menuBar->rect.uly, menuBar->rect.lrx, menuBar->rect.lry)) {
                     int index;
                     for (index = 0; index < menuBar->pulldownsLength; index++) {
                         MenuPulldown* pulldown = &(menuBar->pulldowns[index]);
-                        if (mouse_click_in(pulldown->rect.left, pulldown->rect.top, pulldown->rect.right, pulldown->rect.bottom)) {
+                        if (mouse_click_in(pulldown->rect.ulx, pulldown->rect.uly, pulldown->rect.lrx, pulldown->rect.lry)) {
                             break;
                         }
                     }
@@ -800,7 +800,7 @@ static int process_pull_down(int win, Rect* rect, char** items, int itemsLength,
         if ((mouse_get_buttons() & MOUSE_EVENT_LEFT_BUTTON_UP) != 0
             || ((mouse_get_buttons() & MOUSE_EVENT_LEFT_BUTTON_DOWN) != 0
                 && (mouse_get_buttons() & MOUSE_EVENT_LEFT_BUTTON_REPEAT) == 0)) {
-            if (mouse_click_in(rect->left, rect->top + 8, rect->right, rect->bottom - 9)) {
+            if (mouse_click_in(rect->ulx, rect->uly + 8, rect->lrx, rect->lry - 9)) {
                 rc = focusedIndex;
             } else {
                 rc = -1;
@@ -852,8 +852,8 @@ static int process_pull_down(int win, Rect* rect, char** items, int itemsLength,
             break;
         default:
             if (mx2 != mx1 || my2 != my1) {
-                if (mouse_click_in(rect->left, rect->top + 8, rect->right, rect->bottom - 9)) {
-                    input = (my2 - rect->top - 8) / text_height();
+                if (mouse_click_in(rect->ulx, rect->uly + 8, rect->lrx, rect->lry - 9)) {
+                    input = (my2 - rect->uly - 8) / text_height();
                     if (input != -1) {
                         focusedIndex = items[input][0] != '\0' ? input : -1;
                         input = -3;
@@ -894,10 +894,10 @@ static int process_pull_down(int win, Rect* rect, char** items, int itemsLength,
         unsigned char* parentWindowBuffer = GNW_find(menuBar->win)->buffer;
         MenuPulldown* pulldown = &(menuBar->pulldowns[pulldownIndex]);
 
-        int x = pulldown->rect.left;
-        int y = pulldown->rect.top;
-        int width = pulldown->rect.right - x + 1;
-        int height = pulldown->rect.bottom - y + 1;
+        int x = pulldown->rect.ulx;
+        int y = pulldown->rect.uly;
+        int width = pulldown->rect.lrx - x + 1;
+        int height = pulldown->rect.lry - y + 1;
 
         int color1 = menuBar->foregroundColor;
         if ((color1 & 0xFF00) != 0) {
