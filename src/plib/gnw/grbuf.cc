@@ -10,8 +10,6 @@ namespace fallout {
 void draw_line(unsigned char* buf, int pitch, int x1, int y1, int x2, int y2, int color)
 {
     int temp;
-    int dx;
-    int dy;
     unsigned char* p1;
     unsigned char* p2;
     unsigned char* p3;
@@ -48,7 +46,8 @@ void draw_line(unsigned char* buf, int pitch, int x1, int y1, int x2, int y2, in
         if (y1 == y2) {
             memset(p1, color, p2 - p1);
         } else {
-            dx = x2 - x1;
+            int dx = x2 - x1;
+            int dy;
 
             int rowStep;
             int middlePointOffset;
@@ -287,11 +286,12 @@ void buf_outline(unsigned char* buf, int width, int height, int pitch, int color
 {
     unsigned char* ptr = buf + pitch;
 
+    int x, y;
     bool cycle;
-    for (int y = 0; y < height - 2; y++) {
+    for (y = 0; y < height - 2; y++) {
         cycle = true;
 
-        for (int x = 0; x < width; x++) {
+        for (x = 0; x < width; x++) {
             if (*ptr != 0 && cycle) {
                 if (x != 0) {
                     *(ptr - 1) = color & 0xFF;
@@ -308,11 +308,11 @@ void buf_outline(unsigned char* buf, int width, int height, int pitch, int color
         ptr += pitch - width;
     }
 
-    for (int x = 0; x < width; x++) {
+    for (x = 0; x < width; x++) {
         ptr = buf + x;
         cycle = true;
 
-        for (int y = 0; y < height; y++) {
+        for (y = 0; y < height; y++) {
             if (*ptr != 0 && cycle) {
                 if (y != 0) {
                     *(ptr - pitch) = color & 0xFF;
