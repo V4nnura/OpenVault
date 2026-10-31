@@ -110,23 +110,22 @@ static MessageList perk_message_file;
 // 0x486550
 int perk_init()
 {
-    char path[COMPAT_MAX_PATH];
-    int perk;
-    MessageListItem messageListItem;
-
     perk_defaults();
 
     if (!message_init(&perk_message_file)) {
         return -1;
     }
 
+    char path[COMPAT_MAX_PATH];
     snprintf(path, sizeof(path), "%s%s", msg_path, "perk.msg");
 
     if (!message_load(&perk_message_file, path)) {
         return -1;
     }
 
-    for (perk = 0; perk < PERK_COUNT; perk++) {
+    for (int perk = 0; perk < PERK_COUNT; perk++) {
+        MessageListItem messageListItem;
+
         messageListItem.num = 101 + perk;
         if (message_search(&perk_message_file, &messageListItem)) {
             perk_data[perk].name = messageListItem.text;
@@ -158,9 +157,7 @@ int perk_exit()
 // 0x486668
 int perk_load(DB_FILE* stream)
 {
-    int perk;
-
-    for (perk = 0; perk < PERK_COUNT; perk++) {
+    for (int perk = 0; perk < PERK_COUNT; perk++) {
         if (db_freadInt(stream, &(perk_lev[perk])) == -1) {
             return -1;
         }
@@ -172,9 +169,7 @@ int perk_load(DB_FILE* stream)
 // 0x486694
 int perk_save(DB_FILE* stream)
 {
-    int perk;
-
-    for (perk = 0; perk < PERK_COUNT; perk++) {
+    for (int perk = 0; perk < PERK_COUNT; perk++) {
         if (db_fwriteInt(stream, perk_lev[perk]) == -1) {
             return -1;
         }
@@ -186,14 +181,11 @@ int perk_save(DB_FILE* stream)
 // 0x4866C0
 static bool perk_can_add(int perk)
 {
-    PerkDescription* perkDescription;
-    int stat;
-
     if (perk < 0 || perk >= PERK_COUNT) {
         return false;
     }
 
-    perkDescription = &(perk_data[perk]);
+    PerkDescription* perkDescription = &(perk_data[perk]);
 
     if (perkDescription->max_rank == -1) {
         return false;
@@ -213,7 +205,7 @@ static bool perk_can_add(int perk)
         }
     }
 
-    for (stat = 0; stat < PRIMARY_STAT_COUNT; stat++) {
+    for (int stat = 0; stat < PRIMARY_STAT_COUNT; stat++) {
         if (stat_level(obj_dude, stat) < perkDescription->required_stat_levels[stat]) {
             return false;
         }
@@ -227,9 +219,7 @@ static bool perk_can_add(int perk)
 // 0x486778
 static void perk_defaults()
 {
-    int perk;
-
-    for (perk = 0; perk < PERK_COUNT; perk++) {
+    for (int perk = 0; perk < PERK_COUNT; perk++) {
         perk_lev[perk] = 0;
     }
 }
@@ -275,10 +265,8 @@ int perk_sub(int perk)
 // 0x486824
 int perk_make_list(int* perks)
 {
-    int perk;
     int count = 0;
-
-    for (perk = 0; perk < PERK_COUNT; perk++) {
+    for (int perk = 0; perk < PERK_COUNT; perk++) {
         if (perk_can_add(perk)) {
             perks[count] = perk;
             count++;
@@ -308,23 +296,20 @@ char* perk_description(int perk)
 // 0x4868A8
 void perk_add_effect(Object* critter, int perk)
 {
-    PerkDescription* perkDescription;
-    int value;
-    int stat;
-
     if (perk < 0 || perk >= PERK_COUNT) {
         return;
     }
 
-    perkDescription = &(perk_data[perk]);
+    PerkDescription* perkDescription = &(perk_data[perk]);
 
+    int value;
     if (perkDescription->stat != -1) {
         value = stat_get_bonus(critter, perkDescription->stat);
         stat_set_bonus(critter, perkDescription->stat, value + perkDescription->stat_modifier);
     }
 
     if (perkDescription->max_rank == -1) {
-        for (stat = 0; stat < PRIMARY_STAT_COUNT; stat++) {
+        for (int stat = 0; stat < PRIMARY_STAT_COUNT; stat++) {
             value = stat_get_bonus(critter, stat);
             stat_set_bonus(critter, stat, value + perkDescription->required_stat_levels[stat]);
         }
@@ -334,23 +319,20 @@ void perk_add_effect(Object* critter, int perk)
 // 0x4960x486914CE0
 void perk_remove_effect(Object* critter, int perk)
 {
-    PerkDescription* perkDescription;
-    int value;
-    int stat;
-
     if (perk < 0 || perk >= PERK_COUNT) {
         return;
     }
 
-    perkDescription = &(perk_data[perk]);
+    PerkDescription* perkDescription = &(perk_data[perk]);
 
+    int value;
     if (perkDescription->stat != -1) {
         value = stat_get_bonus(critter, perkDescription->stat);
         stat_set_bonus(critter, perkDescription->stat, value - perkDescription->stat_modifier);
     }
 
     if (perkDescription->max_rank == -1) {
-        for (stat = 0; stat < PRIMARY_STAT_COUNT; stat++) {
+        for (int stat = 0; stat < PRIMARY_STAT_COUNT; stat++) {
             value = stat_get_bonus(critter, stat);
             stat_set_bonus(critter, stat, value - perkDescription->required_stat_levels[stat]);
         }
