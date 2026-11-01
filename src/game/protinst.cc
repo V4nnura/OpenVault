@@ -1224,8 +1224,8 @@ static int check_door_state(Object* door, Object* obj2)
 
         for (int frame = door->frame - 1; frame >= 0; frame--) {
             int x, y;
-            art_frame_hot(art, frame, a1->rotation, &x, &y);
-            obj_offset(a1, -x, -y, &temp);
+            art_frame_hot(art, frame, door->rotation, &x, &y);
+            obj_offset(door, -x, -y, &temp);
         }
 
         obj_set_frame(door, 0, &temp);
