@@ -2189,7 +2189,7 @@ static int get_input_str2(int win, int doneKeyCode, int cancelKeyCode, char* des
     char text[256];
     strcpy(text, description);
 
-    int textLength = static_cast<int>(strlen(text));
+    size_t textLength = strlen(text);
     text[textLength] = ' ';
     text[textLength + 1] = '\0';
 
