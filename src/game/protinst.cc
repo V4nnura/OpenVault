@@ -1436,7 +1436,7 @@ int obj_use_container(Object* critter, Object* item)
 int obj_use_skill_on(Object* source, Object* target, int skill)
 {
     int sid = -1;
-    
+
     if (obj_lock_is_jammed(target)) {
         if (source == obj_dude) {
             MessageListItem messageListItem;
