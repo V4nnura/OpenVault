@@ -1877,7 +1877,7 @@ static int gsound_background_find_with_copy(char* dest, const char* src)
 static int gsound_background_find_dont_copy(char* dest, const char* src)
 {
     char path[COMPAT_MAX_PATH];
-    int len;
+    size_t len;
 
     len = strlen(src) + strlen(".ACM");
     if (strlen(sound_music_path1) + len > COMPAT_MAX_PATH || strlen(sound_music_path2) + len > COMPAT_MAX_PATH) {
@@ -2020,7 +2020,7 @@ static int gsound_speech_start()
 // 0x449B34
 static int gsound_get_music_path(char** out_value, const char* key)
 {
-    int len;
+    size_t len;
     char* copy;
     char* value;
 
