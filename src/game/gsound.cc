@@ -38,9 +38,9 @@ static long gsound_seek(int handle, long offset, int origin);
 static long gsound_tell(int handle);
 static long gsound_filesize(int handle);
 static bool gsound_compressed_query(char* filePath);
-static void gsound_internal_speech_callback(void* userData, int a2);
-static void gsound_internal_background_callback(void* userData, int a2);
-static void gsound_internal_effect_callback(void* userData, int a2);
+static void gsound_internal_speech_callback(void* userData, int event);
+static void gsound_internal_background_callback(void* userData, int event);
+static void gsound_internal_effect_callback(void* userData, int event);
 static int gsound_background_allocate(Sound** out_s, int a2, int a3);
 static int gsound_background_find_with_copy(char* dest, const char* src);
 static int gsound_background_find_dont_copy(char* dest, const char* src);
@@ -1716,9 +1716,9 @@ static bool gsound_compressed_query(char* filePath)
 }
 
 // 0x4493BC
-static void gsound_internal_speech_callback(void* userData, int a2)
+static void gsound_internal_speech_callback(void* userData, int event)
 {
-    if (a2 == 1) {
+    if (event == SOUND_CALLBACK_EVENT_DONE) {
         gsound_speech_tag = NULL;
 
         if (gsound_speech_callback_fp) {
@@ -1728,9 +1728,9 @@ static void gsound_internal_speech_callback(void* userData, int a2)
 }
 
 // 0x4493DC
-static void gsound_internal_background_callback(void* userData, int a2)
+static void gsound_internal_background_callback(void* userData, int event)
 {
-    if (a2 == 1) {
+    if (event == SOUND_CALLBACK_EVENT_DONE) {
         gsound_background_tag = NULL;
 
         if (gsound_background_callback_fp) {
@@ -1740,9 +1740,9 @@ static void gsound_internal_background_callback(void* userData, int a2)
 }
 
 // 0x4493FC
-static void gsound_internal_effect_callback(void* userData, int a2)
+static void gsound_internal_effect_callback(void* userData, int event)
 {
-    if (a2 == 1) {
+    if (event == SOUND_CALLBACK_EVENT_DONE) {
         --gsound_active_effect_counter;
     }
 }
