@@ -291,7 +291,7 @@ int text_remove_manager(int font_num)
 // 0x4C196C
 static void GNW_text_font(int font_num)
 {
-    if (font_num >= TEXT_FONT_MAX) {
+    if (font_num < 0 || font_num >= TEXT_FONT_MAX) {
         return;
     }
 
