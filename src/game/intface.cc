@@ -1845,7 +1845,7 @@ static int intface_redraw_items()
             if (hitMode != -1) {
                 actionPoints = item_w_mp_cost(obj_dude, hitMode, bullseyeFid != -1);
 
-                int id;
+                int id = -1;
                 int anim = item_w_anim(obj_dude, hitMode);
                 switch (anim) {
                 case ANIM_THROW_PUNCH:
@@ -1870,7 +1870,9 @@ static int intface_redraw_items()
                     break;
                 }
 
-                primaryFid = art_id(OBJ_TYPE_INTERFACE, id, 0, 0, 0);
+                if (id != -1) {
+                    primaryFid = art_id(OBJ_TYPE_INTERFACE, id, 0, 0, 0);
+                }
             }
 
             if (primaryFid != -1) {
