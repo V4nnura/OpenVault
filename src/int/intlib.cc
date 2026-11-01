@@ -1300,7 +1300,7 @@ static void op_addkey(Program* program)
         anyKeyOffset = proc;
         anyKeyProg = program;
     } else {
-        if (key > INT_LIB_KEY_HANDLERS_CAPACITY - 1) {
+        if (key < 0 || key > INT_LIB_KEY_HANDLERS_CAPACITY - 1) {
             interpretError("Key out of range");
         }
 
@@ -1318,7 +1318,7 @@ static void op_deletekey(Program* program)
         anyKeyOffset = 0;
         anyKeyProg = NULL;
     } else {
-        if (key > INT_LIB_KEY_HANDLERS_CAPACITY - 1) {
+        if (key < 0 || key > INT_LIB_KEY_HANDLERS_CAPACITY - 1) {
             interpretError("Key out of range");
         }
 
