@@ -155,7 +155,10 @@ static void demo_copy_title(int win);
 static void demo_copy_options(int win);
 static void gDialogRefreshOptionsRect(int win, Rect* drawRect);
 static void head_bk();
-static void talk_to_scroll_subwin(int win, int a2, unsigned char* a3, unsigned char* a4, unsigned char* a5, int a6, int a7);
+// Animates scroll up or down of a given dialog sub-window.
+// If scrolling up - only uses subWindowFrmData to gradually fill the window (must be pre-filled with bg window contents).
+// If scroliing down - uses both subWindowFrmData and bgWindowFrmData to fill parts of window buffer.
+static void talk_to_scroll_subwin(int windowIdx, bool scrollUp, unsigned char* subWindowFrmData, unsigned char* windowBuf, unsigned char* bgWindowFrmData, int windowHeight, bool instantScrollUp = false);
 static int gdialog_review();
 static int gdialog_review_init(int* win);
 static int gdialog_review_exit(int* win);
@@ -2150,42 +2153,43 @@ void talk_to_critter_reacts(int a1)
 }
 
 // 0x43FF34
-static void talk_to_scroll_subwin(int win, int a2, unsigned char* a3, unsigned char* a4, unsigned char* a5, int a6, int a7)
+static void talk_to_scroll_subwin(int windowIdx, bool scrollUp, unsigned char* windowFrmData, unsigned char* windowBuf, unsigned char* bgWindowFrmData, int windowHeight, bool instantScrollUp)
 {
-    int v7 = a6;
-    unsigned char* v9 = a4;
+    constexpr int stripHeight = 10;
+    int height = windowHeight;
+    unsigned char* dest = windowBuf;
     Rect rect;
     unsigned int tick;
 
-    if (a2 == 1) {
+    if (scrollUp) {
         rect.ulx = 0;
         rect.lrx = GAME_DIALOG_WINDOW_WIDTH - 1;
-        rect.lry = a6 - 1;
+        rect.lry = windowHeight - 1;
 
-        int v18 = a6 / 10;
-        if (a7 == -1) {
-            rect.uly = 10;
-            v18 = 0;
+        int strips = windowHeight / stripHeight;
+        if (instantScrollUp) {
+            rect.uly = stripHeight;
+            strips = 0;
         } else {
-            rect.uly = v18 * 10;
-            v7 = a6 % 10;
-            v9 += GAME_DIALOG_WINDOW_WIDTH * rect.uly;
+            rect.uly = strips * stripHeight;
+            height = windowHeight % stripHeight;
+            dest += GAME_DIALOG_WINDOW_WIDTH * rect.uly;
         }
 
-        for (; v18 >= 0; v18--) {
+        for (; strips >= 0; strips--) {
             sharedFpsLimiter.mark();
 
             soundUpdate();
-            buf_to_buf(a3,
+            buf_to_buf(windowFrmData,
                 GAME_DIALOG_WINDOW_WIDTH,
-                v7,
+                height,
                 GAME_DIALOG_WINDOW_WIDTH,
-                v9,
+                dest,
                 GAME_DIALOG_WINDOW_WIDTH);
-            rect.uly -= 10;
-            win_draw_rect(win, &rect);
-            v7 += 10;
-            v9 -= 10 * (GAME_DIALOG_WINDOW_WIDTH);
+            rect.uly -= stripHeight;
+            win_draw_rect(windowIdx, &rect);
+            height += stripHeight;
+            dest -= stripHeight * (GAME_DIALOG_WINDOW_WIDTH);
 
             tick = get_time();
             while (elapsed_time(tick) < 33) {
@@ -2196,36 +2200,36 @@ static void talk_to_scroll_subwin(int win, int a2, unsigned char* a3, unsigned c
         }
     } else {
         rect.lrx = GAME_DIALOG_WINDOW_WIDTH - 1;
-        rect.lry = a6 - 1;
+        rect.lry = windowHeight - 1;
         rect.ulx = 0;
         rect.uly = 0;
 
-        for (int index = a6 / 10; index > 0; index--) {
+        for (int strips = windowHeight / stripHeight; strips > 0; strips--) {
             sharedFpsLimiter.mark();
 
             soundUpdate();
 
-            buf_to_buf(a5,
+            buf_to_buf(bgWindowFrmData,
                 GAME_DIALOG_WINDOW_WIDTH,
-                10,
+                stripHeight,
                 GAME_DIALOG_WINDOW_WIDTH,
-                v9,
+                dest,
                 GAME_DIALOG_WINDOW_WIDTH);
 
-            v9 += 10 * (GAME_DIALOG_WINDOW_WIDTH);
-            v7 -= 10;
-            a5 += 10 * (GAME_DIALOG_WINDOW_WIDTH);
+            dest += stripHeight * (GAME_DIALOG_WINDOW_WIDTH);
+            height -= stripHeight;
+            bgWindowFrmData += stripHeight * (GAME_DIALOG_WINDOW_WIDTH);
 
-            buf_to_buf(a3,
+            buf_to_buf(windowFrmData,
                 GAME_DIALOG_WINDOW_WIDTH,
-                v7,
+                height,
                 GAME_DIALOG_WINDOW_WIDTH,
-                v9,
+                dest,
                 GAME_DIALOG_WINDOW_WIDTH);
 
-            win_draw_rect(win, &rect);
+            win_draw_rect(windowIdx, &rect);
 
-            rect.uly += 10;
+            rect.uly += stripHeight;
 
             tick = get_time();
             while (elapsed_time(tick) < 33) {
@@ -2745,7 +2749,7 @@ static int talk_to_create_barter_win()
     unsigned char* backgroundWindowBuffer = win_get_buf(dialogueBackWindow);
     buf_to_buf(backgroundWindowBuffer + width * (480 - dialogue_subwin_len), width, dialogue_subwin_len, width, windowBuffer, width);
 
-    talk_to_scroll_subwin(dialogueWindow, 1, backgroundData, windowBuffer, NULL, dialogue_subwin_len, 0);
+    talk_to_scroll_subwin(dialogueWindow, true, backgroundData, windowBuffer, NULL, dialogue_subwin_len);
 
     art_ptr_unlock(backgroundHandle);
 
@@ -2846,7 +2850,7 @@ static void talk_to_destroy_barter_win()
     unsigned char* backgroundFrmData = art_ptr_lock_data(fid, 0, 0, &backgroundFrmHandle);
     if (backgroundFrmData != NULL) {
         unsigned char* windowBuffer = win_get_buf(dialogueWindow);
-        talk_to_scroll_subwin(dialogueWindow, 0, backgroundFrmData, windowBuffer, backgroundWindowBuffer, dialogue_subwin_len, 0);
+        talk_to_scroll_subwin(dialogueWindow, false, backgroundFrmData, windowBuffer, backgroundWindowBuffer, dialogue_subwin_len);
         art_ptr_unlock(backgroundFrmHandle);
         win_delete(dialogueWindow);
         dialogueWindow = -1;
@@ -3012,21 +3016,21 @@ static int talk_to_create_dialogue_win()
         return -1;
     }
 
-    unsigned char* v10 = win_get_buf(dialogueWindow);
-    unsigned char* v14 = win_get_buf(dialogueBackWindow);
-    buf_to_buf(v14 + screenWidth * (GAME_DIALOG_WINDOW_HEIGHT - dialogue_subwin_len),
+    unsigned char* windowBuf = win_get_buf(dialogueWindow);
+    unsigned char* bgWindowBuf = win_get_buf(dialogueBackWindow);
+    buf_to_buf(bgWindowBuf + screenWidth * (GAME_DIALOG_WINDOW_HEIGHT - dialogue_subwin_len),
         screenWidth,
         dialogue_subwin_len,
         screenWidth,
-        v10,
+        windowBuf,
         screenWidth);
 
     if (dialogue_just_started) {
         win_draw(dialogueBackWindow);
-        talk_to_scroll_subwin(dialogueWindow, 1, backgroundFrmData, v10, 0, dialogue_subwin_len, -1);
+        talk_to_scroll_subwin(dialogueWindow, true, backgroundFrmData, windowBuf, 0, dialogue_subwin_len, true);
         dialogue_just_started = 0;
     } else {
-        talk_to_scroll_subwin(dialogueWindow, 1, backgroundFrmData, v10, 0, dialogue_subwin_len, 0);
+        talk_to_scroll_subwin(dialogueWindow, true, backgroundFrmData, windowBuf, 0, dialogue_subwin_len, false);
     }
 
     art_ptr_unlock(backgroundFrmHandle);
@@ -3136,7 +3140,7 @@ static void talk_to_destroy_dialogue_win()
     unsigned char* backgroundFrmData = art_ptr_lock_data(fid, 0, 0, &backgroundFrmHandle);
     if (backgroundFrmData != NULL) {
         unsigned char* windowBuffer = win_get_buf(dialogueWindow);
-        talk_to_scroll_subwin(dialogueWindow, 0, backgroundFrmData, windowBuffer, backgroundWindowBuffer, dialogue_subwin_len, 0);
+        talk_to_scroll_subwin(dialogueWindow, false, backgroundFrmData, windowBuffer, backgroundWindowBuffer, dialogue_subwin_len);
         art_ptr_unlock(backgroundFrmHandle);
         win_delete(dialogueWindow);
         dial_win_created = 0;
