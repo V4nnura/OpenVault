@@ -1718,10 +1718,16 @@ int item_m_curr_charges(Object* misc_item)
 // 0x46B7A0
 int item_m_set_charges(Object* miscItem, int charges)
 {
+    if (miscItem == NULL) {
+        return -1;
+    }
+
     // NOTE: Uninline.
     int maxCharges = item_m_max_charges(miscItem);
 
-    if (charges > maxCharges) {
+    if (charges < 0) {
+        charges = 0;
+    } else if (charges > maxCharges) {
         charges = maxCharges;
     }
 
