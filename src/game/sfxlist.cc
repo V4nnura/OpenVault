@@ -23,6 +23,7 @@ typedef struct SoundEffectsListEntry {
 static int sfxl_index(int tag, int* indexPtr);
 static int sfxl_index_to_tag(int index, int* tagPtr);
 static void sfxl_destroy();
+static void sfxl_reset();
 static int sfxl_get_names();
 static int sfxl_copy_names(char** fileNameList);
 static int sfxl_get_sizes();
@@ -64,11 +65,10 @@ bool sfxl_tag_is_legal(int tag)
 // 0x497974
 int sfxl_init(const char* soundEffectsPath, int compression, int debugLevel)
 {
-    int err;
-
     sfxl_dlevel = debugLevel;
     sfxl_compression = compression;
     sfxl_files_total = 0;
+    sfxl_effect_path_len = 0;
 
     sfxl_effect_path = mem_strdup(soundEffectsPath);
     if (sfxl_effect_path == NULL) {
@@ -76,25 +76,22 @@ int sfxl_init(const char* soundEffectsPath, int compression, int debugLevel)
     }
 
     sfxl_effect_path_len = strlen(sfxl_effect_path);
-
-    err = sfxl_get_names();
+    int err = sfxl_get_names();
     if (err != SFXL_OK) {
-        mem_free(sfxl_effect_path);
+        sfxl_reset();
         return err;
     }
 
     err = sfxl_get_sizes();
     if (err != SFXL_OK) {
-        sfxl_destroy();
-        mem_free(sfxl_effect_path);
+        sfxl_reset();
         return err;
     }
 
     // NOTE: Uninline.
     err = sfxl_sort_by_name();
     if (err != SFXL_OK) {
-        sfxl_destroy();
-        mem_free(sfxl_effect_path);
+        sfxl_reset();
         return err;
     }
 
@@ -107,30 +104,30 @@ int sfxl_init(const char* soundEffectsPath, int compression, int debugLevel)
 void sfxl_exit()
 {
     if (sfxl_initialized) {
-        sfxl_destroy();
-        mem_free(sfxl_effect_path);
-        sfxl_initialized = false;
+        sfxl_reset();
     }
 }
 
 // 0x497A68
 int sfxl_name_to_tag(char* name, int* tagPtr)
 {
-    SoundEffectsListEntry dummy;
-    SoundEffectsListEntry* entry;
-    int tag;
+    if (sfxl_effect_path == NULL) {
+        return SFXL_ERR;
+    }
 
     if (compat_strnicmp(sfxl_effect_path, name, sfxl_effect_path_len) != 0) {
         return SFXL_ERR;
     }
 
+    SoundEffectsListEntry dummy;
     dummy.name = name + sfxl_effect_path_len;
 
-    entry = (SoundEffectsListEntry*)bsearch(&dummy, sfxl_list, sfxl_files_total, sizeof(*sfxl_list), sfxl_compare_by_name);
+    SoundEffectsListEntry* entry = (SoundEffectsListEntry*)bsearch(&dummy, sfxl_list, sfxl_files_total, sizeof(*sfxl_list), sfxl_compare_by_name);
     if (entry == NULL) {
         return SFXL_ERR;
     }
 
+    int tag;
     if (sfxl_index_to_tag(entry - sfxl_list, &tag) != SFXL_OK) {
         return SFXL_ERR;
     }
@@ -143,6 +140,10 @@ int sfxl_name_to_tag(char* name, int* tagPtr)
 // 0x497B20
 int sfxl_name(int tag, char** pathPtr)
 {
+    if (sfxl_effect_path == NULL) {
+        return SFXL_ERR;
+    }
+
     int index;
     int err = sfxl_index(tag, &index);
     if (err != SFXL_OK) {
@@ -257,6 +258,20 @@ static void sfxl_destroy()
     sfxl_files_total = 0;
 }
 
+static void sfxl_reset()
+{
+    sfxl_destroy();
+
+    if (sfxl_effect_path != NULL) {
+        mem_free(sfxl_effect_path);
+        sfxl_effect_path = NULL;
+    }
+
+    sfxl_effect_path_len = 0;
+    sfxl_files_total = 0;
+    sfxl_initialized = false;
+}
+
 // 0x497D00
 static int sfxl_get_names()
 {
@@ -331,9 +346,7 @@ static int sfxl_copy_names(char** fileNameList)
 // 0x497EB8
 static int sfxl_get_sizes()
 {
-    dir_entry de;
-
-    char* path = (char*)mem_malloc(sfxl_effect_path_len + 13);
+    char* path = (char*)mem_malloc(sfxl_effect_path_len + COMPAT_MAX_PATH);
     if (path == NULL) {
         return SFXL_ERR;
     }
@@ -346,6 +359,7 @@ static int sfxl_get_sizes()
         SoundEffectsListEntry* entry = &(sfxl_list[index]);
         strcpy(fileName, entry->name);
 
+        dir_entry de;
         if (db_dir_entry(path, &de) != 0) {
             mem_free(path);
             return SFXL_ERR;
@@ -374,6 +388,13 @@ static int sfxl_get_sizes()
                 int sampleRate;
                 int sampleCount;
                 AudioDecoder* ad = Create_AudioDecoder(sfxl_ad_reader, stream, &channels, &sampleRate, &sampleCount);
+                if (ad == NULL) {
+                    debug_printf("SFXLIST: Failed to decode ACM header for %s\n", path);
+                    db_fclose(stream);
+                    mem_free(path);
+                    return SFXL_ERR;
+                }
+
                 entry->dataSize = 2 * sampleCount;
                 AudioDecoder_Close(ad);
                 db_fclose(stream);
