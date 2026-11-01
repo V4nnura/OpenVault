@@ -150,9 +150,9 @@ int obj_new_sid_inst(Object* obj, int scriptType, int scriptIndex)
 }
 
 // 0x48A1FC
-int obj_look_at(Object* a1, Object* a2)
+int obj_look_at(Object* critter, Object* target)
 {
-    return obj_look_at_func(a1, a2, display_print);
+    return obj_look_at_func(critter, target, display_print);
 }
 
 // 0x48A20C
@@ -209,9 +209,9 @@ int obj_look_at_func(Object* critter, Object* target, void (*fn)(const char* str
 }
 
 // 0x48A338
-int obj_examine(Object* a1, Object* a2)
+int obj_examine(Object* critter, Object* target)
 {
-    return obj_examine_func(a1, a2, display_print);
+    return obj_examine_func(critter, target, display_print);
 }
 
 // Performs examine (reading description) action and passes resulting text
@@ -224,7 +224,6 @@ int obj_examine(Object* a1, Object* a2)
 int obj_examine_func(Object* critter, Object* target, void (*fn)(const char* string))
 {
     int sid = -1;
-    bool scriptOverrides = false;
 
     if (critter_is_dead(critter)) {
         return -1;
@@ -234,6 +233,7 @@ int obj_examine_func(Object* critter, Object* target, void (*fn)(const char* str
         return -1;
     }
 
+    bool scriptOverrides = false;
     if (obj_sid(target, &sid) != -1) {
         scr_set_objs(sid, critter, target);
         exec_script_proc(sid, SCRIPT_PROC_DESCRIPTION);
@@ -359,31 +359,27 @@ int obj_examine_func(Object* critter, Object* target, void (*fn)(const char* str
                 strcat(formattedText, endingMessageListItem.text);
             }
         } else {
-            int v12 = 0;
-            if (critter_is_crippled(target)) {
-                v12 -= 2;
-            }
-
-            int v16;
+            int crippledMsgIdOffset = critter_is_crippled(target) ? -2 : 0;
+            int healthLevel;
 
             const int maxiumHitPoints = stat_level(target, STAT_MAXIMUM_HIT_POINTS);
             const int currentHitPoints = stat_level(target, STAT_CURRENT_HIT_POINTS);
             if (currentHitPoints <= 0 || critter_is_dead(target)) {
-                v16 = 0;
+                healthLevel = 0;
             } else if (currentHitPoints == maxiumHitPoints) {
-                v16 = 4;
+                healthLevel = 4;
             } else {
-                v16 = (currentHitPoints * 3) / maxiumHitPoints + 1;
+                healthLevel = (currentHitPoints * 3) / maxiumHitPoints + 1;
             }
 
             MessageListItem hpMessageListItem;
-            hpMessageListItem.num = 500 + v16;
+            hpMessageListItem.num = 500 + healthLevel;
             if (!message_search(&proto_main_msg_file, &hpMessageListItem)) {
                 debug_printf("\nError: Can't find msg num!");
                 exit(1);
             }
 
-            if (v16 > 4) {
+            if (healthLevel > 4) {
                 // Error: lookup_val out of range
                 hpMessageListItem.num = 550;
                 if (!message_search(&proto_main_msg_file, &hpMessageListItem)) {
@@ -395,50 +391,50 @@ int obj_examine_func(Object* critter, Object* target, void (*fn)(const char* str
                 return 0;
             }
 
-            MessageListItem v66;
+            MessageListItem msg;
             if (target == obj_dude) {
                 // You look %s
-                v66.num = 520 + v12;
-                if (!message_search(&proto_main_msg_file, &v66)) {
+                msg.num = 520 + crippledMsgIdOffset;
+                if (!message_search(&proto_main_msg_file, &msg)) {
                     debug_printf("\nError: Can't find msg num!");
                     exit(1);
                 }
 
-                debug_printf("\nDEBUG: v66.text (msg %d): '%s'\n", v66.num, v66.text);
+                debug_printf("\nDEBUG: msg.text (msg %d): '%s'\n", msg.num, msg.text);
                 debug_printf("\nDEBUG: hpMessageListItem.text (msg %d): '%s'\n", hpMessageListItem.num, hpMessageListItem.text);
-                snprintf(formattedText, sizeof(formattedText), v66.text, hpMessageListItem.text);
+                snprintf(formattedText, sizeof(formattedText), msg.text, hpMessageListItem.text);
             } else {
                 // He/She looks: %s (message 522/523 already contains the pronoun and format)
-                MessageListItem v63;
-                v63.num = 522 + stat_level(target, STAT_GENDER);
-                if (!message_search(&proto_main_msg_file, &v63)) {
+                MessageListItem prefixMsg;
+                prefixMsg.num = 522 + stat_level(target, STAT_GENDER);
+                if (!message_search(&proto_main_msg_file, &prefixMsg)) {
                     debug_printf("\nError: Can't find msg num!");
                     exit(1);
                 }
 
-                debug_printf("\nDEBUG: v63.text (msg %d): '%s'\n", v63.num, v63.text);
+                debug_printf("\nDEBUG: prefixMsg.text (msg %d): '%s'\n", prefixMsg.num, prefixMsg.text);
                 debug_printf("\nDEBUG: hpMessageListItem.text (msg %d): '%s'\n", hpMessageListItem.num, hpMessageListItem.text);
-                snprintf(formattedText, sizeof(formattedText), v63.text, hpMessageListItem.text);
+                snprintf(formattedText, sizeof(formattedText), prefixMsg.text, hpMessageListItem.text);
             }
         }
 
         if (critter_is_crippled(target)) {
-            const int maxiumHitPoints = stat_level(target, STAT_MAXIMUM_HIT_POINTS);
+            const int maximumHitPoints = stat_level(target, STAT_MAXIMUM_HIT_POINTS);
             const int currentHitPoints = stat_level(target, STAT_CURRENT_HIT_POINTS);
 
-            MessageListItem v63;
-            v63.num = maxiumHitPoints >= currentHitPoints ? 531 : 530;
+            MessageListItem crippledMsg;
+            crippledMsg.num = maximumHitPoints >= currentHitPoints ? 531 : 530;
 
             if (target == obj_dude) {
-                v63.num += 2;
+                crippledMsg.num += 2;
             }
 
-            if (!message_search(&proto_main_msg_file, &v63)) {
+            if (!message_search(&proto_main_msg_file, &crippledMsg)) {
                 debug_printf("\nError: Can't find msg num!");
                 exit(1);
             }
 
-            strcat(formattedText, v63.text);
+            strcat(formattedText, crippledMsg.text);
         }
 
         fn(formattedText);
@@ -568,17 +564,17 @@ int obj_remove_from_inven(Object* critter, Object* item)
 }
 
 // 0x48AC94
-int obj_drop(Object* a1, Object* a2)
+int obj_drop(Object* invenObj, Object* itemObj)
 {
     int sid = -1;
-    bool scriptOverrides = false;
 
-    if (a2 == NULL) {
+    if (itemObj == NULL) {
         return -1;
     }
 
-    if (obj_sid(a2, &sid) != -1) {
-        scr_set_objs(sid, a1, a2);
+    bool scriptOverrides = false;
+    if (obj_sid(itemObj, &sid) != -1) {
+        scr_set_objs(sid, invenObj, itemObj);
         exec_script_proc(sid, SCRIPT_PROC_DROP);
 
         Script* scr;
@@ -593,14 +589,14 @@ int obj_drop(Object* a1, Object* a2)
         return 0;
     }
 
-    if (obj_remove_from_inven(a1, a2) == 0) {
-        Object* owner = obj_top_environment(a1);
+    if (obj_remove_from_inven(invenObj, itemObj) == 0) {
+        Object* owner = obj_top_environment(invenObj);
         if (owner == NULL) {
-            owner = a1;
+            owner = invenObj;
         }
 
         Rect updatedRect;
-        obj_connect(a2, owner->tile, owner->elevation, &updatedRect);
+        obj_connect(itemObj, owner->tile, owner->elevation, &updatedRect);
         tile_refresh_rect(&updatedRect, owner->elevation);
     }
 
@@ -832,6 +828,7 @@ static int obj_use_explosive(Object* explosive)
     return 0;
 }
 
+// Returns 0 on success, -1 on error, 1 to remove item, 2 to drop explosive.
 // 0x49BF38
 int protinst_use_item(Object* critter, Object* item)
 {
@@ -872,7 +869,7 @@ int protinst_use_item(Object* critter, Object* item)
         }
         // FALLTHROUGH
     default:
-        // That does nothing
+        // "That does nothing"
         messageListItem.num = 582;
         if (message_search(&proto_main_msg_file, &messageListItem)) {
             display_print(messageListItem.text);
@@ -969,6 +966,7 @@ static int protinst_default_use_item(Object* user, Object* targetObj, Object* it
     return -1;
 }
 
+// Returns 0 on success, -1 on error, 1 to remove item.
 // 0x48B394
 int protinst_use_item_on(Object* critter, Object* targetObj, Object* item)
 {
