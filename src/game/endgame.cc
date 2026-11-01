@@ -461,15 +461,20 @@ static void endgame_pan_desert(int direction, const char* narratorFileName)
         endgame_load_voiceover(narratorFileName);
 
         // TODO: Unclear math.
-        int v8 = width - 640;
-        int v32 = v8 / 4;
-        unsigned int v9 = 16 * v8 / v8;
-        unsigned int v9_ = 16 * v8;
+        //
+        // NOTE: This arithmetic is intentionally preserved from original logic.
+        // If `width == 640` then `panDistance` becomes 0 and divisions below can
+        // hit divide-by-zero
+        int panDistance = width - 640;
+        int fadeDistance = panDistance / 4;
+        unsigned int frameDelay = 16 * panDistance / panDistance;
+        unsigned int baseAnimationTicks = 16 * panDistance;
 
         if (endgame_voiceover_loaded) {
-            unsigned int v10 = 1000 * gsound_speech_length_get();
-            if (v10 > v9_ / 2) {
-                v9 = (v10 + v9 * (v8 / 2)) / v8;
+            unsigned int speechDurationMs = 1000 * gsound_speech_length_get();
+            if (speechDurationMs > baseAnimationTicks / 2) {
+                // NOTE: Same divide-by-zero risk as above when `panDistance == 0`.
+                frameDelay = (speechDurationMs + frameDelay * (panDistance / 2)) / panDistance;
             }
         }
 
@@ -491,10 +496,10 @@ static void endgame_pan_desert(int direction, const char* narratorFileName)
         while (start != end) {
             sharedFpsLimiter.mark();
 
-            int v12 = 640 - v32;
+            int fadeOutStartX = 640 - fadeDistance;
 
             // TODO: Complex math, setup scene in debugger.
-            if (elapsed_time(since) >= v9) {
+            if (elapsed_time(since) >= frameDelay) {
                 buf_to_buf(backgroundData + start, ENDGAME_ENDING_WINDOW_WIDTH, ENDGAME_ENDING_WINDOW_HEIGHT, width, endgame_window_buffer, ENDGAME_ENDING_WINDOW_WIDTH);
 
                 if (subtitlesLoaded) {
@@ -505,36 +510,36 @@ static void endgame_pan_desert(int direction, const char* narratorFileName)
 
                 since = get_time();
 
-                bool v14;
-                double v31;
-                if (start > v32) {
-                    if (v12 > start) {
-                        v14 = false;
+                bool shouldDarkenPalette;
+                double darkeningFactor;
+                if (start > fadeDistance) {
+                    if (fadeOutStartX > start) {
+                        shouldDarkenPalette = false;
                     } else {
-                        int v28 = v32 - (start - v12);
-                        v31 = (double)v28 / (double)v32;
-                        v14 = true;
+                        int fadeOffset = fadeDistance - (start - fadeOutStartX);
+                        darkeningFactor = (double)fadeOffset / (double)fadeDistance;
+                        shouldDarkenPalette = true;
                     }
                 } else {
-                    v14 = true;
-                    v31 = (double)start / (double)v32;
+                    shouldDarkenPalette = true;
+                    darkeningFactor = (double)start / (double)fadeDistance;
                 }
 
-                if (v14) {
+                if (shouldDarkenPalette) {
                     unsigned char darkenedPalette[768];
                     for (int index = 0; index < 768; index++) {
-                        darkenedPalette[index] = (unsigned char)trunc(palette[index] * v31);
+                        darkenedPalette[index] = (unsigned char)trunc(palette[index] * darkeningFactor);
                     }
                     palette_set_to(darkenedPalette);
                 }
 
                 start += direction;
 
-                if (direction == 1 && (start == v32)) {
+                if (direction == 1 && (start == fadeDistance)) {
                     // NOTE: Uninline.
                     endgame_play_voiceover();
                     subtitlesLoaded = true;
-                } else if (direction == -1 && (start == v12)) {
+                } else if (direction == -1 && (start == fadeOutStartX)) {
                     // NOTE: Uninline.
                     endgame_play_voiceover();
                     subtitlesLoaded = true;
