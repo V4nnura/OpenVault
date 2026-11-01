@@ -2620,7 +2620,7 @@ static int text_to_rect_func(unsigned char* buffer, Rect* rect, const char* stri
                 }
 
                 if (textOffset != NULL) {
-                    *textOffset += strlen(start) + 1;
+                    *textOffset += static_cast<int>(strlen(start)) + 1;
                 }
 
                 rect->uly += height;
@@ -2651,7 +2651,7 @@ static int text_to_rect_func(unsigned char* buffer, Rect* rect, const char* stri
         }
 
         if (textOffset != NULL && end != NULL) {
-            *textOffset += strlen(start) + 1;
+            *textOffset += static_cast<int>(strlen(start)) + 1;
         }
 
         rect->uly += height;
