@@ -6,6 +6,8 @@
 #include <string.h>
 #include <time.h>
 
+#include <algorithm>
+
 #include "game/actions.h"
 #include "game/automap.h"
 #include "game/combat.h"
@@ -82,7 +84,7 @@ static int scr_index_to_name(int scriptIndex, char* name, size_t size);
 static int scr_header_load();
 static int scr_write_ScriptSubNode(Script* scr, DB_FILE* stream);
 static int scr_write_ScriptNode(ScriptListExtent* scriptExtent, DB_FILE* stream);
-static int scr_read_ScriptSubNode(Script* scr, DB_FILE* stream);
+static int scr_read_ScriptSubNode(Script* scr, int expectedLength, DB_FILE* stream);
 static int scr_read_ScriptNode(ScriptListExtent* scriptExtent, DB_FILE* stream);
 static int scr_new_id(int scriptType);
 static void scrExecMapProcScripts(int a1);
@@ -1805,7 +1807,7 @@ static int scr_read_ScriptSubNode(Script* scr, DB_FILE* stream)
 }
 
 // 0x493D84
-static int scr_read_ScriptNode(ScriptListExtent* scriptExtent, DB_FILE* stream)
+static int scr_read_ScriptNode(ScriptListExtent* scriptExtent, int expectedLength, DB_FILE* stream)
 {
     for (int index = 0; index < SCRIPT_LIST_EXTENT_SIZE; index++) {
         Script* scr = &(scriptExtent->scripts[index]);
@@ -1815,6 +1817,13 @@ static int scr_read_ScriptNode(ScriptListExtent* scriptExtent, DB_FILE* stream)
     }
 
     if (db_freadInt(stream, &(scriptExtent->length)) != 0) {
+        return -1;
+    }
+
+    if (scriptExtent->length != expectedLength) {
+        debug_printf("\nError loading scripts: invalid extent length %d (expected %d).\n",
+            scriptExtent->length,
+            expectedLength);
         return -1;
     }
 
@@ -1837,6 +1846,11 @@ int scr_load(DB_FILE* stream)
             return -1;
         }
 
+        if (scriptsCount < 0) {
+            debug_printf("\nError loading scripts: invalid script count %d.\n", scriptsCount);
+            return -1;
+        }
+
         if (scriptsCount != 0) {
             scriptList->length = scriptsCount / SCRIPT_LIST_EXTENT_SIZE;
 
@@ -1844,36 +1858,23 @@ int scr_load(DB_FILE* stream)
                 scriptList->length++;
             }
 
-            ScriptListExtent* extent = (ScriptListExtent*)mem_malloc(sizeof(*extent));
-            scriptList->head = extent;
-            scriptList->tail = extent;
-            if (extent == NULL) {
-                return -1;
-            }
-
-            if (scr_read_ScriptNode(extent, stream) != 0) {
-                return -1;
-            }
-
-            for (int scriptIndex = 0; scriptIndex < extent->length; scriptIndex++) {
-                Script* script = &(extent->scripts[scriptIndex]);
-                script->owner = NULL;
-                script->source = NULL;
-                script->target = NULL;
-                script->program = NULL;
-                script->scr_flags &= ~SCRIPT_FLAG_LOADED;
-            }
-
-            extent->next = NULL;
-
-            ScriptListExtent* prevExtent = extent;
-            for (int extentIndex = 1; extentIndex < scriptList->length; extentIndex++) {
+            int remainingScripts = scriptsCount;
+            ScriptListExtent* prevExtent = NULL;
+            for (int extentIndex = 0; extentIndex < scriptList->length; extentIndex++) {
                 ScriptListExtent* extent = (ScriptListExtent*)mem_malloc(sizeof(*extent));
                 if (extent == NULL) {
                     return -1;
                 }
 
-                if (scr_read_ScriptNode(extent, stream) != 0) {
+                if (prevExtent != NULL) {
+                    prevExtent->next = extent;
+                } else {
+                    scriptList->head = extent;
+                }
+                scriptList->tail = extent;
+
+                int expectedLength = std::min(remainingScripts, SCRIPT_LIST_EXTENT_SIZE);
+                if (scr_read_ScriptNode(extent, expectedLength, stream) != 0) {
                     return -1;
                 }
 
@@ -1886,13 +1887,10 @@ int scr_load(DB_FILE* stream)
                     script->scr_flags &= ~SCRIPT_FLAG_LOADED;
                 }
 
-                prevExtent->next = extent;
-
                 extent->next = NULL;
                 prevExtent = extent;
+                remainingScripts -= expectedLength;
             }
-
-            scriptList->tail = prevExtent;
         } else {
             scriptList->head = NULL;
             scriptList->tail = NULL;
