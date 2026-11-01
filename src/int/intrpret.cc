@@ -684,7 +684,7 @@ static void op_cancel(Program* program)
 {
     int data = programStackPopInteger(program);
 
-    if (data >= fetchLong(program->procedures, 0)) {
+    if (data < 0 || data >= fetchLong(program->procedures, 0)) {
         interpretError("Invalid procedure offset given to cancel");
     }
 
@@ -1331,6 +1331,10 @@ static void op_add(Program* program)
         case VALUE_TYPE_PTR:
             strings[0] = (char*)mymalloc(80, __FILE__, __LINE__);
             snprintf(strings[0], 80, "%p", value[0].pointerValue);
+            break;
+        default:
+            strings[0] = (char*)mymalloc(1, __FILE__, __LINE__);
+            strings[0][0] = '\0';
             break;
         }
 
@@ -3085,7 +3089,7 @@ int interpretLoadProgramState()
 
 void programStackPushValue(Program* program, ProgramValue& programValue)
 {
-    if (program->stackValues->size() > STACK_SIZE) {
+    if (program->stackValues->size() >= STACK_SIZE) {
         interpretError("programStackPushValue: Stack overflow.");
     }
 
@@ -3182,7 +3186,7 @@ void* programStackPopPointer(Program* program)
 
 void programReturnStackPushValue(Program* program, ProgramValue& programValue)
 {
-    if (program->returnStackValues->size() > STACK_SIZE) {
+    if (program->returnStackValues->size() >= STACK_SIZE) {
         interpretError("programReturnStackPushValue: Stack overflow.");
     }
 
