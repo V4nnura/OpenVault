@@ -1465,7 +1465,7 @@ int get_input_str(int win, int cancelKeyCode, char* text, int maxLength, int x, 
     char copy[257];
     strcpy(copy, text);
 
-    int nameLength = static_cast<int>(strlen(text));
+    size_t nameLength = strlen(text);
     copy[nameLength] = ' ';
     copy[nameLength + 1] = '\0';
 
@@ -1560,8 +1560,8 @@ bool isdoschar(int ch)
         return true;
     }
 
-    int length = static_cast<int>(strlen(punctuations));
-    for (int index = 0; index < length; index++) {
+    size_t length = strlen(punctuations);
+    for (size_t index = 0; index < length; index++) {
         if (punctuations[index] == ch) {
             return true;
         }
