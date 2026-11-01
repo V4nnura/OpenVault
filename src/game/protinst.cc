@@ -159,7 +159,6 @@ int obj_look_at(Object* critter, Object* target)
 int obj_look_at_func(Object* critter, Object* target, void (*fn)(const char* string))
 {
     int sid = -1;
-    bool scriptOverrides = false;
 
     if (critter_is_dead(critter)) {
         return -1;
@@ -174,6 +173,7 @@ int obj_look_at_func(Object* critter, Object* target, void (*fn)(const char* str
         return -1;
     }
 
+    bool scriptOverrides = false;
     if (obj_sid(target, &sid) != -1) {
         scr_set_objs(sid, critter, target);
         exec_script_proc(sid, SCRIPT_PROC_LOOK_AT);
@@ -1351,7 +1351,6 @@ int obj_use_door(Object* user, Object* door, bool animateOnly)
 int obj_use_container(Object* critter, Object* item)
 {
     int sid = -1;
-    bool overriden = false;
 
     if (FID_TYPE(item->fid) != OBJ_TYPE_ITEM) {
         return -1;
@@ -1384,6 +1383,7 @@ int obj_use_container(Object* critter, Object* item)
         return -1;
     }
 
+    bool overriden = false;
     if (obj_sid(item, &sid) != -1) {
         scr_set_objs(sid, critter, item);
         exec_script_proc(sid, SCRIPT_PROC_USE);
@@ -1436,8 +1436,7 @@ int obj_use_container(Object* critter, Object* item)
 int obj_use_skill_on(Object* source, Object* target, int skill)
 {
     int sid = -1;
-    bool scriptOverrides = false;
-
+    
     if (obj_lock_is_jammed(target)) {
         if (source == obj_dude) {
             MessageListItem messageListItem;
@@ -1454,6 +1453,7 @@ int obj_use_skill_on(Object* source, Object* target, int skill)
         return -1;
     }
 
+    bool scriptOverrides = false;
     if (obj_sid(target, &sid) != -1) {
         scr_set_objs(sid, source, target);
         scr_set_action_num(sid, skill);
@@ -1492,12 +1492,11 @@ bool obj_is_a_portal(Object* obj)
 // 0x48BE4C
 bool obj_is_lockable(Object* obj)
 {
-    Proto* proto;
-
     if (obj == NULL) {
         return false;
     }
 
+    Proto* proto;
     if (proto_ptr(obj->pid, &proto) == -1) {
         return false;
     }
@@ -1579,12 +1578,11 @@ int obj_unlock(Object* object)
 // 0x48BF68
 bool obj_is_openable(Object* obj)
 {
-    Proto* proto;
-
     if (obj == NULL) {
         return false;
     }
 
+    Proto* proto;
     if (proto_ptr(obj->pid, &proto) == -1) {
         return false;
     }
