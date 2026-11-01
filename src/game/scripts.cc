@@ -1026,19 +1026,19 @@ void scripts_request_endgame_slideshow()
 }
 
 // 0x492890
-int scripts_request_loot_container(Object* a1, Object* a2)
+int scripts_request_loot_container(Object* looter, Object* container)
 {
-    scriptState.lootingBy = a1;
-    scriptState.lootingFrom = a2;
+    scriptState.lootingBy = looter;
+    scriptState.lootingFrom = container;
     scriptState.requests |= SCRIPT_REQUEST_LOOTING;
     return 0;
 }
 
 // 0x4928B0
-int scripts_request_steal_container(Object* a1, Object* a2)
+int scripts_request_steal_container(Object* thief, Object* target)
 {
-    scriptState.stealingBy = a1;
-    scriptState.stealingFrom = a2;
+    scriptState.stealingBy = thief;
+    scriptState.stealingFrom = target;
     scriptState.requests |= SCRIPT_REQUEST_STEALING;
     return 0;
 }
@@ -1936,11 +1936,11 @@ int scr_ptr(int sid, Script** scriptPtr)
 static int scr_new_id(int scriptType)
 {
     int scriptId = scriptlists[scriptType].nextScriptId++;
-    int v1 = scriptType << 24;
+    int sidPrefix = scriptType << 24;
 
     while (scriptId < 32000) {
         Script* script;
-        if (scr_ptr(v1 | scriptId, &script) == -1) {
+        if (scr_ptr(sidPrefix | scriptId, &script) == -1) {
             break;
         }
         scriptId++;
@@ -2119,12 +2119,12 @@ int scr_remove(int sid)
                 mem_free(scriptListExtent);
 
                 if (scriptList->length != 0) {
-                    ScriptListExtent* v13 = scriptList->head;
-                    while (scriptList->tail != v13->next) {
-                        v13 = v13->next;
+                    ScriptListExtent* previousTailExtent = scriptList->head;
+                    while (scriptList->tail != previousTailExtent->next) {
+                        previousTailExtent = previousTailExtent->next;
                     }
-                    v13->next = NULL;
-                    scriptList->tail = v13;
+                    previousTailExtent->next = NULL;
+                    scriptList->tail = previousTailExtent;
                 } else {
                     scriptList->head = NULL;
                     scriptList->tail = NULL;
@@ -2449,13 +2449,13 @@ void scr_exec_map_exit_scripts()
 }
 
 // 0x494CC8
-int scr_get_dialog_msg_file(int a1, MessageList** messageListPtr)
+int scr_get_dialog_msg_file(int messageListId, MessageList** messageListPtr)
 {
-    if (a1 == -1) {
+    if (messageListId == -1) {
         return -1;
     }
 
-    int messageListIndex = a1 - 1;
+    int messageListIndex = messageListId - 1;
     MessageList* messageList = &(script_dialog_msgs[messageListIndex]);
     if (messageList->entries_num == 0) {
         char scriptName[16];
@@ -2492,7 +2492,7 @@ char* scr_get_msg_str(int messageListId, int messageId)
 }
 
 // 0x494DC0
-char* scr_get_msg_str_speech(int messageListId, int messageId, int a3)
+char* scr_get_msg_str_speech(int messageListId, int messageId, int shouldStartSpeech)
 {
     // 0x507974
     static char err_str[] = "Error";
@@ -2520,7 +2520,7 @@ char* scr_get_msg_str_speech(int messageListId, int messageId, int a3)
     }
 
     if (FID_TYPE(dialogue_head) != OBJ_TYPE_HEAD) {
-        a3 = 0;
+        shouldStartSpeech = 0;
     }
 
     MessageListItem messageListItem;
@@ -2530,7 +2530,7 @@ char* scr_get_msg_str_speech(int messageListId, int messageId, int a3)
         return err_str;
     }
 
-    if (a3) {
+    if (shouldStartSpeech) {
         if (dialog_active()) {
             if (messageListItem.audio != NULL && messageListItem.audio[0] != '\0') {
                 gdialog_setup_speech(messageListItem.audio);
@@ -2638,7 +2638,7 @@ bool scr_end_combat()
 }
 
 // 0x495048
-int scr_explode_scenery(Object* a1, int tile, int radius, int elevation)
+int scr_explode_scenery(Object* explosionSource, int tile, int radius, int elevation)
 {
     int scriptExtentsCount = scriptlists[SCRIPT_TYPE_SPATIAL].length + scriptlists[SCRIPT_TYPE_ITEM].length;
     if (scriptExtentsCount == 0) {
