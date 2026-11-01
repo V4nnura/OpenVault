@@ -700,7 +700,7 @@ static void endgame_load_voiceover(const char* fileBaseName)
 
         unsigned int timing = 0;
         for (int index = 0; index < endgame_subtitle_count; index++) {
-            double charactersCount = strlen(endgame_subtitle_text[index]);
+            double charactersCount = static_cast<double>(strlen(endgame_subtitle_text[index]));
             // NOTE: There is floating point math at 0x4402E6 used to add
             // timing.
             timing += (unsigned int)trunc(charactersCount * durationPerCharacter * 1000.0);
@@ -793,7 +793,7 @@ static int endgame_load_subtitles(const char* filePath)
             if (endgame_subtitle_count < ENDGAME_ENDING_MAX_SUBTITLES) {
                 endgame_subtitle_text[endgame_subtitle_count] = mem_strdup(pch + 1);
                 endgame_subtitle_count++;
-                endgame_subtitle_characters += strlen(pch + 1);
+                endgame_subtitle_characters += static_cast<int>(strlen(pch + 1));
             }
         }
     }
