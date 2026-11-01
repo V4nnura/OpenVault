@@ -885,7 +885,7 @@ int protinst_use_item(Object* critter, Object* item)
 }
 
 // 0x48B1DC
-int obj_use_item(Object* userObj, Object* a2)
+int obj_use_item(Object* userObj, Object* item)
 {
     int rc = protinst_use_item(userObj, item);
     if (rc == 1) {
@@ -1242,7 +1242,7 @@ static int check_door_state(Object* door, Object* obj2)
         rebuild_all_light();
 
         CacheEntry* artHandle;
-        Art* art = art_ptr_lock(a1->fid, &artHandle);
+        Art* art = art_ptr_lock(door->fid, &artHandle);
         if (art == NULL) {
             return -1;
         }
