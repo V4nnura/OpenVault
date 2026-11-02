@@ -1673,8 +1673,8 @@ int scr_save(DB_FILE* stream)
         }
 
         ScriptListExtent* scriptExtent = scriptList->head;
-        ScriptListExtent* lastScriptExtent = NULL;
         int index;
+        ScriptListExtent* lastScriptExtent = NULL;
         while (scriptExtent != NULL) {
             for (index = 0; index < scriptExtent->length; index++) {
                 Script* script = &(scriptExtent->scripts[index]);
@@ -2653,13 +2653,14 @@ int scr_explode_scenery(Object* explosionSource, int tile, int radius, int eleva
     }
 
     ScriptListExtent* extent;
+    int index;
     int scriptsCount = 0;
 
     scr_spatials_disable();
 
     extent = scriptlists[SCRIPT_TYPE_ITEM].head;
     while (extent != NULL) {
-        for (int index = 0; index < extent->length; index++) {
+        for (index = 0; index < extent->length; index++) {
             Script* script = &(extent->scripts[index]);
             if (script->procs[SCRIPT_PROC_DAMAGE] <= 0 && script->program == NULL) {
                 exec_script_proc(script->scr_id, SCRIPT_PROC_START);
@@ -2680,7 +2681,7 @@ int scr_explode_scenery(Object* explosionSource, int tile, int radius, int eleva
 
     extent = scriptlists[SCRIPT_TYPE_SPATIAL].head;
     while (extent != NULL) {
-        for (int index = 0; index < extent->length; index++) {
+        for (index = 0; index < extent->length; index++) {
             Script* script = &(extent->scripts[index]);
             if (script->procs[SCRIPT_PROC_DAMAGE] <= 0 && script->program == NULL) {
                 exec_script_proc(script->scr_id, SCRIPT_PROC_START);
@@ -2696,7 +2697,7 @@ int scr_explode_scenery(Object* explosionSource, int tile, int radius, int eleva
         extent = extent->next;
     }
 
-    for (int index = 0; index < scriptsCount; index++) {
+    for (index = 0; index < scriptsCount; index++) {
         exec_script_proc(scriptIds[index], SCRIPT_PROC_DAMAGE);
     }
 
