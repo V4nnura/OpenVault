@@ -169,8 +169,8 @@ int scripts_request_elevator(int elevator);
 int scripts_request_explosion(int tile, int elevation, int minDamage, int maxDamage);
 void scripts_request_dialog(Object* obj);
 void scripts_request_endgame_slideshow();
-int scripts_request_loot_container(Object* a1, Object* a2);
-int scripts_request_steal_container(Object* a1, Object* a2);
+int scripts_request_loot_container(Object* looter, Object* container);
+int scripts_request_steal_container(Object* thief, Object* target);
 void script_make_path(char* path);
 int exec_script_proc(int sid, int proc);
 int scr_find_str_run_info(int scr_script_idx, int* run_info_flags, int sid);
@@ -210,13 +210,13 @@ int scr_load_all_scripts();
 void scr_exec_map_enter_scripts();
 void scr_exec_map_update_scripts();
 void scr_exec_map_exit_scripts();
-int scr_get_dialog_msg_file(int a1, MessageList** out_message_list);
+int scr_get_dialog_msg_file(int messageListId, MessageList** out_message_list);
 char* scr_get_msg_str(int messageListId, int messageId);
 char* scr_get_msg_str_speech(int messageListId, int messageId, int a3);
 int scr_get_local_var(int sid, int variable, ProgramValue& value);
 int scr_set_local_var(int sid, int variable, ProgramValue& value);
 bool scr_end_combat();
-int scr_explode_scenery(Object* a1, int tile, int radius, int elevation);
+int scr_explode_scenery(Object* explosionSource, int tile, int radius, int elevation);
 
 } // namespace fallout
 
