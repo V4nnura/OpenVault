@@ -25,10 +25,10 @@ typedef struct assoc_pair {
 
 // A collection of key/value pairs.
 //
-// The keys in assoc array are always strings. Internally pairs are kept sorted
-// by the key. Both keys and values are copied when new entry is added to
-// assoc array. For this reason the size of the value's type is provided during
-// assoc array initialization.
+// The keys in assoc array are always strings. Internally pairs are
+// kept sorted by the key. Both keys and values are copied when new
+// entry is added to assoc array. For this reason the size of the
+// value's type is provided during assoc array initialization.
 typedef struct assoc_array {
     int init_flag;
 
