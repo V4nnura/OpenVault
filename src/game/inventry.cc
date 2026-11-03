@@ -3311,11 +3311,11 @@ void inven_action_cursor(int keyCode, int inventoryWindowType)
     };
 
     Object* item;
-    Object** v43;
-    Object* v41;
+    Object** itemSlot;
+    Object* owner;
 
-    int v56 = inven_from_button(keyCode, &item, &v43, &v41);
-    if (v56 == 0) {
+    int quantity = inven_from_button(keyCode, &item, &itemSlot, &owner);
+    if (quantity == 0) {
         return;
     }
 
@@ -3350,8 +3350,7 @@ void inven_action_cursor(int keyCode, int inventoryWindowType)
 
     unsigned char* windowBuffer = win_get_buf(i_wid);
 
-    int x;
-    int y;
+    int x, y;
     mouse_get_position(&x, &y);
 
     int actionMenuItemsLength;
@@ -3384,7 +3383,7 @@ void inven_action_cursor(int keyCode, int inventoryWindowType)
                 }
             }
         } else {
-            if (itemType == ITEM_TYPE_CONTAINER && v43 != NULL) {
+            if (itemType == ITEM_TYPE_CONTAINER && itemSlot != NULL) {
                 actionMenuItemsLength = 3;
                 actionMenuItems = act_no_use;
             } else {
@@ -3412,8 +3411,7 @@ void inven_action_cursor(int keyCode, int inventoryWindowType)
 
     InventoryCursorData* cursorData = &(imdata[INVENTORY_WINDOW_CURSOR_MENU]);
 
-    int offsetX;
-    int offsetY;
+    int offsetX, offsetY;
     art_frame_offset(cursorData->frm, 0, &offsetX, &offsetY);
 
     Rect rect;
@@ -3453,8 +3451,7 @@ void inven_action_cursor(int keyCode, int inventoryWindowType)
             display_body(-1, INVENTORY_WINDOW_TYPE_NORMAL);
         }
 
-        int x;
-        int y;
+        int x, y;
         mouse_get_position(&x, &y);
         if (y - previousMouseY > 10 || previousMouseY - y > 10) {
             if (y >= previousMouseY || menuItemIndex <= 0) {
@@ -3504,52 +3501,52 @@ void inven_action_cursor(int keyCode, int inventoryWindowType)
     int actionMenuItem = actionMenuItems[menuItemIndex];
     switch (actionMenuItem) {
     case GAME_MOUSE_ACTION_MENU_ITEM_DROP:
-        if (v43 != NULL) {
-            if (v43 == &i_worn) {
+        if (itemSlot != NULL) {
+            if (itemSlot == &i_worn) {
                 adjust_ac(stack[0], item, NULL);
             }
-            item_add_force(v41, item, 1);
-            v56 = 1;
-            *v43 = NULL;
+            item_add_force(owner, item, 1);
+            quantity = 1;
+            *itemSlot = NULL;
         }
 
         if (item->pid == PROTO_ID_MONEY) {
-            if (v56 > 1) {
-                v56 = do_move_timer(INVENTORY_WINDOW_TYPE_MOVE_ITEMS, item, v56);
+            if (quantity > 1) {
+                quantity = do_move_timer(INVENTORY_WINDOW_TYPE_MOVE_ITEMS, item, quantity);
             } else {
-                v56 = 1;
+                quantity = 1;
             }
 
-            if (v56 > 0) {
-                if (v56 == 1) {
+            if (quantity > 0) {
+                if (quantity == 1) {
                     item_caps_set_amount(item, 1);
-                    obj_drop(v41, item);
+                    obj_drop(owner, item);
                 } else {
-                    if (item_remove_mult(v41, item, v56 - 1) == 0) {
-                        Object* a2;
-                        if (inven_from_button(keyCode, &a2, &v43, &v41) != 0) {
-                            item_caps_set_amount(a2, v56);
-                            obj_drop(v41, a2);
+                    if (item_remove_mult(owner, item, quantity - 1) == 0) {
+                        Object* item2;
+                        if (inven_from_button(keyCode, &item2, &itemSlot, &owner) != 0) {
+                            item_caps_set_amount(item2, quantity);
+                            obj_drop(owner, item2);
                         } else {
-                            item_add_force(v41, item, v56 - 1);
+                            item_add_force(owner, item, quantity - 1);
                         }
                     }
                 }
             }
         } else if (item->pid == PROTO_ID_DYNAMITE_II || item->pid == PROTO_ID_PLASTIC_EXPLOSIVES_II) {
             dropped_explosive = 1;
-            obj_drop(v41, item);
+            obj_drop(owner, item);
         } else {
-            if (v56 > 1) {
-                v56 = do_move_timer(INVENTORY_WINDOW_TYPE_MOVE_ITEMS, item, v56);
+            if (quantity > 1) {
+                quantity = do_move_timer(INVENTORY_WINDOW_TYPE_MOVE_ITEMS, item, quantity);
 
-                for (int index = 0; index < v56; index++) {
-                    if (inven_from_button(keyCode, &item, &v43, &v41) != 0) {
-                        obj_drop(v41, item);
+                for (int index = 0; index < quantity; index++) {
+                    if (inven_from_button(keyCode, &item, &itemSlot, &owner) != 0) {
+                        obj_drop(owner, item);
                     }
                 }
             } else {
-                obj_drop(v41, item);
+                obj_drop(owner, item);
             }
         }
         break;
@@ -3567,10 +3564,10 @@ void inven_action_cursor(int keyCode, int inventoryWindowType)
             break;
         case ITEM_TYPE_DRUG:
             if (item_d_take_drug(stack[0], item)) {
-                if (v43 != NULL) {
-                    *v43 = NULL;
+                if (itemSlot != NULL) {
+                    *itemSlot = NULL;
                 } else {
-                    item_remove_mult(v41, item, 1);
+                    item_remove_mult(owner, item, 1);
                 }
 
                 obj_connect(item, obj_dude->tile, obj_dude->elevation, NULL);
@@ -3580,34 +3577,34 @@ void inven_action_cursor(int keyCode, int inventoryWindowType)
             break;
         case ITEM_TYPE_WEAPON:
         case ITEM_TYPE_MISC:
-            if (v43 == NULL) {
-                item_remove_mult(v41, item, 1);
+            if (itemSlot == NULL) {
+                item_remove_mult(owner, item, 1);
             }
 
-            int v21;
+            UseItemResultCode useResult;
             if (proto_action_can_use(item->pid)) {
-                v21 = protinst_use_item(stack[0], item);
+                useResult = protinst_use_item(stack[0], item);
             } else {
-                v21 = protinst_use_item_on(stack[0], stack[0], item);
+                useResult = protinst_use_item_on(stack[0], stack[0], item);
             }
 
-            if (v21 == 1) {
-                if (v43 != NULL) {
-                    *v43 = NULL;
+            if (useResult == USE_ITEM_RESULT_REMOVE) {
+                if (itemSlot != NULL) {
+                    *itemSlot = NULL;
                 }
 
                 obj_connect(item, obj_dude->tile, obj_dude->elevation, NULL);
                 obj_destroy(item);
             } else {
-                if (v43 == NULL) {
-                    item_add_force(v41, item, 1);
+                if (itemSlot == NULL) {
+                    item_add_force(owner, item, 1);
                 }
             }
         }
         break;
     case GAME_MOUSE_ACTION_MENU_ITEM_UNLOAD:
-        if (v43 == NULL) {
-            item_remove_mult(v41, item, 1);
+        if (itemSlot == NULL) {
+            item_remove_mult(owner, item, 1);
         }
 
         for (;;) {
@@ -3618,11 +3615,11 @@ void inven_action_cursor(int keyCode, int inventoryWindowType)
 
             Rect rect;
             obj_disconnect(ammo, &rect);
-            item_add_force(v41, ammo, 1);
+            item_add_force(owner, ammo, 1);
         }
 
-        if (v43 == NULL) {
-            item_add_force(v41, item, 1);
+        if (itemSlot == NULL) {
+            item_add_force(owner, item, 1);
         }
         break;
     default:
