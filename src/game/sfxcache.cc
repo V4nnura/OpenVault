@@ -19,9 +19,9 @@ namespace fallout {
 #define SOUND_EFFECTS_CACHE_MIN_SIZE 0x40000
 
 typedef struct SoundEffect {
-    // NOTE: This field is only 1 byte, likely unsigned char. It always uses
-    // cmp for checking implying it's not bitwise flags. Therefore it's better
-    // to express it as boolean.
+    // NOTE: This field is only 1 byte, likely unsigned char.
+    // It always uses cmp for checking implying it's not bitwise flags.
+    // Therefore it's better to express it as boolean.
     bool used;
     CacheEntry* cacheHandle;
     int tag;
