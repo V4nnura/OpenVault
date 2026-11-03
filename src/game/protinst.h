@@ -5,11 +5,11 @@
 
 namespace fallout {
 
-typedef enum UseItemResultCode {
+enum UseItemResultCode {
     USE_ITEM_RESULT_ERROR = -1,
     USE_ITEM_RESULT_OK = 0,
     USE_ITEM_RESULT_REMOVE = 1,
-} UseItemResultCode;
+};
 
 int obj_sid(Object* object, int* sidPtr);
 int obj_new_sid(Object* object, int* sidPtr);
