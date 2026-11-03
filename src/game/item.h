@@ -2,6 +2,7 @@
 #define FALLOUT_GAME_ITEM_H_
 
 #include "game/object_types.h"
+#include "game/protinst.h"
 #include "plib/db/db.h"
 
 namespace fallout {
@@ -88,7 +89,7 @@ int item_m_set_charges(Object* miscItem, int charges);
 int item_m_cell(Object* miscItem);
 int item_m_cell_pid(Object* miscItem);
 bool item_m_uses_charges(Object* obj);
-int item_m_use_charged_item(Object* critter, Object* item);
+UseItemResultCode item_m_use_charged_item(Object* critter, Object* item);
 int item_m_dec_charges(Object* miscItem);
 int item_m_trickle(Object* item_obj, void* data);
 bool item_m_on(Object* obj);
@@ -97,7 +98,7 @@ int item_m_turn_off(Object* item_obj);
 int item_m_turn_off_from_queue(Object* obj, void* data);
 int item_c_max_size(Object* container);
 int item_c_curr_size(Object* container);
-int item_d_take_drug(Object* critter_obj, Object* item_obj);
+UseItemResultCode item_d_take_drug(Object* critter, Object* item);
 int item_d_clear(Object* obj, void* data);
 int item_d_process(Object* obj, void* data);
 int item_d_load(DB_FILE* stream, void** dataPtr);
