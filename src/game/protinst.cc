@@ -31,10 +31,10 @@
 
 namespace fallout {
 
-static int obj_use_book(Object* item_obj);
-static int obj_use_flare(Object* critter, Object* item_obj);
-static int obj_use_explosive(Object* explosive);
-static int protinst_default_use_item(Object* user, Object* targetObj, Object* item);
+static UseItemResultCode obj_use_book(Object* item_obj);
+static UseItemResultCode obj_use_flare(Object* critter, Object* item_obj);
+static UseItemResultCode obj_use_explosive(Object* explosive);
+static UseItemResultCode protinst_default_use_item(Object* user, Object* targetObj, Object* item);
 static int rebuild_all_light();
 static int set_door_state_open(Object* door, Object* obj2);
 static int set_door_state_closed(Object* door, Object* obj2);
@@ -633,7 +633,7 @@ int obj_destroy(Object* obj)
 // Read a book.
 //
 // 0x48AD88
-static int obj_use_book(Object* book)
+static UseItemResultCode obj_use_book(Object* book)
 {
     MessageListItem messageListItem;
 
@@ -669,7 +669,7 @@ static int obj_use_book(Object* book)
     }
 
     if (messageId == -1) {
-        return -1;
+        return USE_ITEM_RESULT_ERROR;
     }
 
     if (isInCombat()) {
@@ -679,7 +679,7 @@ static int obj_use_book(Object* book)
             display_print(messageListItem.text);
         }
 
-        return 0;
+        return USE_ITEM_RESULT_OK;
     }
 
     int increase = (100 - skill_level(obj_dude, skill)) / 10;
@@ -713,18 +713,18 @@ static int obj_use_book(Object* book)
         display_print(messageListItem.text);
     }
 
-    return 1;
+    return USE_ITEM_RESULT_REMOVE;
 }
 
 // Light a flare.
 //
 // 0x48AF24
-static int obj_use_flare(Object* critter, Object* flare)
+static UseItemResultCode obj_use_flare(Object* critter, Object* flare)
 {
     MessageListItem messageListItem;
 
     if (flare->pid != PROTO_ID_FLARE) {
-        return -1;
+        return USE_ITEM_RESULT_ERROR;
     }
 
     if ((flare->flags & OBJECT_QUEUED) != 0) {
@@ -746,31 +746,31 @@ static int obj_use_flare(Object* critter, Object* flare)
         queue_add(72000, flare, NULL, EVENT_TYPE_FLARE);
     }
 
-    return 0;
+    return USE_ITEM_RESULT_OK;
 }
 
 // 0x48AFC8
-int obj_use_radio(Object* item)
+UseItemResultCode obj_use_radio(Object* item)
 {
     Script* scr;
     int sid;
 
     if (obj_sid(item, &sid) == -1) {
-        return -1;
+        return USE_ITEM_RESULT_ERROR;
     }
 
     scr_set_objs(sid, obj_dude, item);
     exec_script_proc(sid, SCRIPT_PROC_USE);
 
     if (scr_ptr(sid, &scr) == -1) {
-        return -1;
+        return USE_ITEM_RESULT_ERROR;
     }
 
-    return 0;
+    return USE_ITEM_RESULT_OK;
 }
 
 // 0x48B01C
-static int obj_use_explosive(Object* explosive)
+static UseItemResultCode obj_use_explosive(Object* explosive)
 {
     MessageListItem messageListItem;
 
@@ -779,7 +779,7 @@ static int obj_use_explosive(Object* explosive)
         && pid != PROTO_ID_PLASTIC_EXPLOSIVES_I
         && pid != PROTO_ID_DYNAMITE_II
         && pid != PROTO_ID_PLASTIC_EXPLOSIVES_II) {
-        return -1;
+        return USE_ITEM_RESULT_ERROR;
     }
 
     if ((explosive->flags & OBJECT_QUEUED) != 0) {
@@ -825,24 +825,24 @@ static int obj_use_explosive(Object* explosive)
         }
     }
 
-    return 0;
+    return USE_ITEM_RESULT_OK;
 }
 
 // Returns 0 on success, -1 on error, 1 to remove item, 2 to drop explosive.
 // 0x49BF38
-int protinst_use_item(Object* critter, Object* item)
+UseItemResultCode protinst_use_item(Object* critter, Object* item)
 {
-    int rc;
+    UseItemResultCode rc;
     MessageListItem messageListItem;
 
     switch (item_get_type(item)) {
     case ITEM_TYPE_DRUG:
-        rc = -1;
+        rc = USE_ITEM_RESULT_ERROR;
         break;
     case ITEM_TYPE_WEAPON:
     case ITEM_TYPE_MISC:
         rc = obj_use_book(item);
-        if (rc != -1) {
+        if (rc != USE_ITEM_RESULT_ERROR) {
             break;
         }
 
@@ -857,13 +857,13 @@ int protinst_use_item(Object* critter, Object* item)
         }
 
         rc = obj_use_explosive(item);
-        if (rc == 0) {
+        if (rc == USE_ITEM_RESULT_OK) {
             break;
         }
 
         if (item_m_uses_charges(item)) {
             rc = item_m_use_charged_item(critter, item);
-            if (rc == 0) {
+            if (rc == USE_ITEM_RESULT_OK) {
                 break;
             }
         }
@@ -875,19 +875,19 @@ int protinst_use_item(Object* critter, Object* item)
             display_print(messageListItem.text);
         }
 
-        rc = -1;
+        rc = USE_ITEM_RESULT_ERROR;
     }
 
     return rc;
 }
 
 // 0x48B1DC
-int obj_use_item(Object* userObj, Object* item)
+UseItemResultCode obj_use_item(Object* userObj, Object* item)
 {
-    int rc = protinst_use_item(userObj, item);
-    if (rc == 1) {
+    UseItemResultCode rc = protinst_use_item(userObj, item);
+    if (rc == USE_ITEM_RESULT_REMOVE) {
         obj_destroy(item);
-        rc = 0;
+        rc = USE_ITEM_RESULT_OK;
     }
 
     scr_exec_map_update_scripts();
@@ -896,12 +896,12 @@ int obj_use_item(Object* userObj, Object* item)
 }
 
 // 0x48B21C
-static int protinst_default_use_item(Object* user, Object* targetObj, Object* item)
+static UseItemResultCode protinst_default_use_item(Object* user, Object* targetObj, Object* item)
 {
     char formattedText[90];
     MessageListItem messageListItem;
 
-    int rc;
+    UseItemResultCode rc;
     switch (item_get_type(item)) {
     case ITEM_TYPE_DRUG:
         if (PID_TYPE(targetObj->pid) != OBJ_TYPE_CRITTER) {
@@ -912,7 +912,7 @@ static int protinst_default_use_item(Object* user, Object* targetObj, Object* it
                     display_print(messageListItem.text);
                 }
             }
-            return -1;
+            return USE_ITEM_RESULT_ERROR;
         }
 
         if (critter_is_dead(targetObj)) {
@@ -924,7 +924,7 @@ static int protinst_default_use_item(Object* user, Object* targetObj, Object* it
             if (message_search(&proto_main_msg_file, &messageListItem)) {
                 display_print(messageListItem.text);
             }
-            return -1;
+            return USE_ITEM_RESULT_ERROR;
         }
 
         rc = item_d_take_drug(targetObj, item);
@@ -937,7 +937,7 @@ static int protinst_default_use_item(Object* user, Object* targetObj, Object* it
             // 581: You use the %s on %s.
             messageListItem.num = 580 + (targetObj != obj_dude);
             if (!message_search(&proto_main_msg_file, &messageListItem)) {
-                return -1;
+                return USE_ITEM_RESULT_ERROR;
             }
 
             snprintf(formattedText, sizeof(formattedText), messageListItem.text, object_name(item), object_name(targetObj));
@@ -952,8 +952,8 @@ static int protinst_default_use_item(Object* user, Object* targetObj, Object* it
     case ITEM_TYPE_WEAPON:
     case ITEM_TYPE_MISC:
         rc = obj_use_flare(user, item);
-        if (rc == 0) {
-            return 0;
+        if (rc == USE_ITEM_RESULT_OK) {
+            return USE_ITEM_RESULT_OK;
         }
         break;
     }
@@ -963,12 +963,12 @@ static int protinst_default_use_item(Object* user, Object* targetObj, Object* it
         snprintf(formattedText, sizeof(formattedText), "%s", messageListItem.text);
         display_print(formattedText);
     }
-    return -1;
+    return USE_ITEM_RESULT_ERROR;
 }
 
 // Returns 0 on success, -1 on error, 1 to remove item.
 // 0x48B394
-int protinst_use_item_on(Object* critter, Object* targetObj, Object* item)
+UseItemResultCode protinst_use_item_on(Object* critter, Object* targetObj, Object* item)
 {
     int messageId = -1;
     int criticalChanceModifier = 0;
@@ -1002,7 +1002,7 @@ int protinst_use_item_on(Object* critter, Object* targetObj, Object* item)
             exec_script_proc(sid, SCRIPT_PROC_USE_OBJ_ON);
 
             if (scr_ptr(sid, &script) == -1) {
-                return -1;
+                return USE_ITEM_RESULT_ERROR;
             }
 
             if (!script->scriptOverrides) {
@@ -1013,7 +1013,7 @@ int protinst_use_item_on(Object* critter, Object* targetObj, Object* item)
             exec_script_proc(sid, SCRIPT_PROC_USE_OBJ_ON);
 
             if (scr_ptr(sid, &script) == -1) {
-                return -1;
+                return USE_ITEM_RESULT_ERROR;
             }
 
             if (script->returnValue == 0) {
@@ -1026,7 +1026,7 @@ int protinst_use_item_on(Object* critter, Object* targetObj, Object* item)
 
                 Script* script;
                 if (scr_ptr(sid, &script) == -1) {
-                    return -1;
+                    return USE_ITEM_RESULT_ERROR;
                 }
 
                 if (!script->scriptOverrides) {
@@ -1047,15 +1047,15 @@ int protinst_use_item_on(Object* critter, Object* targetObj, Object* item)
                 display_print(messageListItem.text);
             }
         }
-        return -1;
+        return USE_ITEM_RESULT_ERROR;
     }
 
     if (skill_use(critter, targetObj, skill, criticalChanceModifier) != 0) {
-        return 0;
+        return USE_ITEM_RESULT_OK;
     }
 
     if (roll_random(1, 10) != 1) {
-        return 0;
+        return USE_ITEM_RESULT_OK;
     }
 
     MessageListItem messageListItem;
@@ -1066,17 +1066,17 @@ int protinst_use_item_on(Object* critter, Object* targetObj, Object* item)
         }
     }
 
-    return 1;
+    return USE_ITEM_RESULT_REMOVE;
 }
 
 // 0x48B618
-int obj_use_item_on(Object* user, Object* targetObj, Object* item)
+UseItemResultCode obj_use_item_on(Object* user, Object* targetObj, Object* item)
 {
-    int rc = protinst_use_item_on(user, targetObj, item);
+    UseItemResultCode rc = protinst_use_item_on(user, targetObj, item);
 
-    if (rc == 1) {
+    if (rc == USE_ITEM_RESULT_REMOVE) {
         obj_destroy(item);
-        rc = 0;
+        rc = USE_ITEM_RESULT_OK;
     }
 
     scr_exec_map_update_scripts();
