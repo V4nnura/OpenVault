@@ -199,9 +199,7 @@ void rect_free(RectPtr ptr)
     rlist = ptr;
 }
 
-// Calculates a union of two source rectangles and places it into result
-// rectangle.
-//
+// Calculates a union of two source rectangles and places it into result rectangle.
 // 0x4B2CC8
 void rect_min_bound(const Rect* r1, const Rect* r2, Rect* min_bound)
 {
@@ -211,10 +209,10 @@ void rect_min_bound(const Rect* r1, const Rect* r2, Rect* min_bound)
     min_bound->lry = std::max(r1->lry, r2->lry);
 }
 
-// Calculates intersection of two source rectangles and places it into third
-// rectangle and returns 0. If two source rectangles do not have intersection
-// it returns -1 and resulting rectangle is a copy of r1.
-//
+// Calculates intersection of two source rectangles and
+// places it into third rectangle and returns 0. If two
+// source rectangles do not have intersection it returns
+// -1 and resulting rectangle is a copy of r1.
 // 0x4B2D18
 int rect_inside_bound(const Rect* r1, const Rect* bound, Rect* r2)
 {
