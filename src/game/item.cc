@@ -1776,7 +1776,7 @@ bool item_m_uses_charges(Object* miscItem)
 }
 
 // 0x46B84C
-int item_m_use_charged_item(Object* critter, Object* miscItem)
+UseItemResultCode item_m_use_charged_item(Object* critter, Object* miscItem)
 {
     int pid = miscItem->pid;
     if (pid == PROTO_ID_STEALTH_BOY_I
@@ -1808,7 +1808,7 @@ int item_m_use_charged_item(Object* critter, Object* miscItem)
         }
     }
 
-    return 0;
+    return USE_ITEM_RESULT_OK;
 }
 
 // 0x46B94C
@@ -2201,14 +2201,14 @@ static void perform_drug_effect(Object* critter, int* stats, int* mods, bool isI
 }
 
 // 0x46C09C
-int item_d_take_drug(Object* critter, Object* item)
+UseItemResultCode item_d_take_drug(Object* critter, Object* item)
 {
     if (critter_is_dead(critter)) {
-        return -1;
+        return USE_ITEM_RESULT_ERROR;
     }
 
     if (critter_body_type(critter) == BODY_TYPE_ROBOTIC) {
-        return -1;
+        return USE_ITEM_RESULT_ERROR;
     }
 
     Proto* proto;
@@ -2249,7 +2249,7 @@ int item_d_take_drug(Object* critter, Object* item)
         }
     }
 
-    return 1;
+    return USE_ITEM_RESULT_ERROR;
 }
 
 // 0x46C22C
