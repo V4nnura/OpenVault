@@ -1035,7 +1035,8 @@ UseItemResultCode protinst_use_item_on(Object* critter, Object* targetObj, Objec
             }
         }
 
-        return script->returnValue;
+        // FO didn't have any check for return value, and it's probably not needed anyway.
+        return static_cast<UseItemResultCode>(script->returnValue);
     }
 
     if (isInCombat()) {
