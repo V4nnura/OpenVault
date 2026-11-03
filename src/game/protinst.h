@@ -5,6 +5,13 @@
 
 namespace fallout {
 
+enum UseItemResultCode {
+    USE_ITEM_RESULT_ERROR = -1,
+    USE_ITEM_RESULT_OK = 0,
+    USE_ITEM_RESULT_REMOVE = 1,
+    USE_ITEM_RESULT_DROP = 2,
+};
+
 int obj_sid(Object* object, int* sidPtr);
 int obj_new_sid(Object* object, int* sidPtr);
 int obj_new_sid_inst(Object* obj, int scriptType, int scriptIndex);
@@ -17,10 +24,10 @@ int obj_remove_from_inven(Object* critter, Object* item);
 int obj_drop(Object* inven, Object* item);
 int obj_destroy(Object* obj);
 int obj_use_radio(Object* item);
-int protinst_use_item(Object* critter, Object* item);
-int obj_use_item(Object* user, Object* item);
-int protinst_use_item_on(Object* critter, Object* target, Object* item);
-int obj_use_item_on(Object* user, Object* target, Object* item);
+UseItemResultCode protinst_use_item(Object* critter, Object* item);
+UseItemResultCode obj_use_item(Object* user, Object* item);
+UseItemResultCode protinst_use_item_on(Object* critter, Object* target, Object* item);
+UseItemResultCode obj_use_item_on(Object* user, Object* target, Object* item);
 int check_scenery_ap_cost(Object* obj, Object* a2);
 int obj_use(Object* user, Object* target);
 int obj_use_door(Object* user, Object* door, bool animateOnly = false);
