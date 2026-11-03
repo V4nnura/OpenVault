@@ -23,7 +23,7 @@ int obj_pickup(Object* critter, Object* item);
 int obj_remove_from_inven(Object* critter, Object* item);
 int obj_drop(Object* inven, Object* item);
 int obj_destroy(Object* obj);
-int obj_use_radio(Object* item);
+UseItemResultCode obj_use_radio(Object* item);
 UseItemResultCode protinst_use_item(Object* critter, Object* item);
 UseItemResultCode obj_use_item(Object* user, Object* item);
 UseItemResultCode protinst_use_item_on(Object* critter, Object* target, Object* item);
