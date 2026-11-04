@@ -209,9 +209,9 @@ typedef struct InventoryCursorData {
 static int inventry_msg_load();
 static int inventry_msg_unload();
 static void display_inventory_info(Object* item, int quantity, unsigned char* dest, int pitch, bool moving_item, int selected_quantity);
-static void inven_update_lighting(Object* a1);
+static void inven_update_lighting(Object* activeItem);
 static int barter_compute_value(Object* buyer, Object* seller);
-static int barter_attempt_transaction(Object* a1, Object* a2, Object* a3, Object* a4);
+static int barter_attempt_transaction(Object* buyer, Object* offerTable, Object* seller, Object* barterTable);
 static void barter_move_inventory(Object* item, int quantity, int index, int offset, Object* target, Object* table, bool is_peon, bool skipDrag, bool moveAll);
 static void barter_move_from_table_inventory(Object* item, int quantity, int index, Object* target, Object* table, bool is_peon, bool skipDrag, bool moveAll);
 static void display_table_inventories(int win, Object* peon_table, Object* barterer_table, int selected_index, int selected_quantity = 1);
@@ -220,7 +220,6 @@ static int setup_move_timer_win(int inventoryWindowType, Object* item);
 static int exit_move_timer_win(int inventoryWindowType);
 
 // The number of items to show in scroller.
-//
 // 0x50563C
 static int inven_cur_disp = 6;
 
@@ -228,7 +227,6 @@ static int inven_cur_disp = 6;
 static Object* inven_dude = NULL;
 
 // Probably fid of armor to display in inventory dialog.
-//
 // 0x505644
 static int inven_pid = -1;
 
@@ -262,7 +260,6 @@ CacheEntry* ikey[OFF_59E7BC_COUNT];
 static int target_stack_offset[10];
 
 // inventory.msg
-//
 // 0x059CDC4
 static MessageList inventry_message_file;
 
@@ -329,7 +326,6 @@ static Object* i_worn;
 static Object* i_lhand;
 
 // Rotating character's fid.
-//
 // 0x59CEF4
 static int i_fid;
 
@@ -2027,19 +2023,19 @@ void inven_hover_off(int btn, int keyCode)
 }
 
 // 0x46457C
-void inven_pickup(int keyCode, int first_item_index)
+void inven_pickup(int buttonCode, int indexOffset)
 {
-    Object* a1a;
-    Object** v29 = NULL;
-    int count = inven_from_button(keyCode, &a1a, &v29, NULL);
+    Object* item;
+    Object** itemSlot = NULL;
+    int count = inven_from_button(buttonCode, &item, &itemSlot, NULL);
     if (count == 0) {
         return;
     }
 
-    int v3 = -1;
+    int itemIndex = -1;
     Rect rect;
 
-    switch (keyCode) {
+    switch (buttonCode) {
     case 1006:
         rect.ulx = 245;
         rect.uly = 286;
@@ -2053,20 +2049,20 @@ void inven_pickup(int keyCode, int first_item_index)
         rect.uly = 183;
         break;
     default:
-        // NOTE: Original code a little bit different, this code path
-        // is only for key codes below 1006.
-        v3 = keyCode - 1000;
+        // NOTE: Original code a little bit different,
+        // this code path is only for key codes below 1006.
+        itemIndex = buttonCode - 1000;
         rect.ulx = 44;
-        rect.uly = 48 * v3 + 35;
+        rect.uly = 48 * itemIndex + 35;
         break;
     }
 
-    if (v3 == -1 || pud->items[first_item_index + v3].quantity <= 1) {
+    if (itemIndex == -1 || pud->items[indexOffset + itemIndex].quantity <= 1) {
         unsigned char* windowBuffer = win_get_buf(i_wid);
-        if (i_rhand != i_lhand || a1a != i_lhand) {
+        if (i_rhand != i_lhand || item != i_lhand) {
             int height;
             int width;
-            if (v3 == -1) {
+            if (itemIndex == -1) {
                 height = INVENTORY_LARGE_SLOT_HEIGHT;
                 width = INVENTORY_LARGE_SLOT_WIDTH;
             } else {
@@ -2100,11 +2096,11 @@ void inven_pickup(int keyCode, int first_item_index)
         }
         win_draw_rect(i_wid, &rect);
     } else {
-        display_inventory(first_item_index, v3, INVENTORY_WINDOW_TYPE_NORMAL);
+        display_inventory(indexOffset, itemIndex, INVENTORY_WINDOW_TYPE_NORMAL);
     }
 
     CacheEntry* itemInventoryFrmHandle;
-    int itemInventoryFid = item_inv_fid(a1a);
+    int itemInventoryFid = item_inv_fid(item);
     Art* itemInventoryFrm = art_ptr_lock(itemInventoryFid, &itemInventoryFrmHandle);
     if (itemInventoryFrm != NULL) {
         int width = art_frame_width(itemInventoryFrm, 0, 0);
@@ -2130,142 +2126,142 @@ void inven_pickup(int keyCode, int first_item_index)
     }
 
     if (mouseHitTestInWindow(i_wid, INVENTORY_SCROLLER_X, INVENTORY_SCROLLER_Y, INVENTORY_SCROLLER_MAX_X, INVENTORY_SLOT_HEIGHT * inven_cur_disp + INVENTORY_SCROLLER_Y)) {
-        int x;
-        int y;
+        int x, y;
         mouseGetPositionInWindow(i_wid, &x, &y);
 
         int index = (y - 39) / 48;
-        if (index + first_item_index < pud->length) {
-            Object* v19 = pud->items[index + first_item_index].item;
-            if (v19 != a1a) {
-                // TODO: Needs checking usage of v19
-                if (item_get_type(v19) == ITEM_TYPE_CONTAINER) {
-                    if (drop_into_container(v19, a1a, v3, v29, count) == 0) {
-                        v3 = 0;
+        if (index + indexOffset < pud->length) {
+            Object* targetItem = pud->items[index + indexOffset].item;
+            if (targetItem != item) {
+                // Dropping item on top of another item.
+                if (item_get_type(targetItem) == ITEM_TYPE_CONTAINER) {
+                    if (drop_into_container(targetItem, item, itemIndex, itemSlot, count) == 0) {
+                        itemIndex = 0;
                     }
                 } else {
-                    if (drop_ammo_into_weapon(v19, a1a, v29, count, keyCode) == 0) {
-                        v3 = 0;
+                    if (drop_ammo_into_weapon(targetItem, item, itemSlot, count, buttonCode) == 0) {
+                        itemIndex = 0;
                     }
                 }
             }
         }
 
-        if (v3 == -1) {
+        if (itemIndex == -1) {
             // TODO: Holy shit, needs refactoring.
-            *v29 = NULL;
-            if (item_add_force(inven_dude, a1a, 1)) {
-                *v29 = a1a;
-            } else if (v29 == &i_worn) {
-                adjust_ac(stack[0], a1a, NULL);
+            *itemSlot = NULL;
+            if (item_add_force(inven_dude, item, 1)) {
+                *itemSlot = item;
+            } else if (itemSlot == &i_worn) {
+                adjust_ac(stack[0], item, NULL);
             } else if (i_rhand == i_lhand) {
                 i_lhand = NULL;
                 i_rhand = NULL;
             }
         }
     } else if (mouseHitTestInWindow(i_wid, INVENTORY_LEFT_HAND_SLOT_X, INVENTORY_LEFT_HAND_SLOT_Y, INVENTORY_LEFT_HAND_SLOT_MAX_X, INVENTORY_LEFT_HAND_SLOT_MAX_Y)) {
-        if (i_lhand != NULL && item_get_type(i_lhand) == ITEM_TYPE_CONTAINER && i_lhand != a1a) {
-            drop_into_container(i_lhand, a1a, v3, v29, count);
-        } else if (i_lhand == NULL || drop_ammo_into_weapon(i_lhand, a1a, v29, count, keyCode)) {
-            switch_hand(a1a, &i_lhand, v29, keyCode);
+        if (i_lhand != NULL && item_get_type(i_lhand) == ITEM_TYPE_CONTAINER && i_lhand != item) {
+            drop_into_container(i_lhand, item, itemIndex, itemSlot, count);
+        } else if (i_lhand == NULL || drop_ammo_into_weapon(i_lhand, item, itemSlot, count, buttonCode)) {
+            switch_hand(item, &i_lhand, itemSlot, buttonCode);
         }
     } else if (mouseHitTestInWindow(i_wid, INVENTORY_RIGHT_HAND_SLOT_X, INVENTORY_RIGHT_HAND_SLOT_Y, INVENTORY_RIGHT_HAND_SLOT_MAX_X, INVENTORY_RIGHT_HAND_SLOT_MAX_Y)) {
-        if (i_rhand != NULL && item_get_type(i_rhand) == ITEM_TYPE_CONTAINER && i_rhand != a1a) {
-            drop_into_container(i_rhand, a1a, v3, v29, count);
-        } else if (i_rhand == NULL || drop_ammo_into_weapon(i_rhand, a1a, v29, count, keyCode)) {
-            switch_hand(a1a, &i_rhand, v29, v3);
+        if (i_rhand != NULL && item_get_type(i_rhand) == ITEM_TYPE_CONTAINER && i_rhand != item) {
+            drop_into_container(i_rhand, item, itemIndex, itemSlot, count);
+        } else if (i_rhand == NULL || drop_ammo_into_weapon(i_rhand, item, itemSlot, count, buttonCode)) {
+            switch_hand(item, &i_rhand, itemSlot, itemIndex);
         }
     } else if (mouseHitTestInWindow(i_wid, INVENTORY_ARMOR_SLOT_X, INVENTORY_ARMOR_SLOT_Y, INVENTORY_ARMOR_SLOT_MAX_X, INVENTORY_ARMOR_SLOT_MAX_Y)) {
-        if (item_get_type(a1a) == ITEM_TYPE_ARMOR) {
-            Object* v21 = i_worn;
-            int v22 = 0;
-            if (v3 != -1) {
-                item_remove_mult(inven_dude, a1a, 1);
+        if (item_get_type(item) == ITEM_TYPE_ARMOR) {
+            Object* currentArmor = i_worn;
+            int itemAddResult = 0;
+            if (itemIndex != -1) {
+                item_remove_mult(inven_dude, item, 1);
             }
 
             if (i_worn != NULL) {
-                if (v29 != NULL) {
-                    *v29 = i_worn;
+                if (itemSlot != NULL) {
+                    *itemSlot = i_worn;
                 } else {
                     i_worn = NULL;
-                    v22 = item_add_force(inven_dude, v21, 1);
+                    itemAddResult = item_add_force(inven_dude, currentArmor, 1);
                 }
             } else {
-                if (v29 != NULL) {
-                    *v29 = i_worn;
+                if (itemSlot != NULL) {
+                    *itemSlot = i_worn;
                 }
             }
 
-            if (v22 != 0) {
-                i_worn = v21;
-                if (v3 != -1) {
-                    item_add_force(inven_dude, a1a, 1);
+            if (itemAddResult != 0) {
+                i_worn = currentArmor;
+                if (itemIndex != -1) {
+                    item_add_force(inven_dude, item, 1);
                 }
             } else {
-                adjust_ac(stack[0], v21, a1a);
-                i_worn = a1a;
+                adjust_ac(stack[0], currentArmor, item);
+                i_worn = item;
             }
         }
     } else if (mouseHitTestInWindow(i_wid, INVENTORY_PC_BODY_VIEW_X, INVENTORY_PC_BODY_VIEW_Y, INVENTORY_PC_BODY_VIEW_MAX_X, INVENTORY_PC_BODY_VIEW_MAX_Y)) {
         if (curr_stack != 0) {
-            // TODO: Check this curr_stack - 1, not sure.
-            drop_into_container(stack[curr_stack - 1], a1a, v3, v29, count);
+            // If we are looking inside nested inventory (such as backpack item), we see
+            // this item in the PC Body View instead of the player. So we drop item into it.
+            drop_into_container(stack[curr_stack - 1], item, itemIndex, itemSlot, count);
         }
     }
 
     adjust_fid();
     display_stats();
-    display_inventory(first_item_index, -1, INVENTORY_WINDOW_TYPE_NORMAL);
+    display_inventory(indexOffset, -1, INVENTORY_WINDOW_TYPE_NORMAL);
     inven_set_mouse(INVENTORY_WINDOW_CURSOR_HAND);
 }
 
 // 0x464BFC
-void switch_hand(Object* a1, Object** a2, Object** a3, int a4)
+void switch_hand(Object* sourceItem, Object** targetSlot, Object** sourceSlot, int itemIndex)
 {
-    if (*a2 != NULL) {
-        if (item_get_type(*a2) == ITEM_TYPE_WEAPON && item_get_type(a1) == ITEM_TYPE_AMMO) {
+    if (*targetSlot != NULL) {
+        if (item_get_type(*targetSlot) == ITEM_TYPE_WEAPON && item_get_type(sourceItem) == ITEM_TYPE_AMMO) {
             return;
         }
 
-        if (a3 != NULL && (a3 != &i_worn || item_get_type(*a2) == ITEM_TYPE_ARMOR)) {
-            if (a3 == &i_worn) {
-                adjust_ac(stack[0], i_worn, *a2);
+        if (sourceSlot != NULL && (sourceSlot != &i_worn || item_get_type(*targetSlot) == ITEM_TYPE_ARMOR)) {
+            if (sourceSlot == &i_worn) {
+                adjust_ac(stack[0], i_worn, *targetSlot);
             }
-            *a3 = *a2;
+            *sourceSlot = *targetSlot;
         } else {
-            if (a4 != -1) {
-                item_remove_mult(inven_dude, a1, 1);
+            if (itemIndex != -1) {
+                item_remove_mult(inven_dude, sourceItem, 1);
             }
 
-            Object* itemToAdd = *a2;
-            *a2 = NULL;
+            Object* itemToAdd = *targetSlot;
+            *targetSlot = NULL;
             if (item_add_force(inven_dude, itemToAdd, 1) != 0) {
-                item_add_force(inven_dude, a1, 1);
+                item_add_force(inven_dude, sourceItem, 1);
                 return;
             }
 
-            a4 = -1;
+            itemIndex = -1;
 
-            if (a3 != NULL) {
-                if (a3 == &i_worn) {
+            if (sourceSlot != NULL) {
+                if (sourceSlot == &i_worn) {
                     adjust_ac(stack[0], i_worn, NULL);
                 }
-                *a3 = NULL;
+                *sourceSlot = NULL;
             }
         }
     } else {
-        if (a3 != NULL) {
-            if (a3 == &i_worn) {
+        if (sourceSlot != NULL) {
+            if (sourceSlot == &i_worn) {
                 adjust_ac(stack[0], i_worn, NULL);
             }
-            *a3 = NULL;
+            *sourceSlot = NULL;
         }
     }
 
-    *a2 = a1;
+    *targetSlot = sourceItem;
 
-    if (a4 != -1) {
-        item_remove_mult(inven_dude, a1, 1);
+    if (itemIndex != -1) {
+        item_remove_mult(inven_dude, sourceItem, 1);
     }
 }
 
@@ -4263,22 +4259,22 @@ static int barter_compute_value(Object* buyer, Object* seller)
 }
 
 // 0x467B70
-static int barter_attempt_transaction(Object* a1, Object* a2, Object* a3, Object* a4)
+static int barter_attempt_transaction(Object* buyer, Object* offerTable, Object* seller, Object* barterTable)
 {
-    if (a2->data.inventory.length == 0) {
+    if (offerTable->data.inventory.length == 0) {
         return -1;
     }
 
-    if (item_queued(a2)) {
+    if (item_queued(offerTable)) {
         return -1;
     }
 
-    if (barter_compute_value(a1, a3) > item_total_cost(a2)) {
+    if (barter_compute_value(buyer, seller) > item_total_cost(offerTable)) {
         return -1;
     }
 
-    item_move_all(a4, a1);
-    item_move_all(a2, a3);
+    item_move_all(barterTable, buyer);
+    item_move_all(offerTable, seller);
     return 0;
 }
 
