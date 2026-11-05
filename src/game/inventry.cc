@@ -1982,30 +1982,29 @@ void inven_hover_on(int btn, int keyCode)
     static Object* last_target = NULL;
 
     if (immode == INVENTORY_WINDOW_CURSOR_ARROW) {
-        int x;
-        int y;
+        int x, y;
         mouseGetPositionInWindow(i_wid, &x, &y);
 
-        Object* a2a = NULL;
-        if (inven_from_button(keyCode, &a2a, NULL, NULL) != 0) {
+        Object* item = NULL;
+        if (inven_from_button(keyCode, &item, NULL, NULL) != 0) {
             gmouse_3d_build_pick_frame(x, y, 3, i_wid_max_x, i_wid_max_y);
 
-            int v5 = 0;
-            int v6 = 0;
-            gmouse_3d_pick_frame_hot(&v5, &v6);
+            int cursorHotspotX = 0;
+            int cursorHotspotY = 0;
+            gmouse_3d_pick_frame_hot(&cursorHotspotX, &cursorHotspotY);
 
             InventoryCursorData* cursorData = &(imdata[INVENTORY_WINDOW_CURSOR_PICK]);
-            mouse_set_shape(cursorData->frmData, cursorData->width, cursorData->height, cursorData->width, v5, v6, 0);
+            mouse_set_shape(cursorData->frmData, cursorData->width, cursorData->height, cursorData->width, cursorHotspotX, cursorHotspotY, 0);
 
-            if (a2a != last_target) {
-                obj_look_at_func(stack[0], a2a, display_msg);
+            if (item != last_target) {
+                obj_look_at_func(stack[0], item, display_msg);
             }
         } else {
             InventoryCursorData* cursorData = &(imdata[INVENTORY_WINDOW_CURSOR_ARROW]);
             mouse_set_shape(cursorData->frmData, cursorData->width, cursorData->height, cursorData->width, cursorData->offsetX, cursorData->offsetY, 0);
         }
 
-        last_target = a2a;
+        last_target = item;
     }
 
     im_value = keyCode;
@@ -2314,22 +2313,22 @@ void adjust_fid()
     if (FID_TYPE(inven_dude->fid) == OBJ_TYPE_CRITTER) {
         Proto* proto;
 
-        int v0 = art_vault_guy_num;
+        int inventoryFid = art_vault_guy_num;
 
-        if (proto_ptr(inven_pid, &proto) == -1) {
-            v0 = proto->fid & 0xFFF;
+        if (proto_ptr(inven_pid, &proto) != -1) {
+            inventoryFid = proto->fid & 0xFFF;
         }
 
         if (i_worn != NULL) {
             proto_ptr(i_worn->pid, &proto);
             if (stat_level(inven_dude, STAT_GENDER) == GENDER_FEMALE) {
-                v0 = proto->item.data.armor.femaleFid;
+                inventoryFid = proto->item.data.armor.femaleFid;
             } else {
-                v0 = proto->item.data.armor.maleFid;
+                inventoryFid = proto->item.data.armor.maleFid;
             }
 
-            if (v0 == -1) {
-                v0 = art_vault_guy_num;
+            if (inventoryFid == -1) {
+                inventoryFid = art_vault_guy_num;
             }
         }
 
@@ -2350,7 +2349,7 @@ void adjust_fid()
             }
         }
 
-        fid = art_id(OBJ_TYPE_CRITTER, v0, 0, animationCode, 0);
+        fid = art_id(OBJ_TYPE_CRITTER, inventoryFid, 0, animationCode, 0);
     } else {
         fid = inven_dude->fid;
     }
