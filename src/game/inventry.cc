@@ -4959,9 +4959,9 @@ void container_exit(int keyCode, int inventoryWindowType)
     } else if (keyCode == 2501) {
         if (target_curr_stack > 0) {
             target_curr_stack -= 1;
-            Object* v5 = target_stack[target_curr_stack];
-            target_pud = &(v5->data.inventory);
-            display_body(v5->fid, inventoryWindowType);
+            Object* target = target_stack[target_curr_stack];
+            target_pud = &(target->data.inventory);
+            display_body(target->fid, inventoryWindowType);
             display_target_inventory(target_stack_offset[target_curr_stack], -1, target_pud, inventoryWindowType);
             win_draw(i_wid);
         }
