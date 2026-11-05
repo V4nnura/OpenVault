@@ -2359,7 +2359,7 @@ void adjust_fid()
 }
 
 // 0x464F00
-void use_inventory_on(Object* a1)
+void use_inventory_on(Object* targetObj)
 {
     if (inven_init() == -1) {
         return;
@@ -2398,7 +2398,7 @@ void use_inventory_on(Object* a1)
                     int inventoryItemIndex = stack_offset[curr_stack] + keyCode - 1000;
                     if (inventoryItemIndex < pud->length) {
                         InventoryItem* inventoryItem = &(pud->items[inventoryItemIndex]);
-                        action_use_an_item_on_object(stack[0], a1, inventoryItem->item);
+                        action_use_an_item_on_object(stack[0], targetObj, inventoryItem->item);
                         keyCode = KEY_ESCAPE;
                     } else {
                         keyCode = -1;
@@ -2848,7 +2848,7 @@ Object* inven_find_id(Object* obj, int id)
 }
 
 // 0x465B98
-int inven_wield(Object* critter, Object* item, int a3)
+int inven_wield(Object* critter, Object* item, int handIndex)
 {
     register_begin(ANIMATION_REQUEST_RESERVED);
 
@@ -2894,20 +2894,20 @@ int inven_wield(Object* critter, Object* item, int a3)
             return -1;
         }
 
-        Object* v17;
-        if (a3) {
-            v17 = inven_right_hand(critter);
+        Object* equippedItem;
+        if (handIndex == HAND_RIGHT) {
+            equippedItem = inven_right_hand(critter);
             item->flags |= OBJECT_IN_RIGHT_HAND;
         } else {
-            v17 = inven_left_hand(critter);
+            equippedItem = inven_left_hand(critter);
             item->flags |= OBJECT_IN_LEFT_HAND;
         }
 
         Rect rect;
-        if (v17 != NULL) {
-            v17->flags &= ~OBJECT_IN_ANY_HAND;
+        if (equippedItem != NULL) {
+            equippedItem->flags &= ~OBJECT_IN_ANY_HAND;
 
-            if (v17->pid == PROTO_ID_LIT_FLARE) {
+            if (equippedItem->pid == PROTO_ID_LIT_FLARE) {
                 int lightIntensity;
                 int lightDistance;
                 if (critter == obj_dude) {
@@ -2948,7 +2948,7 @@ int inven_wield(Object* critter, Object* item, int a3)
             weaponAnimationCode = 0;
         }
 
-        if (hand == a3) {
+        if (hand == handIndex) {
             if ((critter->fid & 0xF000) >> 12 != 0) {
                 const char* soundEffectName = gsnd_build_character_sfx_name(critter, ANIM_PUT_AWAY, CHARACTER_SOUND_EFFECT_UNUSED);
                 register_object_play_sfx(critter, soundEffectName, 0);
@@ -3009,9 +3009,9 @@ int inven_unwield(Object* critter, int hand)
 }
 
 // 0x465DC4
-int inven_from_button(int keyCode, Object** a2, Object*** a3, Object** a4)
+int inven_from_button(int keyCode, Object** outItem, Object*** outItemSlot, Object** outOwner)
 {
-    Object** slot_ptr;
+    Object** itemSlot;
     Object* owner;
     Object* item;
     int quantity = 0;
@@ -3020,22 +3020,22 @@ int inven_from_button(int keyCode, Object** a2, Object*** a3, Object** a4)
 
     switch (keyCode) {
     case 1006:
-        slot_ptr = &i_rhand;
+        itemSlot = &i_rhand;
         owner = stack[0];
         item = i_rhand;
         break;
     case 1007:
-        slot_ptr = &i_lhand;
+        itemSlot = &i_lhand;
         owner = stack[0];
         item = i_lhand;
         break;
     case 1008:
-        slot_ptr = &i_worn;
+        itemSlot = &i_worn;
         owner = stack[0];
         item = i_worn;
         break;
     default:
-        slot_ptr = NULL;
+        itemSlot = NULL;
         owner = NULL;
         item = NULL;
 
@@ -3080,16 +3080,16 @@ int inven_from_button(int keyCode, Object** a2, Object*** a3, Object** a4)
         quantity = inventoryItem->quantity;
     }
 
-    if (a3 != NULL) {
-        *a3 = slot_ptr;
+    if (outItemSlot != NULL) {
+        *outItemSlot = itemSlot;
     }
 
-    if (a2 != NULL) {
-        *a2 = item;
+    if (outItem != NULL) {
+        *outItem = item;
     }
 
-    if (a4 != NULL) {
-        *a4 = owner;
+    if (outOwner != NULL) {
+        *outOwner = owner;
     }
 
     if (quantity == 0 && item != NULL) {
@@ -4969,11 +4969,11 @@ void container_exit(int keyCode, int inventoryWindowType)
 }
 
 // 0x469090
-int drop_into_container(Object* a1, Object* a2, int a3, Object** a4, int quantity)
+int drop_into_container(Object* container, Object* item, int sourceIndex, Object** itemSlot, int quantity)
 {
     int quantityToMove;
     if (quantity > 1) {
-        quantityToMove = do_move_timer(INVENTORY_WINDOW_TYPE_MOVE_ITEMS, a2, quantity);
+        quantityToMove = do_move_timer(INVENTORY_WINDOW_TYPE_MOVE_ITEMS, item, quantity);
     } else {
         quantityToMove = 1;
     }
@@ -4982,23 +4982,23 @@ int drop_into_container(Object* a1, Object* a2, int a3, Object** a4, int quantit
         return -1;
     }
 
-    if (a3 != -1) {
-        if (item_remove_mult(inven_dude, a2, quantityToMove) == -1) {
+    if (sourceIndex != -1) {
+        if (item_remove_mult(inven_dude, item, quantityToMove) == -1) {
             return -1;
         }
     }
 
-    int rc = item_add_mult(a1, a2, quantityToMove);
+    int rc = item_add_mult(container, item, quantityToMove);
     if (rc != 0) {
-        if (a3 != -1) {
-            item_add_mult(inven_dude, a2, quantityToMove);
+        if (sourceIndex != -1) {
+            item_add_mult(inven_dude, item, quantityToMove);
         }
     } else {
-        if (a4 != NULL) {
-            if (a4 == &i_worn) {
+        if (itemSlot != NULL) {
+            if (itemSlot == &i_worn) {
                 adjust_ac(stack[0], i_worn, NULL);
             }
-            *a4 = NULL;
+            *itemSlot = NULL;
         }
     }
 
@@ -5006,7 +5006,7 @@ int drop_into_container(Object* a1, Object* a2, int a3, Object** a4, int quantit
 }
 
 // 0x469130
-int drop_ammo_into_weapon(Object* weapon, Object* ammo, Object** a3, int quantity, int keyCode)
+int drop_ammo_into_weapon(Object* weapon, Object* ammo, Object** ammoItemSlot, int quantity, int keyCode)
 {
     if (item_get_type(weapon) != ITEM_TYPE_WEAPON) {
         return -1;
@@ -5031,27 +5031,27 @@ int drop_ammo_into_weapon(Object* weapon, Object* ammo, Object** a3, int quantit
         return -1;
     }
 
-    Object* v14 = ammo;
-    bool v17 = false;
+    Object* sourceItem = ammo;
+    bool isReloaded = false;
     int rc = item_remove_mult(inven_dude, weapon, 1);
     for (int index = 0; index < quantityToMove; index++) {
-        int v11 = item_w_reload(weapon, v14);
-        if (v11 == 0) {
-            if (a3 != NULL) {
-                *a3 = NULL;
+        int rcReload = item_w_reload(weapon, sourceItem);
+        if (rcReload == 0) {
+            if (ammoItemSlot != NULL) {
+                *ammoItemSlot = NULL;
             }
 
-            obj_destroy(v14);
+            obj_destroy(sourceItem);
 
-            v17 = true;
-            if (inven_from_button(keyCode, &v14, NULL, NULL) == 0) {
+            isReloaded = true;
+            if (inven_from_button(keyCode, &sourceItem, NULL, NULL) == 0) {
                 break;
             }
         }
-        if (v11 != -1) {
-            v17 = true;
+        if (rcReload != -1) {
+            isReloaded = true;
         }
-        if (v11 != 0) {
+        if (rcReload != 0) {
             break;
         }
     }
@@ -5060,7 +5060,7 @@ int drop_ammo_into_weapon(Object* weapon, Object* ammo, Object** a3, int quantit
         item_add_force(inven_dude, weapon, 1);
     }
 
-    if (!v17) {
+    if (!isReloaded) {
         return -1;
     }
 
