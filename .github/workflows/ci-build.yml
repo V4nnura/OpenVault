@@ -125,14 +125,20 @@ jobs:
   linux:
     name: Linux (${{ matrix.arch }})
 
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.runner }}
 
     strategy:
       fail-fast: false
       matrix:
-        arch:
-          - x86
-          - x64
+        include:
+          - arch: x86
+            runner: ubuntu-22.04
+          - arch: x64
+            runner: ubuntu-22.04
+          - arch: armhf
+            runner: ubuntu-22.04-arm
+          - arch: arm64
+            runner: ubuntu-22.04-arm
 
     steps:
       - name: Clone
@@ -145,53 +151,6 @@ jobs:
           sudo apt update
           sudo apt install g++-multilib libsdl2-dev:i386 zlib1g-dev:i386
 
-      - name: Dependencies (x64)
-        if: matrix.arch == 'x64'
-        run: |
-          sudo apt update
-          sudo apt install libsdl2-dev zlib1g-dev
-
-      - name: Cache cmake build
-        uses: actions/cache@v5
-        with:
-          path: out
-          key: linux-${{ matrix.arch }}-cmake-v101
-
-      - name: Configure
-        run: |
-          cmake --preset linux-${{ matrix.arch }}-debug
-
-      - name: Build
-        run: |
-          cmake --build --preset linux-${{ matrix.arch }}-debug
-
-      - name: Package
-        run: |
-          tar -czvf out/build/linux-${{ matrix.arch }}-debug/fallout-ce-linux-${{ matrix.arch }}.tar.gz -C out/build/linux-${{ matrix.arch }}-debug fallout-ce
-
-      - name: Upload
-        uses: actions/upload-artifact@v7
-        with:
-          name: fallout-ce-linux-${{ matrix.arch }}
-          path: out/build/linux-${{ matrix.arch }}-debug/fallout-ce-linux-${{ matrix.arch }}.tar.gz
-          retention-days: 7
-
-  linux-arm:
-    name: Linux (${{ matrix.arch }})
-
-    runs-on: ubuntu-22.04-arm
-
-    strategy:
-      fail-fast: false
-      matrix:
-        arch:
-          - armhf
-          - arm64
-
-    steps:
-      - name: Clone
-        uses: actions/checkout@v7
-
       - name: Dependencies (armhf)
         if: matrix.arch == 'armhf'
         run: |
@@ -199,17 +158,30 @@ jobs:
           sudo apt update
           sudo apt install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf libsdl2-dev:armhf zlib1g-dev:armhf
 
-      - name: Dependencies (arm64)
-        if: matrix.arch == 'arm64'
+      - name: Dependencies (${{ matrix.arch }})
+        if: matrix.arch == 'x64' || matrix.arch == 'arm64'
         run: |
           sudo apt update
           sudo apt install libsdl2-dev zlib1g-dev
 
-      - name: Cache cmake build
+      - name: Cache cmake build (${{ matrix.arch }})
+        if: matrix.arch == 'x86' || matrix.arch == 'x64'
+        uses: actions/cache@v5
+        with:
+          path: out
+          key: linux-${{ matrix.arch }}-cmake-v101
+
+      - name: Cache cmake build (${{ matrix.arch }})
+        if: matrix.arch == 'armhf' || matrix.arch == 'arm64'
         uses: actions/cache@v5
         with:
           path: build
           key: linux-${{ matrix.arch }}-cmake-v101
+
+      - name: Configure (${{ matrix.arch }})
+        if: matrix.arch == 'x86' || matrix.arch == 'x64'
+        run: |
+          cmake --preset linux-${{ matrix.arch }}-debug
 
       - name: Configure (armhf)
         if: matrix.arch == 'armhf'
@@ -232,18 +204,39 @@ jobs:
             -D FALLOUT_VENDORED=OFF \
             # EOL
 
-      - name: Build
+      - name: Build (${{ matrix.arch }})
+        if: matrix.arch == 'x86' || matrix.arch == 'x64'
+        run: |
+          cmake --build --preset linux-${{ matrix.arch }}-debug
+
+      - name: Build (${{ matrix.arch }})
+        if: matrix.arch == 'armhf' || matrix.arch == 'arm64'
         run: |
           cmake \
             --build build \
             -j $(nproc) \
             # EOL
 
-      - name: Package
+      - name: Package (${{ matrix.arch }})
+        if: matrix.arch == 'x86' || matrix.arch == 'x64'
+        run: |
+          tar -czvf out/build/linux-${{ matrix.arch }}-debug/fallout-ce-linux-${{ matrix.arch }}.tar.gz -C out/build/linux-${{ matrix.arch }}-debug fallout-ce
+
+      - name: Package (${{ matrix.arch }})
+        if: matrix.arch == 'armhf' || matrix.arch == 'arm64'
         run: |
           tar -czvf build/fallout-ce-linux-${{ matrix.arch }}.tar.gz -C build fallout-ce
 
-      - name: Upload
+      - name: Upload (${{ matrix.arch }})
+        if: matrix.arch == 'x86' || matrix.arch == 'x64'
+        uses: actions/upload-artifact@v7
+        with:
+          name: fallout-ce-linux-${{ matrix.arch }}
+          path: out/build/linux-${{ matrix.arch }}-debug/fallout-ce-linux-${{ matrix.arch }}.tar.gz
+          retention-days: 7
+
+      - name: Upload (${{ matrix.arch }})
+        if: matrix.arch == 'armhf' || matrix.arch == 'arm64'
         uses: actions/upload-artifact@v7
         with:
           name: fallout-ce-linux-${{ matrix.arch }}
@@ -338,7 +331,7 @@ jobs:
   release:
     name: Experimental build
     runs-on: ubuntu-latest
-    needs: [android, ios, linux, linux-arm, macos, windows]
+    needs: [android, ios, linux, macos, windows]
     permissions: write-all
     steps:
       - name: Search artifacts
