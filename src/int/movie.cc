@@ -1,8 +1,8 @@
 #include "int/movie.h"
 
-#include <string.h>
-
 #include <SDL.h>
+#include <string.h>
+#include <vector>
 
 #include "game/gconfig.h"
 #include "game/moviefx.h"
@@ -29,10 +29,14 @@ typedef struct MovieSubtitleListNode {
     struct MovieSubtitleListNode* next;
 } MovieSubtitleListNode;
 
+static SDL_Rect movieComputeDirectRect(int srcWidth, int srcHeight);
+static void movieDirectOverlayDestroy();
+static bool movieDirectOverlayEnsureTexture(int width, int height);
+static void movieDirectOverlayUpload(unsigned char* pixels, int srcWidth, int srcHeight);
 static void* movieMalloc(size_t size);
 static void movieFree(void* ptr);
 static bool movieRead(void* handle, void* buf, int count);
-static void movieDirect(unsigned char* pixels, int src_width, int src_height, int src_x, int src_y, int dst_width, int dst_height, int dst_x, int dst_y);
+static void movieDirect(unsigned char* pixels, int src_width, int src_height, int, int, int, int, int, int);
 static void movieBuffered(unsigned char* pixels, int src_width, int src_height, int src_x, int src_y, int dst_width, int dst_height, int dst_x, int dst_y);
 static int movieScaleSubRect(int win, unsigned char* data, int width, int height, int pitch);
 static int movieScaleWindowAlpha(int win, unsigned char* data, int width, int height, int pitch);
@@ -53,30 +57,102 @@ static int stepMovie();
 // 0x505B30
 static int GNWWin = -1;
 
+struct MovieDirectOverlay {
+    SDL_Texture* texture = NULL;
+    int srcWidth = 0;
+    int srcHeight = 0;
+    SDL_Rect dstRect = { 0, 0, 0, 0 };
+    bool active = false;
+    std::vector<uint32_t> uploadBuffer;
+};
+
+static MovieDirectOverlay movieDirectOverlay;
+
+static void movieDirectOverlayDestroy()
+{
+    if (movieDirectOverlay.texture != NULL) {
+        SDL_DestroyTexture(movieDirectOverlay.texture);
+        movieDirectOverlay.texture = NULL;
+    }
+
+    movieDirectOverlay.srcWidth = 0;
+    movieDirectOverlay.srcHeight = 0;
+    movieDirectOverlay.dstRect = { 0, 0, 0, 0 };
+    movieDirectOverlay.active = false;
+    movieDirectOverlay.uploadBuffer.clear();
+}
+
+static bool movieDirectOverlayEnsureTexture(int width, int height)
+{
+    if (movieDirectOverlay.texture != NULL
+        && movieDirectOverlay.srcWidth == width
+        && movieDirectOverlay.srcHeight == height) {
+        return true;
+    }
+
+    movieDirectOverlayDestroy();
+
+    movieDirectOverlay.texture = SDL_CreateTexture(gSdlRenderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, width, height);
+    if (movieDirectOverlay.texture == NULL) {
+        return false;
+    }
+
+    SDL_SetTextureBlendMode(movieDirectOverlay.texture, SDL_BLENDMODE_NONE);
+#if SDL_VERSION_ATLEAST(2, 0, 12)
+    SDL_SetTextureScaleMode(movieDirectOverlay.texture, SDL_ScaleModeNearest);
+#endif
+
+    movieDirectOverlay.srcWidth = width;
+    movieDirectOverlay.srcHeight = height;
+    return true;
+}
+
+static void movieDirectOverlayUpload(unsigned char* pixels, int srcWidth, int srcHeight)
+{
+    if (movieDirectOverlay.texture == NULL || gSdlSurface == NULL || gSdlSurface->format == NULL || gSdlSurface->format->palette == NULL) {
+        return;
+    }
+
+    int width = srcWidth;
+    int height = srcHeight;
+    if (width <= 0 || height <= 0) {
+        return;
+    }
+
+    int pixelCount = width * height;
+    if (static_cast<int>(movieDirectOverlay.uploadBuffer.size()) < pixelCount) {
+        movieDirectOverlay.uploadBuffer.resize(pixelCount);
+    }
+
+    SDL_Color* colors = gSdlSurface->format->palette->colors;
+    for (int y = 0; y < height; y++) {
+        const unsigned char* srcRow = pixels + y * srcWidth;
+        uint32_t* dstRow = movieDirectOverlay.uploadBuffer.data() + y * width;
+        for (int x = 0; x < width; x++) {
+            SDL_Color color = colors[srcRow[x]];
+            dstRow[x] = (static_cast<uint32_t>(color.a) << 24)
+                | (static_cast<uint32_t>(color.r) << 16)
+                | (static_cast<uint32_t>(color.g) << 8)
+                | static_cast<uint32_t>(color.b);
+        }
+    }
+
+    SDL_Rect rect = { 0, 0, width, height };
+    SDL_UpdateTexture(movieDirectOverlay.texture, &rect, movieDirectOverlay.uploadBuffer.data(), width * static_cast<int>(sizeof(uint32_t)));
+}
+
 // 0x505B34
 static int subtitleFont = -1;
 
 // 0x505B38
-static MovieBlitFunc* showFrameFuncs[2][2][2] = {
+static MovieBlitFunc* showFrameFuncs[2][2] = {
     {
-        {
-            blitNormal,
-            blitNormal,
-        },
-        {
-            movieScaleWindow,
-            movieScaleSubRect,
-        },
+        blitNormal,
+        blitNormal,
     },
     {
-        {
-            blitAlpha,
-            blitAlpha,
-        },
-        {
-            movieScaleSubRectAlpha,
-            movieScaleWindowAlpha,
-        },
+        movieScaleSubRect,
+        movieScaleWindow,
     },
 };
 
@@ -95,12 +171,6 @@ static int subtitleB = 31;
 // 0x637370
 static Rect winRect;
 
-// 0x637380
-static Rect movieRect;
-
-// 0x637390
-static void (*movieCallback)();
-
 // 0x637394
 static MovieUpdateCallbackProc* updateCallbackFunc;
 
@@ -110,32 +180,11 @@ static MovieSubtitleFunc* subtitleFilenameFunc;
 // 0x6373E4
 static int subtitleW;
 
-// 0x637398
-static int lastMovieBH;
-
-// 0x63739C
-static int lastMovieBW;
-
-// 0x6373A4
-static int lastMovieSX;
-
-// 0x6373A8
-static int lastMovieSY;
-
 // 0x6373AC
 static int movieScaleFlag;
 
-// 0x6373B4
-static int lastMovieH;
-
-// 0x6373B8
-static int lastMovieW;
-
-// 0x6373F0
-static int lastMovieX;
-
-// 0x6373BC
-static int lastMovieY;
+// Similar to 0x6373B4
+static SDL_Rect lastMovieRect;
 
 // 0x6373F4
 static MovieSubtitleListNode* subtitleList;
@@ -143,20 +192,11 @@ static MovieSubtitleListNode* subtitleList;
 // 0x6373C4
 static unsigned int movieFlags;
 
-// 0x6373C8
-static int movieAlphaFlag;
-
 // 0x6373CC
 static bool movieSubRectFlag;
 
 // 0x6373F8
 static int movieH;
-
-// 0x6373FC
-static int movieOffset;
-
-// 0x637410
-static unsigned char* lastMovieBuffer;
 
 // 0x637414
 static int movieW;
@@ -170,22 +210,70 @@ static int running;
 // 0x6373E8
 static DB_FILE* handle;
 
-// 0x6373EC
-static unsigned char* alphaWindowBuf;
-
 // 0x637400
 static int movieX;
 
 // 0x637404
 static int movieY;
 
-// 0x63740C
-static DB_FILE* alphaHandle;
+bool gMovieScaleResolution = true;
 
-// 0x637418
-static unsigned char* alphaBuf;
+static SDL_Rect movieComputeDirectRect(int srcWidth, int srcHeight)
+{
+    int availableX = movieX;
+    int availableY = movieY;
+    int availableWidth = movieW;
+    int availableHeight = movieH;
+    bool centered = (movieFlags & MOVIE_EXTENDED_FLAG_CENTERED) != 0;
 
-static unsigned char* MVE_lastBuffer = NULL;
+    if (!gMovieScaleResolution) {
+        if (!centered) {
+            return {
+                availableX,
+                availableY,
+                srcWidth,
+                srcHeight,
+            };
+        }
+
+        return {
+            availableX + (availableWidth - srcWidth) / 2,
+            availableY + (availableHeight - srcHeight) / 2,
+            srcWidth,
+            srcHeight,
+        };
+    }
+
+    int subtitleReserve = 0;
+    if ((movieFlags & MOVIE_EXTENDED_FLAG_SUBTITLES) != 0) {
+        subtitleReserve = subtitleH + 4;
+    }
+
+    auto fitInto = [&](int fitHeight) {
+        int movieWidth = availableWidth;
+        int movieHeight = movieWidth * srcHeight / srcWidth;
+        if (movieHeight > fitHeight) {
+            movieHeight = fitHeight;
+            movieWidth = fitHeight * srcWidth / srcHeight;
+        }
+
+        return SDL_Rect {
+            centered ? availableX + (availableWidth - movieWidth) / 2 : availableX,
+            centered ? availableY + (fitHeight - movieHeight) / 2 : availableY,
+            movieWidth,
+            movieHeight,
+        };
+    };
+
+    SDL_Rect movieRect = fitInto(availableHeight);
+
+    int marginHeight = (availableHeight - movieRect.h) / 2;
+    if (subtitleReserve > 0 && marginHeight < subtitleReserve && availableHeight > subtitleReserve) {
+        movieRect = fitInto(availableHeight - subtitleReserve);
+    }
+
+    return movieRect;
+}
 
 // 0x47840C
 static void* movieMalloc(size_t size)
@@ -206,60 +294,46 @@ static bool movieRead(void* handle, void* buf, int count)
 }
 
 // 0x478464
-static void movieDirect(unsigned char* pixels, int src_width, int src_height, int src_x, int src_y, int dst_width, int dst_height, int dst_x, int dst_y)
+static void movieDirect(unsigned char* pixels, int src_width, int src_height, int, int, int, int, int, int)
 {
-    int movWinWidth;
-    int movWinSpan;
-
-    SDL_Rect srcRect;
-    srcRect.x = src_x;
-    srcRect.y = src_y;
-    srcRect.w = src_width;
-    srcRect.h = src_height;
-
-    movWinWidth = winRect.lrx - winRect.ulx;
-    movWinSpan = movWinWidth + 1;
-
-    SDL_Rect destRect;
-
-    if (movieScaleFlag) {
-        if ((movieFlags & MOVIE_EXTENDED_FLAG_CENTERED) != 0) {
-            destRect.y = (winRect.lry - winRect.uly + 1 - dst_height) / 2;
-            destRect.x = (movWinSpan - 4 * src_width / 3) / 2;
-        } else {
-            destRect.y = movieY + winRect.uly;
-            destRect.x = winRect.ulx + movieX;
-        }
-
-        destRect.w = 4 * src_width / 3 + destRect.x;
-        destRect.h = dst_height + destRect.y;
-    } else {
-        if ((movieFlags & MOVIE_EXTENDED_FLAG_CENTERED) != 0) {
-            destRect.y = (winRect.lry - winRect.uly + 1 - dst_height) / 2;
-            destRect.x = (movWinSpan - dst_width) / 2;
-        } else {
-            destRect.y = movieY + winRect.uly;
-            destRect.x = winRect.ulx + movieX;
-        }
-        destRect.w = dst_width;
-        destRect.h = dst_height;
+    if (gMovieWindow == -1) {
+        return;
     }
 
-    lastMovieSX = src_x;
-    lastMovieSY = src_y;
-    lastMovieX = destRect.x;
-    lastMovieY = destRect.y;
-    lastMovieBH = src_height;
-    lastMovieW = destRect.w;
-    MVE_lastBuffer = pixels;
-    lastMovieBW = src_width;
-    lastMovieH = destRect.h;
+    if (lastMovieRect.w == 0) {
+        // We don't know the movie dimensions until we have the first frame, at which point we can compute the output rect
+        lastMovieRect = movieComputeDirectRect(src_width, src_height);
+        debug_printf("Movie output: x=%d, y=%d, w=%d, h=%d", lastMovieRect.x, lastMovieRect.y, lastMovieRect.w, lastMovieRect.h);
+    }
 
-    destRect.x += winRect.ulx;
-    destRect.y += winRect.uly;
+    if (lastMovieRect.w == src_width && lastMovieRect.h == src_height) {
+        movieDirectOverlay.active = false;
+        scr_blit(pixels, src_width, src_height, 0, 0, src_width, src_height, lastMovieRect.x, lastMovieRect.y);
+    } else {
+        // we're scaling, so use an SDL overlay to render
+        if (!movieDirectOverlayEnsureTexture(src_width, src_height)) {
+            movieFlags |= MOVIE_EXTENDED_FLAG_ERROR;
+            return;
+        }
 
-    scr_blit(pixels, src_width, src_height, src_x, src_y, dst_width, dst_height, dst_x, dst_y);
-    renderPresent();
+        movieDirectOverlayUpload(pixels, src_width, src_height);
+        movieDirectOverlay.dstRect = lastMovieRect;
+        movieDirectOverlay.active = true;
+    }
+}
+
+void movieRenderDirectOverlay()
+{
+    if (!movieDirectOverlay.active || movieDirectOverlay.texture == NULL) {
+        return;
+    }
+
+    SDL_RenderCopy(gSdlRenderer, movieDirectOverlay.texture, NULL, &movieDirectOverlay.dstRect);
+}
+
+void movieHandleRendererReset()
+{
+    movieDirectOverlayDestroy();
 }
 
 // 0x478710
@@ -269,18 +343,11 @@ static void movieBuffered(unsigned char* pixels, int src_width, int src_height, 
         return;
     }
 
-    lastMovieBW = src_width;
-    MVE_lastBuffer = pixels;
-    lastMovieBH = src_width;
-    lastMovieW = dst_width;
-    lastMovieH = dst_height;
-    lastMovieX = src_x;
-    lastMovieY = src_y;
-    lastMovieSX = src_x;
-    lastMovieSY = src_y;
+    lastMovieRect = { src_x, src_y, dst_width, dst_height };
 
-    MovieBlitFunc* func = showFrameFuncs[movieAlphaFlag][movieScaleFlag][movieSubRectFlag];
+    MovieBlitFunc* func = showFrameFuncs[movieScaleFlag][movieSubRectFlag];
     if (func(GNWWin, pixels, src_width, src_height, src_width) != 0) {
+        Rect movieRect = { movieX, movieY, movieX + movieW, movieY + movieH };
         win_draw_rect(GNWWin, &movieRect);
     }
 }
@@ -291,14 +358,14 @@ static int movieScaleSubRect(int win, unsigned char* data, int width, int height
     int windowWidth = win_width(win);
     unsigned char* windowBuffer = win_get_buf(win) + windowWidth * movieY + movieX;
     if (width * 4 / 3 > movieW) {
-        movieFlags |= 0x01;
+        movieFlags |= MOVIE_EXTENDED_FLAG_ERROR;
         return 0;
     }
 
-    int v1 = width / 3;
+    int tripletCount = width / 3;
     for (int y = 0; y < height; y++) {
         int x;
-        for (x = 0; x < v1; x++) {
+        for (x = 0; x < tripletCount; x++) {
             unsigned int value = data[0];
             value |= data[1] << 8;
             value |= data[2] << 16;
@@ -321,35 +388,12 @@ static int movieScaleSubRect(int win, unsigned char* data, int width, int height
     return 1;
 }
 
-// 0x478A84
-static int movieScaleWindowAlpha(int win, unsigned char* data, int width, int height, int pitch)
-{
-    movieFlags |= 1;
-    return 0;
-}
-
-// 0x478A84
-static int movieScaleSubRectAlpha(int win, unsigned char* data, int width, int height, int pitch)
-{
-    movieFlags |= 1;
-    return 0;
-}
-
-// 0x478A90
-static int blitAlpha(int win, unsigned char* data, int width, int height, int pitch)
-{
-    int windowWidth = win_width(win);
-    unsigned char* windowBuffer = win_get_buf(win);
-    alphaBltBuf(data, width, height, pitch, alphaWindowBuf, alphaBuf, windowBuffer + windowWidth * movieY + movieX, windowWidth);
-    return 1;
-}
-
 // 0x478AE4
 static int movieScaleWindow(int win, unsigned char* data, int width, int height, int pitch)
 {
     int windowWidth = win_width(win);
     if (width != 3 * windowWidth / 4) {
-        movieFlags |= 1;
+        movieFlags |= MOVIE_EXTENDED_FLAG_ERROR;
         return 0;
     }
 
@@ -393,6 +437,7 @@ static void movieSetPalette(unsigned char* palette, int start, int end)
 // 0x478C1C
 void initMovie()
 {
+    movieDirectOverlayDestroy();
     MveSetMemory(movieMalloc, movieFree);
     MveSetPalette(movieSetPalette);
     MveSetScreenSize(screenGetWidth(), screenGetHeight());
@@ -406,21 +451,9 @@ static void cleanupMovie(bool shouldEndMovie)
         return;
     }
 
-    int frame;
-    int dropped;
+    int frame, dropped;
     MVE_rmFrameCounts(&frame, &dropped);
     debug_printf("Frames %d, dropped %d\n", frame, dropped);
-
-    if (lastMovieBuffer != NULL) {
-        myfree(lastMovieBuffer, __FILE__, __LINE__); // "..\\int\\MOVIE.C", 787
-        lastMovieBuffer = NULL;
-    }
-
-    if (MVE_lastBuffer != NULL) {
-        lastMovieBuffer = (unsigned char*)mymalloc(lastMovieBH * lastMovieBW, __FILE__, __LINE__); // "..\\int\\MOVIE.C", 802
-        memcpy(lastMovieBuffer, MVE_lastBuffer, lastMovieBW * lastMovieBH);
-        MVE_lastBuffer = NULL;
-    }
 
     if (shouldEndMovie) {
         MVE_rmEndMovie();
@@ -429,26 +462,8 @@ static void cleanupMovie(bool shouldEndMovie)
     MVE_ReleaseMem();
 
     db_fclose(handle);
-
-    if (alphaWindowBuf != NULL) {
-        buf_to_buf(alphaWindowBuf, movieW, movieH, movieW, win_get_buf(GNWWin) + movieY * win_width(GNWWin) + movieX, win_width(GNWWin));
-        win_draw_rect(GNWWin, &movieRect);
-    }
-
-    if (alphaHandle != NULL) {
-        db_fclose(alphaHandle);
-        alphaHandle = NULL;
-    }
-
-    if (alphaBuf != NULL) {
-        myfree(alphaBuf, __FILE__, __LINE__); // "..\\int\\MOVIE.C", 840
-        alphaBuf = NULL;
-    }
-
-    if (alphaWindowBuf != NULL) {
-        myfree(alphaWindowBuf, __FILE__, __LINE__); // "..\\int\\MOVIE.C", 845
-        alphaWindowBuf = NULL;
-    }
+    handle = NULL;
+    movieDirectOverlayDestroy();
 
     while (subtitleList != NULL) {
         MovieSubtitleListNode* next = subtitleList->next;
@@ -460,7 +475,6 @@ static void cleanupMovie(bool shouldEndMovie)
     running = 0;
     movieSubRectFlag = 0;
     movieScaleFlag = 0;
-    movieAlphaFlag = 0;
     movieFlags = 0;
     GNWWin = -1;
 }
@@ -468,12 +482,7 @@ static void cleanupMovie(bool shouldEndMovie)
 // 0x478F2C
 void movieClose()
 {
-    cleanupMovie(1);
-
-    if (lastMovieBuffer) {
-        myfree(lastMovieBuffer, __FILE__, __LINE__); // "..\\int\\MOVIE.C", 869
-        lastMovieBuffer = NULL;
-    }
+    cleanupMovie(true);
 }
 
 // 0x478F60
@@ -543,17 +552,6 @@ void movieSetCallback(MovieUpdateCallbackProc* func)
     updateCallbackFunc = func;
 }
 
-// 0x4790EC
-static void cleanupLast()
-{
-    if (lastMovieBuffer != NULL) {
-        myfree(lastMovieBuffer, __FILE__, __LINE__); // "..\\int\\MOVIE.C", 981
-        lastMovieBuffer = NULL;
-    }
-
-    MVE_lastBuffer = NULL;
-}
-
 // 0x479120
 static DB_FILE* openFile(char* filePath)
 {
@@ -568,7 +566,7 @@ static DB_FILE* openFile(char* filePath)
 // 0x479184
 static void openSubtitle(char* filePath)
 {
-    subtitleW = win_width(GNWWin);
+    subtitleW = movieW;
     subtitleH = text_height() + 4;
 
     if (subtitleFilenameFunc != NULL) {
@@ -647,15 +645,30 @@ static void doSubtitle()
         return;
     }
 
-    int v1 = text_height();
-    int v2 = (480 - lastMovieH - lastMovieY - v1) / 2 + lastMovieH + lastMovieY;
-
-    if (subtitleH + v2 > windowGetYres()) {
-        subtitleH = windowGetYres() - v2;
+    int subtitleX = movieX;
+    int subtitleW = subtitleW;
+    int movieY = movieY;
+    int movieHeight = movieH;
+    if ((movieFlags & MOVIE_EXTENDED_FLAG_DIRECT) != 0 && lastMovieRect.w > 0 && lastMovieRect.h > 0) {
+        subtitleX = lastMovieRect.x;
+        subtitleW = lastMovieRect.w;
+        movieY = lastMovieRect.y;
+        movieHeight = lastMovieRect.h;
     }
 
-    int frame;
-    int dropped;
+    int lineHeight = text_height();
+    int subtitleY = (win_height(gMovieWindow) - movieHeight - movieY - lineHeight) / 2 + movieHeight + movieY;
+
+    int subtitleHeight = subtitleH;
+    int movieWindowHeight = win_height(gMovieWindow);
+    if (subtitleHeight + subtitleY > movieWindowHeight) {
+        subtitleHeight = movieWindowHeight - subtitleY;
+    }
+    if (subtitleHeight <= 0) {
+        return;
+    }
+
+    int frame, dropped;
     MVE_rmFrameCounts(&frame, &dropped);
 
     while (subtitleList != NULL) {
@@ -665,7 +678,7 @@ static void doSubtitle()
 
         MovieSubtitleListNode* next = subtitleList->next;
 
-        win_fill(GNWWin, 0, v2, subtitleW, subtitleH, 0);
+        win_fill(GNWWin, 0, subtitleX, subtitleY, subtitleW, subtitleHeight, 0);
 
         int oldFont;
         if (subtitleFont != -1) {
@@ -674,13 +687,13 @@ static void doSubtitle()
         }
 
         int colorIndex = (subtitleR << 10) | (subtitleG << 5) | subtitleB;
-        windowWrapLine(GNWWin, subtitleList->text, subtitleW, subtitleH, 0, v2, colorTable[colorIndex] | 0x2000000, TEXT_ALIGNMENT_CENTER);
+        windowWrapLine(GNWWin, subtitleList->text, subtitleW, subtitleHeight, subtitleX, subtitleY, colorTable[colorIndex] | 0x2000000, TEXT_ALIGNMENT_CENTER);
 
         Rect rect;
-        rect.lrx = subtitleW;
-        rect.uly = v2;
-        rect.lry = v2 + subtitleH;
-        rect.ulx = 0;
+        rect.lrx = subtitleX + subtitleW - 1;
+        rect.uly = subtitleY;
+        rect.lry = subtitleY + subtitleHeight - 1;
+        rect.ulx = subtitleX;
         win_draw_rect(GNWWin, &rect);
 
         myfree(subtitleList->text, __FILE__, __LINE__); // "..\\int\\MOVIE.C", 1108
@@ -701,8 +714,6 @@ static int movieStart(int win, char* filePath)
         return 1;
     }
 
-    cleanupLast();
-
     handle = openFile(filePath);
     if (handle == NULL) {
         return 1;
@@ -711,6 +722,7 @@ static int movieStart(int win, char* filePath)
     GNWWin = win;
     running = 1;
     movieFlags &= ~MOVIE_EXTENDED_FLAG_ERROR;
+    lastMovieRect = { 0, 0, 0, 0 };
 
     if ((movieFlags & MOVIE_EXTENDED_FLAG_SUBTITLES) != 0) {
         openSubtitle(filePath);
@@ -735,44 +747,7 @@ static int movieStart(int win, char* filePath)
         debug_printf("not scaled\n");
     }
 
-    if (alphaHandle != NULL) {
-        unsigned long size;
-        db_freadLong(alphaHandle, &size);
-
-        short tmp;
-        db_freadInt16(alphaHandle, &tmp);
-        db_freadInt16(alphaHandle, &tmp);
-
-        alphaBuf = (unsigned char*)mymalloc(size, __FILE__, __LINE__); // "..\\int\\MOVIE.C", 1178
-        alphaWindowBuf = (unsigned char*)mymalloc(movieH * movieW, __FILE__, __LINE__); // "..\\int\\MOVIE.C", 1179
-
-        unsigned char* windowBuffer = win_get_buf(GNWWin);
-        buf_to_buf(windowBuffer + win_width(GNWWin) * movieY + movieX,
-            movieW,
-            movieH,
-            win_width(GNWWin),
-            alphaWindowBuf,
-            movieW);
-    }
-
-    movieRect.ulx = movieX;
-    movieRect.uly = movieY;
-    movieRect.lrx = movieW + movieX;
-    movieRect.lry = movieH + movieY;
-
     return 0;
-}
-
-// 0x479768
-static bool localMovieCallback()
-{
-    doSubtitle();
-
-    if (movieCallback != NULL) {
-        movieCallback();
-    }
-
-    return get_input() != -1;
 }
 
 // 0x4798CC
@@ -784,7 +759,6 @@ int movieRun(int win, char* filePath)
 
     movieX = 0;
     movieY = 0;
-    movieOffset = 0;
     movieW = win_width(win);
     movieH = win_height(win);
     movieSubRectFlag = 0;
@@ -800,7 +774,6 @@ int movieRunRect(int win, char* filePath, int x, int y, int w, int h)
 
     movieX = x;
     movieY = y;
-    movieOffset = x + y * win_width(win);
     movieW = w;
     movieH = h;
     movieSubRectFlag = 1;
@@ -811,15 +784,10 @@ int movieRunRect(int win, char* filePath, int x, int y, int w, int h)
 // 0x479980
 static int stepMovie()
 {
-    if (alphaHandle != NULL) {
-        unsigned long size;
-        db_freadLong(alphaHandle, &size);
-        db_fread(alphaBuf, 1, size, alphaHandle);
-    }
-
     int rc = _MVE_rmStepMovie();
     if (rc != -1) {
         doSubtitle();
+        renderPresent();
     }
 
     return rc;
@@ -847,24 +815,23 @@ void movieUpdate()
 
     if ((movieFlags & MOVIE_EXTENDED_FLAG_STOP_REQUESTED) != 0) {
         debug_printf("Movie aborted\n");
-        cleanupMovie(1);
+        cleanupMovie(true);
         return;
     }
 
     if ((movieFlags & MOVIE_EXTENDED_FLAG_ERROR) != 0) {
         debug_printf("Movie error\n");
-        cleanupMovie(1);
+        cleanupMovie(true);
         return;
     }
 
     if (stepMovie() == -1) {
-        cleanupMovie(1);
+        cleanupMovie(true);
         return;
     }
 
     if (updateCallbackFunc != NULL) {
-        int frame;
-        int dropped;
+        int frame, dropped;
         MVE_rmFrameCounts(&frame, &dropped);
         updateCallbackFunc(frame);
     }
