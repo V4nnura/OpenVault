@@ -170,50 +170,19 @@ jobs:
           path: out
           key: linux-${{ matrix.arch }}-cmake-v101
 
-      - name: Configure (${{ matrix.arch }})
-        if: matrix.arch == 'x86' || matrix.arch == 'x64'
+      - name: Configure 
         run: |
           cmake --preset linux-${{ matrix.arch }}-debug
 
-      - name: Configure (armhf)
-        if: matrix.arch == 'armhf'
-        run: |
-          cmake \
-            -B build \
-            -D CMAKE_BUILD_TYPE=Debug \
-            -D FALLOUT_VENDORED=OFF \
-            -D CMAKE_SYSTEM_PROCESSOR=arm \
-            -D CMAKE_C_COMPILER=arm-linux-gnueabihf-gcc \
-            -D CMAKE_CXX_COMPILER=arm-linux-gnueabihf-g++ \
-            # EOL
-
-      - name: Configure (arm64)
-        if: matrix.arch == 'arm64'
-        run: |
-          cmake \
-            -B build \
-            -D CMAKE_BUILD_TYPE=Debug \
-            -D FALLOUT_VENDORED=OFF \
-            # EOL
-
-      - name: Build (${{ matrix.arch }})
-        if: matrix.arch == 'x86' || matrix.arch == 'x64'
+      - name: Build
         run: |
           cmake --build --preset linux-${{ matrix.arch }}-debug
 
-      - name: Build (${{ matrix.arch }})
-        if: matrix.arch == 'armhf' || matrix.arch == 'arm64'
-        run: |
-          cmake \
-            --build build \
-            -j $(nproc) \
-            # EOL
-
-      - name: Package (${{ matrix.arch }})
+      - name: Package
         run: |
           tar -czvf out/build/linux-${{ matrix.arch }}-debug/fallout-ce-linux-${{ matrix.arch }}.tar.gz -C out/build/linux-${{ matrix.arch }}-debug fallout-ce
 
-      - name: Upload (${{ matrix.arch }})
+      - name: Upload
         uses: actions/upload-artifact@v7
         with:
           name: fallout-ce-linux-${{ matrix.arch }}
