@@ -36,7 +36,6 @@ typedef struct MovieEffect {
 
 static void moviefx_callback_func(int frame);
 static void moviefx_palette_func(unsigned char* palette, int start, int end);
-static void moviefx_add(MovieEffect* movie_effect);
 static void moviefx_remove_all();
 
 // 0x505B68
@@ -216,8 +215,8 @@ int moviefx_start(const char* filePath)
                 inside_fade = true;
             }
 
-            // NOTE: Uninline.
-            moviefx_add(movieEffect);
+            movieEffect->next = moviefx_effects_list;
+            moviefx_effects_list = movieEffect;
 
             movieEffectsCreated++;
         }
@@ -297,13 +296,6 @@ static void moviefx_palette_func(unsigned char* palette, int start, int end)
     if (!inside_fade) {
         palette_set_entries(palette, start, end);
     }
-}
-
-// 0x47A10C
-static void moviefx_add(MovieEffect* movie_effect)
-{
-    movie_effect->next = moviefx_effects_list;
-    moviefx_effects_list = movie_effect;
 }
 
 // 0x47A120
