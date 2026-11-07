@@ -1,5 +1,6 @@
 #include "plib/gnw/svga.h"
 
+#include "int/movie.h"
 #include "plib/gnw/debug.h"
 #include "plib/gnw/gnw.h"
 #include "plib/gnw/grbuf.h"
@@ -295,6 +296,7 @@ static void destroyRenderer()
 
 void handleWindowSizeChanged()
 {
+    movieHandleRendererReset();
     destroyRenderer();
     createRenderer(screenGetWidth(), screenGetHeight());
 }
@@ -305,6 +307,8 @@ void renderPresent()
     SDL_UpdateTexture(gSdlTexture, NULL, gSdlTextureSurface->pixels, gSdlTextureSurface->pitch);
     SDL_RenderClear(gSdlRenderer);
     SDL_RenderCopy(gSdlRenderer, gSdlTexture, NULL, NULL);
+    // render movie SDL texture if present
+    movieRenderDirectOverlay();
     SDL_RenderPresent(gSdlRenderer);
 }
 
