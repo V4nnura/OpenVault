@@ -678,7 +678,7 @@ static void doSubtitle()
 
         MovieSubtitleListNode* next = subtitleList->next;
 
-        win_fill(GNWWin, 0, subtitleX, subtitleY, subtitleW, subtitleHeight, 0);
+        win_fill(GNWWin, subtitleX, subtitleY, subtitleW, subtitleHeight, 0);
 
         int oldFont;
         if (subtitleFont != -1) {
