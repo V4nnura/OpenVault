@@ -667,7 +667,7 @@ static int partyMemberItemRecover(PartyMember* partyMember)
     memcpy(script, partyMember->script, sizeof(*script));
 
     partyMember->object->sid = partyMemberItemCount | (SCRIPT_TYPE_ITEM << 24);
-    script->scr_id = partyMember->object->sid
+    script->scr_id = partyMember->object->sid;
 
     script->program = NULL;
     script->scr_flags &= ~(SCRIPT_FLAG_LOADED | SCRIPT_FLAG_EXECUTED | SCRIPT_FLAG_NO_SAVE | SCRIPT_FLAG_NO_REMOVE);
