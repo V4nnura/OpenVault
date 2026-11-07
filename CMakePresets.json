@@ -239,7 +239,7 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo"
             }
-        },
+        }
     ],
     "buildPresets": [
         {
