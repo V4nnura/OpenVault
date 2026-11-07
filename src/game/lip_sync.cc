@@ -7,6 +7,7 @@
 #include "int/audio.h"
 #include "int/sound.h"
 #include "platform_compat.h"
+#include "plib/db/db.h"
 #include "plib/gnw/debug.h"
 #include "plib/gnw/input.h"
 #include "plib/gnw/memory.h"
@@ -25,10 +26,10 @@ static int lips_make_speech();
 unsigned char head_phoneme_current = 0;
 
 // 0x5057E5
-unsigned char head_phoneme_drawn = 0;
+static unsigned char head_phoneme_drawn = 0;
 
 // 0x5057E8
-int head_marker_current = 0;
+static int head_marker_current = 0;
 
 // 0x5057EC
 bool lips_draw_head = true;
@@ -62,7 +63,7 @@ LipsData lip_info = {
 };
 
 // 0x505958
-int speechStartTime = 0;
+static int speechStartTime = 0;
 
 // 0x612220
 static char lips_subdir_name[14];
