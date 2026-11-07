@@ -17,7 +17,6 @@ namespace fallout {
 static char* lips_fix_string(const char* fileName, size_t length);
 static unsigned char lips_get_phoneme(int index);
 static int lips_stop_speech();
-static int lips_read_marker_type(SpeechMarker* marker_type, DB_FILE* stream);
 static int lips_read_lipsynch_info(LipsData* lipsData, DB_FILE* stream);
 static int lips_make_speech();
 
@@ -221,22 +220,6 @@ static int lips_stop_speech()
     return 0;
 }
 
-// 0x46CECC
-static int lips_read_marker_type(SpeechMarker* marker_type, DB_FILE* stream)
-{
-    int marker;
-
-    // Marker is read into temporary variable.
-    if (db_freadInt32(stream, &marker) == -1) return -1;
-
-    // Position is read directly into struct.
-    if (db_freadInt32(stream, &(marker_type->position)) == -1) return -1;
-
-    marker_type->marker = marker;
-
-    return 0;
-}
-
 // 0x46CF08
 static int lips_read_lipsynch_info(LipsData* lipsData, DB_FILE* stream)
 {
@@ -405,11 +388,18 @@ int lips_load_file(const char* audioFileName, const char* headFileName)
 
     if (stream != NULL) {
         for (i = 0; i < lip_info.marker_count; i++) {
-            // NOTE: Uninline.
-            if (lips_read_marker_type(&(lip_info.markers[i]), stream) != 0) {
-                debug_printf("lips_load_file: Error reading marker type.");
-                return -1;
-            }
+            speech_marker = &(lip_info.markers[i]);
+
+            // Marker is read into temporary variable.
+            if (db_freadInt32(stream, &(speech_marker->marker)) == -1) break;
+
+            // Position is read directly into struct.
+            if (db_freadInt32(stream, &(speech_marker->position)) == -1) break;
+        }
+
+        if (i != lip_info.marker_count) {
+            debug_printf("lips_load_file: Error reading marker type.");
+            return -1;
         }
 
         speech_marker = &(lip_info.markers[0]);
