@@ -201,11 +201,7 @@ int audioEngineCreateSoundBuffer(unsigned int size, int bitsPerSample, int chann
 
 bool audioEngineSoundBufferRelease(int soundBufferIndex)
 {
-    if (!audioEngineIsInitialized()) {
-        return false;
-    }
-
-    if (!soundBufferIsValid(soundBufferIndex)) {
+    if (!audioEngineIsInitialized() || !soundBufferIsValid(soundBufferIndex)) {
         return false;
     }
 
@@ -231,11 +227,7 @@ bool audioEngineSoundBufferRelease(int soundBufferIndex)
 
 bool audioEngineSoundBufferSetVolume(int soundBufferIndex, int volume)
 {
-    if (!audioEngineIsInitialized()) {
-        return false;
-    }
-
-    if (!soundBufferIsValid(soundBufferIndex)) {
+    if (!audioEngineIsInitialized() || !soundBufferIsValid(soundBufferIndex)) {
         return false;
     }
 
@@ -255,11 +247,7 @@ bool audioEngineSoundBufferSetVolume(int soundBufferIndex, int volume)
 
 bool audioEngineSoundBufferGetVolume(int soundBufferIndex, int* volumePtr)
 {
-    if (!audioEngineIsInitialized()) {
-        return false;
-    }
-
-    if (!soundBufferIsValid(soundBufferIndex)) {
+    if (!audioEngineIsInitialized() || !soundBufferIsValid(soundBufferIndex)) {
         return false;
     }
 
@@ -279,11 +267,7 @@ bool audioEngineSoundBufferGetVolume(int soundBufferIndex, int* volumePtr)
 
 bool audioEngineSoundBufferSetPan(int soundBufferIndex, int pan)
 {
-    if (!audioEngineIsInitialized()) {
-        return false;
-    }
-
-    if (!soundBufferIsValid(soundBufferIndex)) {
+    if (!audioEngineIsInitialized() || !soundBufferIsValid(soundBufferIndex)) {
         return false;
     }
 
@@ -304,11 +288,7 @@ bool audioEngineSoundBufferSetPan(int soundBufferIndex, int pan)
 
 bool audioEngineSoundBufferPlay(int soundBufferIndex, unsigned int flags)
 {
-    if (!audioEngineIsInitialized()) {
-        return false;
-    }
-
-    if (!soundBufferIsValid(soundBufferIndex)) {
+    if (!audioEngineIsInitialized() || !soundBufferIsValid(soundBufferIndex)) {
         return false;
     }
 
@@ -332,11 +312,7 @@ bool audioEngineSoundBufferPlay(int soundBufferIndex, unsigned int flags)
 
 bool audioEngineSoundBufferStop(int soundBufferIndex)
 {
-    if (!audioEngineIsInitialized()) {
-        return false;
-    }
-
-    if (!soundBufferIsValid(soundBufferIndex)) {
+    if (!audioEngineIsInitialized() || !soundBufferIsValid(soundBufferIndex)) {
         return false;
     }
 
@@ -356,11 +332,7 @@ bool audioEngineSoundBufferStop(int soundBufferIndex)
 
 bool audioEngineSoundBufferGetCurrentPosition(int soundBufferIndex, unsigned int* readPosPtr, unsigned int* writePosPtr)
 {
-    if (!audioEngineIsInitialized()) {
-        return false;
-    }
-
-    if (!soundBufferIsValid(soundBufferIndex)) {
+    if (!audioEngineIsInitialized() || !soundBufferIsValid(soundBufferIndex)) {
         return false;
     }
 
@@ -393,11 +365,7 @@ bool audioEngineSoundBufferGetCurrentPosition(int soundBufferIndex, unsigned int
 
 bool audioEngineSoundBufferSetCurrentPosition(int soundBufferIndex, unsigned int pos)
 {
-    if (!audioEngineIsInitialized()) {
-        return false;
-    }
-
-    if (!soundBufferIsValid(soundBufferIndex)) {
+    if (!audioEngineIsInitialized() || !soundBufferIsValid(soundBufferIndex)) {
         return false;
     }
 
@@ -417,11 +385,7 @@ bool audioEngineSoundBufferSetCurrentPosition(int soundBufferIndex, unsigned int
 
 bool audioEngineSoundBufferLock(int soundBufferIndex, unsigned int writePos, unsigned int writeBytes, void** audioPtr1, unsigned int* audioBytes1, void** audioPtr2, unsigned int* audioBytes2, unsigned int flags)
 {
-    if (!audioEngineIsInitialized()) {
-        return false;
-    }
-
-    if (!soundBufferIsValid(soundBufferIndex)) {
+    if (!audioEngineIsInitialized() || !soundBufferIsValid(soundBufferIndex)) {
         return false;
     }
 
@@ -486,11 +450,7 @@ bool audioEngineSoundBufferLock(int soundBufferIndex, unsigned int writePos, uns
 
 bool audioEngineSoundBufferUnlock(int soundBufferIndex, void* audioPtr1, unsigned int audioBytes1, void* audioPtr2, unsigned int audioBytes2)
 {
-    if (!audioEngineIsInitialized()) {
-        return false;
-    }
-
-    if (!soundBufferIsValid(soundBufferIndex)) {
+    if (!audioEngineIsInitialized() || !soundBufferIsValid(soundBufferIndex)) {
         return false;
     }
 
@@ -510,11 +470,7 @@ bool audioEngineSoundBufferUnlock(int soundBufferIndex, void* audioPtr1, unsigne
 
 bool audioEngineSoundBufferGetStatus(int soundBufferIndex, unsigned int* statusPtr)
 {
-    if (!audioEngineIsInitialized()) {
-        return false;
-    }
-
-    if (!soundBufferIsValid(soundBufferIndex)) {
+    if (!audioEngineIsInitialized() || !soundBufferIsValid(soundBufferIndex)) {
         return false;
     }
 
