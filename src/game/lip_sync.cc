@@ -17,7 +17,6 @@ namespace fallout {
 static char* lips_fix_string(const char* fileName, size_t length);
 static unsigned char lips_get_phoneme(int index);
 static int lips_stop_speech();
-static int lips_read_phoneme_type(unsigned char* phoneme_type, DB_FILE* stream);
 static int lips_read_marker_type(SpeechMarker* marker_type, DB_FILE* stream);
 static int lips_read_lipsynch_info(LipsData* lipsData, DB_FILE* stream);
 static int lips_make_speech();
@@ -222,12 +221,6 @@ static int lips_stop_speech()
     return 0;
 }
 
-// 0x46CEBC
-static int lips_read_phoneme_type(unsigned char* phoneme_type, DB_FILE* stream)
-{
-    return db_freadByte(stream, phoneme_type);
-}
-
 // 0x46CECC
 static int lips_read_marker_type(SpeechMarker* marker_type, DB_FILE* stream)
 {
@@ -390,7 +383,7 @@ int lips_load_file(const char* audioFileName, const char* headFileName)
 
     if (stream != NULL) {
         for (i = 0; i < lip_info.phoneme_count; i++) {
-            if (lips_read_phoneme_type(&(lip_info.phonemes[i]), stream) != 0) {
+            if (db_freadByte(stream, &(lip_info.phonemes[i])) != 0) {
                 debug_printf("lips_load_file: Error reading phoneme type.\n");
                 return -1;
             }
