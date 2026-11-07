@@ -40,6 +40,14 @@
             "architecture": "x64"
         },
         {
+            "name": "windows-arm64",
+            "inherits": [
+                "windows-base"
+            ],
+            "generator": "Visual Studio 18 2026",
+            "architecture": "arm64"
+        },
+        {
             "name": "linux-base",
             "hidden": true,
             "inherits": [
@@ -210,6 +218,28 @@
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo"
             }
         }
+        {
+            "name": "Mingw-arm64-debug",
+            "displayName": "MinGW arm64 Debug",
+            "description": "Cross-compile a Debug Windows arm64 build with MinGW-w64 and Ninja.",
+            "inherits": [
+                "Mingw-arm64-base"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "Mingw-arm64-release",
+            "displayName": "MinGW arm64 Release",
+            "description": "Cross-compile a RelWithDebInfo Windows arm64 build with MinGW-w64 and Ninja.",
+            "inherits": [
+                "Mingw-arm64-debug"
+            ],
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
+            }
+        },
     ],
     "buildPresets": [
         {
@@ -230,6 +260,16 @@
         {
             "name": "windows-x64-release",
             "configurePreset": "windows-x64",
+            "configuration": "Release"
+        },
+        {
+            "name": "windows-arm64-debug",
+            "configurePreset": "windows-arm64",
+            "configuration": "Debug"
+        },
+        {
+            "name": "windows-arm64-release",
+            "configurePreset": "windows-arm64",
             "configuration": "Release"
         },
         {
