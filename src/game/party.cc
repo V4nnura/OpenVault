@@ -71,7 +71,6 @@ static int partyStatePrepped = 0;
 // 0x485250
 int partyMemberAdd(Object* object)
 {
-    int index;
     PartyMember* partyMember;
     Script* script;
 
@@ -79,7 +78,7 @@ int partyMemberAdd(Object* object)
         return -1;
     }
 
-    for (index = 0; index < partyMemberCount; index++) {
+    for (int index = 0; index < partyMemberCount; index++) {
         partyMember = &(partyMemberList[index]);
         if (partyMember->object == object || partyMember->object->pid == object->pid) {
             return 0;
@@ -162,19 +161,16 @@ int partyMemberRemove(Object* object)
 // 0x48542C
 int partyMemberPrepSave()
 {
-    int index;
-    PartyMember* partyMember;
-    Script* script;
-
     partyStatePrepped = 1;
 
-    for (index = 0; index < partyMemberCount; index++) {
-        partyMember = &(partyMemberList[index]);
+    for (int index = 0; index < partyMemberCount; index++) {
+        PartyMember* partyMember = &(partyMemberList[index]);
 
         if (index > 0) {
             partyMember->object->flags &= ~(OBJECT_NO_REMOVE | OBJECT_NO_SAVE);
         }
 
+        Script* script;
         if (scr_ptr(partyMember->object->sid, &script) != -1) {
             script->scr_flags &= ~(SCRIPT_FLAG_NO_SAVE | SCRIPT_FLAG_NO_REMOVE);
         }
@@ -186,17 +182,14 @@ int partyMemberPrepSave()
 // 0x49466C
 int partyMemberUnPrepSave()
 {
-    int index;
-    PartyMember* partyMember;
-    Script* script;
-
-    for (index = 0; index < partyMemberCount; index++) {
-        partyMember = &(partyMemberList[index]);
+    for (int index = 0; index < partyMemberCount; index++) {
+        PartyMember* partyMember = &(partyMemberList[index]);
 
         if (index > 0) {
             partyMember->object->flags |= (OBJECT_NO_REMOVE | OBJECT_NO_SAVE);
         }
 
+        Script* script;
         if (scr_ptr(partyMember->object->sid, &script) != -1) {
             script->scr_flags |= (SCRIPT_FLAG_NO_SAVE | SCRIPT_FLAG_NO_REMOVE);
         }
@@ -210,14 +203,11 @@ int partyMemberUnPrepSave()
 // 0x4854EC
 int partyMemberSave(DB_FILE* stream)
 {
-    int index;
-    PartyMember* partyMember;
-
     if (db_fwriteInt(stream, partyMemberCount) == -1) return -1;
     if (db_fwriteInt(stream, partyMemberItemCount) == -1) return -1;
 
-    for (index = 1; index < partyMemberCount; index++) {
-        partyMember = &(partyMemberList[index]);
+    for (int index = 1; index < partyMemberCount; index++) {
+        PartyMember* partyMember = &(partyMemberList[index]);
         if (db_fwriteInt(stream, partyMember->object->id) == -1) return -1;
     }
 
@@ -227,9 +217,7 @@ int partyMemberSave(DB_FILE* stream)
 // 0x485554
 static Object* partyMemberFindID(int id)
 {
-    Object* object;
-
-    object = obj_find_first();
+    Object* object = obj_find_first();
     while (object != NULL) {
         if (object->id == id) {
             break;
@@ -243,18 +231,15 @@ static Object* partyMemberFindID(int id)
 // 0x485570
 int partyMemberPrepLoad()
 {
-    int index;
-    PartyMember* partyMember;
-    Script* script;
-
     if (partyStatePrepped) {
         return -1;
     }
 
     partyStatePrepped = 1;
 
-    for (index = 0; index < partyMemberCount; index++) {
-        partyMember = &(partyMemberList[index]);
+    for (int index = 0; index < partyMemberCount; index++) {
+        PartyMember* partyMember = &(partyMemberList[index]);
+        Script* script;
 
         if (scr_ptr(partyMember->object->sid, &script) != -1) {
             partyMember->script = (Script*)mem_malloc(sizeof(*script));
@@ -295,8 +280,6 @@ int partyMemberPrepLoad()
 // 0x4856C8
 int partyMemberRecoverLoad()
 {
-    int index;
-    PartyMember* partyMember;
     Script* script;
     int sid = -1;
 
@@ -307,8 +290,8 @@ int partyMemberRecoverLoad()
 
     debug_printf("\n");
 
-    for (index = 0; index < partyMemberCount; index++) {
-        partyMember = &(partyMemberList[index]);
+    for (int index = 0; index < partyMemberCount; index++) {
+        PartyMember* partyMember = &(partyMemberList[index]);
         if (partyMember->script != NULL) {
             if (scr_new(&sid, SCRIPT_TYPE_CRITTER) == -1) {
                 GNWSystemError("\n  Error!: partyMemberRecoverLoad: Can't create script!");
@@ -361,8 +344,6 @@ int partyMemberRecoverLoad()
 int partyMemberLoad(DB_FILE* stream)
 {
     int objectIds[20];
-    int index;
-    Object* object;
 
     if (db_freadInt(stream, &partyMemberCount) == -1) return -1;
     if (db_freadInt(stream, &partyMemberItemCount) == -1) return -1;
@@ -370,12 +351,13 @@ int partyMemberLoad(DB_FILE* stream)
     partyMemberList[0].object = obj_dude;
 
     if (partyMemberCount != 0) {
+        int index;
         for (index = 1; index < partyMemberCount; index++) {
             if (db_freadInt(stream, &(objectIds[index])) == -1) return -1;
         }
 
         for (index = 1; index < partyMemberCount; index++) {
-            object = partyMemberFindID(objectIds[index]);
+            Object* object = partyMemberFindID(objectIds[index]);
 
             if (object == NULL) {
                 debug_printf("\n  Error: partyMemberLoad: Can't match ID!");
@@ -398,13 +380,11 @@ int partyMemberLoad(DB_FILE* stream)
 // 0x485978
 void partyMemberClear()
 {
-    int index;
-
     if (partyStatePrepped) {
         partyMemberUnPrepSave();
     }
 
-    for (index = partyMemberCount; index > 1; index--) {
+    for (int index = partyMemberCount; index > 1; index--) {
         partyMemberRemove(partyMemberList[1].object);
     }
 
@@ -419,11 +399,8 @@ void partyMemberClear()
 // 0x4859C8
 int partyMemberSyncPosition()
 {
-    int index;
-    PartyMember* partyMember;
-
-    for (index = 1; index < partyMemberCount; index++) {
-        partyMember = &(partyMemberList[index]);
+    for (int index = 1; index < partyMemberCount; index++) {
+        PartyMember* partyMember = &(partyMemberList[index]);
         if ((partyMember->object->flags & OBJECT_HIDDEN) == 0) {
             obj_attempt_placement(partyMember->object, obj_dude->tile, obj_dude->elevation, 2);
         }
@@ -456,11 +433,8 @@ int partyMemberRestingHeal(int hours)
 // 0x485A78
 Object* partyMemberFindObjFromPid(int pid)
 {
-    int index;
-    Object* object;
-
-    for (index = 0; index < partyMemberCount; index++) {
-        object = partyMemberList[index].object;
+    for (int index = 0; index < partyMemberCount; index++) {
+        Object* object = partyMemberList[index].object;
         if (object->pid == pid) {
             return object;
         }
@@ -474,13 +448,15 @@ Object* partyMemberFindObjFromPid(int pid)
 // 0x485AAC
 bool isPartyMember(Object* object)
 {
-    int index;
+    if (object == NULL) {
+        return false;
+    }
 
     if (object->id < 18000) {
         return false;
     }
 
-    for (index = 0; index < partyMemberCount; index++) {
+    for (int index = 0; index < partyMemberCount; index++) {
         if (partyMemberList[index].object == object) {
             return true;
         }
@@ -494,12 +470,10 @@ bool isPartyMember(Object* object)
 // 0x485AE8
 int getPartyMemberCount()
 {
-    int index;
-    Object* object;
     int count = partyMemberCount;
 
-    for (index = 1; index < partyMemberCount; index++) {
-        object = partyMemberList[index].object;
+    for (int index = 1; index < partyMemberCount; index++) {
+        Object* object = partyMemberList[index].object;
         if ((object->flags & OBJECT_HIDDEN) != 0) {
             count--;
         }
@@ -574,16 +548,11 @@ static int partyMemberNewObjIDRecurseFind(Object* obj, int objectId)
 // 0x485BEC
 int partyMemberPrepItemSaveAll()
 {
-    int partyMemberIndex;
-    Object* object;
-    Inventory* inventory;
-    int inventoryItemIndex;
+    for (int partyMemberIndex = 0; partyMemberIndex < partyMemberCount; partyMemberIndex++) {
+        Object* object = partyMemberList[partyMemberIndex].object;
 
-    for (partyMemberIndex = 0; partyMemberIndex < partyMemberCount; partyMemberIndex++) {
-        object = partyMemberList[partyMemberIndex].object;
-
-        inventory = &(object->data.inventory);
-        for (inventoryItemIndex = 0; inventoryItemIndex < inventory->length; inventoryItemIndex++) {
+        Inventory* inventory = &(object->data.inventory);
+        for (int inventoryItemIndex = 0; inventoryItemIndex < inventory->length; inventoryItemIndex++) {
             partyMemberPrepItemSave(inventory->items[inventoryItemIndex].item);
         }
     }
@@ -616,13 +585,9 @@ static int partyMemberPrepItemSave(Object* object)
 // 0x485CAC
 static int partyMemberItemSaveAll(Object* object)
 {
-    Inventory* inventory;
-    InventoryItem* inventoryItem;
-    int index;
-
-    inventory = &(object->data.inventory);
-    for (index = 0; index < inventory->length; index++) {
-        inventoryItem = &(inventory->items[index]);
+    Inventory* inventory = &(object->data.inventory);
+    for (int index = 0; index < inventory->length; index++) {
+        InventoryItem* inventoryItem = &(inventory->items[index]);
         partyMemberItemSave(inventoryItem->item);
     }
 
@@ -632,13 +597,8 @@ static int partyMemberItemSaveAll(Object* object)
 // 0x485CDC
 static int partyMemberItemSave(Object* object)
 {
-    Script* script;
-    PartyMember* node;
-    PartyMember* temp;
-    Inventory* inventory;
-    int index;
-
     if (object->sid != -1) {
+        Script* script;
         if (scr_ptr(object->sid, &script) == -1) {
             GNWSystemError("\n  Error!: partyMemberItemSave: Can't find script!");
             exit(1);
@@ -649,7 +609,7 @@ static int partyMemberItemSave(Object* object)
             object->id = script->scr_oid;
         }
 
-        node = (PartyMember*)mem_malloc(sizeof(*node));
+        PartyMember* node = (PartyMember*)mem_malloc(sizeof(*node));
         if (node == NULL) {
             GNWSystemError("\n  Error!: partyMemberItemSave: Out of memory!");
             exit(1);
@@ -677,13 +637,13 @@ static int partyMemberItemSave(Object* object)
             node->vars = NULL;
         }
 
-        temp = itemSaveListHead;
+        PartyMember* temp = itemSaveListHead;
         itemSaveListHead = node;
         node->next = temp;
     }
 
-    inventory = &(object->data.inventory);
-    for (index = 0; index < inventory->length; index++) {
+    Inventory* inventory = &(object->data.inventory);
+    for (int index = 0; index < inventory->length; index++) {
         partyMemberItemSave(inventory->items[index].item);
     }
 
@@ -730,10 +690,8 @@ static int partyMemberItemRecover(PartyMember* partyMember)
 // 0x485F38
 static int partyMemberItemRecoverAll()
 {
-    PartyMember* partyMember;
-
     while (itemSaveListHead != NULL) {
-        partyMember = itemSaveListHead;
+        PartyMember* partyMember = itemSaveListHead;
         itemSaveListHead = itemSaveListHead->next;
         partyMemberItemRecover(partyMember);
         mem_free(partyMember);
@@ -745,10 +703,8 @@ static int partyMemberItemRecoverAll()
 // 0x485F6C
 static int partyMemberClearItemList()
 {
-    PartyMember* node;
-
     while (itemSaveListHead != NULL) {
-        node = itemSaveListHead;
+        PartyMember* node = itemSaveListHead;
         itemSaveListHead = itemSaveListHead->next;
 
         if (node->script != NULL) {
