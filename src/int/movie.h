@@ -25,6 +25,8 @@ typedef void(MoviePaletteFunc)(unsigned char* palette, int start, int end);
 typedef void(MovieUpdateCallbackProc)(int frame);
 typedef int(MovieBlitFunc)(int win, unsigned char* data, int width, int height, int pitch);
 
+extern bool gMovieScaleResolution;
+
 void initMovie();
 void movieClose();
 void movieStop();
