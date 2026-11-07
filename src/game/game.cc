@@ -181,6 +181,7 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
                 video_options.height /= video_options.scale;
             }
 
+            configGetBool(&resolutionConfig, "MOVIES", "MOVIE_SIZE", &gMovieScaleResolution);
             config_get_value(&resolutionConfig, "IFACE", "IFACE_BAR_WIDTH", &gInterfaceBarWidth);
             config_get_value(&resolutionConfig, "IFACE", "IFACE_BAR_SIDE_ART", &gInterfaceSidePanelsImageId);
             configGetBool(&resolutionConfig, "IFACE", "IFACE_BAR_SIDES_ORI", &gInterfaceSidePanelsExtendFromScreenEdge);
