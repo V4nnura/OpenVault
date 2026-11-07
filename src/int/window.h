@@ -129,7 +129,6 @@ bool windowPlayMovieRect(char* filePath, int a2, int a3, int a4, int a5);
 void windowStopMovie();
 void drawScaled(unsigned char* dest, int destWidth, int destHeight, int destPitch, unsigned char* src, int srcWidth, int srcHeight, int srcPitch);
 void drawScaledBuf(unsigned char* dest, int destWidth, int destHeight, unsigned char* src, int srcWidth, int srcHeight);
-void alphaBltBuf(unsigned char* src, int srcWidth, int srcHeight, int srcPitch, unsigned char* a5, unsigned char* a6, unsigned char* dest, int destPitch);
 void fillBuf3x3(unsigned char* src, int srcWidth, int srcHeight, unsigned char* dest, int destWidth, int destHeight);
 int windowEnableCheckRegion();
 int windowDisableCheckRegion();
