@@ -4,7 +4,6 @@
 #include <stddef.h>
 
 #include "int/sound.h"
-#include "plib/db/db.h"
 
 namespace fallout {
 
@@ -49,11 +48,8 @@ typedef struct LipsData {
 } LipsData;
 
 extern unsigned char head_phoneme_current;
-extern unsigned char head_phoneme_drawn;
-extern int head_marker_current;
 extern bool lips_draw_head;
 extern LipsData lip_info;
-extern int speechStartTime;
 
 void lips_bkg_proc();
 int lips_play_speech();
