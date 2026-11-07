@@ -116,9 +116,6 @@ int partyMemberAdd(Object* object)
 // 0x485358
 int partyMemberRemove(Object* object)
 {
-    int index;
-    Script* script;
-
     if (partyMemberCount == 0) {
         return -1;
     }
@@ -127,6 +124,7 @@ int partyMemberRemove(Object* object)
         return -1;
     }
 
+    int index;
     for (index = 1; index < partyMemberCount; index++) {
         PartyMember* partyMember = &(partyMemberList[index]);
         if (partyMember->object == object) {
@@ -151,6 +149,7 @@ int partyMemberRemove(Object* object)
 
     partyMemberCount--;
 
+    Script* script;
     if (scr_ptr(object->sid, &script) != -1) {
         script->scr_flags &= ~(SCRIPT_FLAG_NO_SAVE | SCRIPT_FLAG_NO_REMOVE);
     }
@@ -281,7 +280,6 @@ int partyMemberPrepLoad()
 int partyMemberRecoverLoad()
 {
     Script* script;
-    int sid = -1;
 
     if (partyStatePrepped != 1) {
         debug_printf("\npartyMemberRecoverLoad DENIED");
@@ -293,6 +291,7 @@ int partyMemberRecoverLoad()
     for (int index = 0; index < partyMemberCount; index++) {
         PartyMember* partyMember = &(partyMemberList[index]);
         if (partyMember->script != NULL) {
+            int sid = -1;
             if (scr_new(&sid, SCRIPT_TYPE_CRITTER) == -1) {
                 GNWSystemError("\n  Error!: partyMemberRecoverLoad: Can't create script!");
                 exit(1);
@@ -654,13 +653,12 @@ static int partyMemberItemSave(Object* object)
 static int partyMemberItemRecover(PartyMember* partyMember)
 {
     int sid = -1;
-    Script* script;
-
     if (scr_new(&sid, SCRIPT_TYPE_ITEM) == -1) {
         GNWSystemError("\n  Error!: partyMemberItemRecover: Can't create script!");
         exit(1);
     }
 
+    Script* script;
     if (scr_ptr(sid, &script) == -1) {
         GNWSystemError("\n  Error!: partyMemberItemRecover: Can't find script!");
         exit(1);
@@ -669,7 +667,7 @@ static int partyMemberItemRecover(PartyMember* partyMember)
     memcpy(script, partyMember->script, sizeof(*script));
 
     partyMember->object->sid = partyMemberItemCount | (SCRIPT_TYPE_ITEM << 24);
-    script->scr_id = partyMemberItemCount | (SCRIPT_TYPE_ITEM << 24);
+    script->scr_id = partyMember->object->sid
 
     script->program = NULL;
     script->scr_flags &= ~(SCRIPT_FLAG_LOADED | SCRIPT_FLAG_EXECUTED | SCRIPT_FLAG_NO_SAVE | SCRIPT_FLAG_NO_REMOVE);
