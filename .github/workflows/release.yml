@@ -107,14 +107,20 @@ jobs:
   linux:
     name: Linux (${{ matrix.arch }})
 
-    runs-on: ubuntu-22.04
+    runs-on: ${{ matrix.runner }}
 
     strategy:
       fail-fast: false
       matrix:
-        arch:
-          - x86
-          - x64
+        include:
+          - arch: x86
+            runner: ubuntu-22.04
+          - arch: x64
+            runner: ubuntu-22.04
+          - arch: armhf
+            runner: ubuntu-22.04-arm
+          - arch: arm64
+            runner: ubuntu-22.04-arm
 
     steps:
       - name: Clone
@@ -127,8 +133,15 @@ jobs:
           sudo apt update
           sudo apt install g++-multilib libsdl2-dev:i386 zlib1g-dev:i386
 
-      - name: Dependencies (x64)
-        if: matrix.arch == 'x64'
+      - name: Dependencies (armhf)
+        if: matrix.arch == 'armhf'
+        run: |
+          sudo dpkg --add-architecture armhf
+          sudo apt update
+          sudo apt install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf libsdl2-dev:armhf zlib1g-dev:armhf
+
+      - name: Dependencies (${{ matrix.arch }})
+        if: matrix.arch == 'x64' || matrix.arch == 'arm64'
         run: |
           sudo apt update
           sudo apt install libsdl2-dev zlib1g-dev
@@ -155,57 +168,6 @@ jobs:
             -B build \
             -D CMAKE_BUILD_TYPE=RelWithDebInfo \
             # EOL
-
-      - name: Build
-        run: |
-          cmake \
-            --build build \
-            -j $(nproc) \
-            # EOL
-
-      - name: Upload
-        run: |
-          cd build
-          tar -czvf fallout-ce-linux-${{ matrix.arch }}.tar.gz fallout-ce
-          gh release upload ${{ github.event.release.tag_name }} fallout-ce-linux-${{ matrix.arch }}.tar.gz
-          rm fallout-ce-linux-${{ matrix.arch }}.tar.gz
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  linux-arm:
-    name: Linux (${{ matrix.arch }})
-
-    runs-on: ubuntu-22.04-arm
-
-    strategy:
-      fail-fast: false
-      matrix:
-        arch:
-          - armhf
-          - arm64
-
-    steps:
-      - name: Clone
-        uses: actions/checkout@v7
-
-      - name: Dependencies (armhf)
-        if: matrix.arch == 'armhf'
-        run: |
-          sudo dpkg --add-architecture armhf
-          sudo apt update
-          sudo apt install gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf libsdl2-dev:armhf zlib1g-dev:armhf
-
-      - name: Dependencies (arm64)
-        if: matrix.arch == 'arm64'
-        run: |
-          sudo apt update
-          sudo apt install libsdl2-dev zlib1g-dev
-
-      - name: Cache cmake build
-        uses: actions/cache@v5
-        with:
-          path: build
-          key: linux-${{ matrix.arch }}-cmake-v101
 
       - name: Configure (armhf)
         if: matrix.arch == 'armhf'
@@ -318,16 +280,21 @@ jobs:
   windows:
     name: Windows (${{ matrix.arch }})
 
-    runs-on: windows-2025
+    runs-on: ${{ matrix.runner }}
 
     strategy:
       fail-fast: false
       matrix:
         include:
           - arch: x86
+            runner: windows-2025
             generator-platform: Win32
           - arch: x64
+            runner: windows-2025
             generator-platform: x64
+          - arch: arm64
+            runner: windows-11-arm
+            generator-platform: arm64
 
     steps:
       - name: Clone
@@ -343,7 +310,7 @@ jobs:
         run: |
           cmake \
             -B build \
-            -G "Visual Studio 16 2019" \
+            -G "Visual Studio 17 2022" \
             -A ${{ matrix.generator-platform }} \
             # EOL
 
