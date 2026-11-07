@@ -2,8 +2,6 @@
 
 #include <string.h>
 
-#include <algorithm>
-
 #include <SDL.h>
 
 namespace fallout {
@@ -62,7 +60,10 @@ static void audioEngineMixin(void* userData, Uint8* stream, int length)
             unsigned char buffer[1024];
             int pos = 0;
             while (pos < length) {
-                int remaining = std::min(length - pos, sizeof(buffer));
+                int remaining = length - pos;
+                if (remaining > sizeof(buffer)) {
+                    remaining = sizeof(buffer);
+                }
 
                 // TODO: Make something better than frame-by-frame convertion.
                 SDL_AudioStreamPut(soundBuffer->stream, (unsigned char*)soundBuffer->data + soundBuffer->pos, srcFrameSize);
