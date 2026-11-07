@@ -156,12 +156,12 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
         if (config_load(&resolutionConfig, "f1_res.ini", false)) {
             int screenWidth;
             if (config_get_value(&resolutionConfig, "MAIN", "SCR_WIDTH", &screenWidth)) {
-                video_options.width = std::max(screenWidth, screenGetWidth());
+                video_options.width = std::max(screenWidth, 640);
             }
 
             int screenHeight;
             if (config_get_value(&resolutionConfig, "MAIN", "SCR_HEIGHT", &screenHeight)) {
-                video_options.height = std::max(screenHeight, screenGetHeight());
+                video_options.height = std::max(screenHeight, 480);
             }
 
             bool windowed;
@@ -1370,9 +1370,9 @@ static void game_splash_screen()
             mem_free(scaled);
         }
     } else {
-        int splashWindowX = (screenWidth - width) / 2;
-        int splashWindowY = (screenHeight - height) / 2;
-        scr_blit(data, width, height, 0, 0, width, height, splashWindowX, splashWindowY);
+        int x = (screenWidth - width) / 2;
+        int y = (screenHeight - height) / 2;
+        scr_blit(data, width, height, 0, 0, width, height, x, y);
         palette_fade_to(palette);
     }
 
