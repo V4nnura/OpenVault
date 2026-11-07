@@ -164,18 +164,10 @@ jobs:
           sudo apt update
           sudo apt install libsdl2-dev zlib1g-dev
 
-      - name: Cache cmake build (${{ matrix.arch }})
-        if: matrix.arch == 'x86' || matrix.arch == 'x64'
+      - name: Cache cmake build
         uses: actions/cache@v5
         with:
           path: out
-          key: linux-${{ matrix.arch }}-cmake-v101
-
-      - name: Cache cmake build (${{ matrix.arch }})
-        if: matrix.arch == 'armhf' || matrix.arch == 'arm64'
-        uses: actions/cache@v5
-        with:
-          path: build
           key: linux-${{ matrix.arch }}-cmake-v101
 
       - name: Configure (${{ matrix.arch }})
@@ -218,29 +210,14 @@ jobs:
             # EOL
 
       - name: Package (${{ matrix.arch }})
-        if: matrix.arch == 'x86' || matrix.arch == 'x64'
         run: |
           tar -czvf out/build/linux-${{ matrix.arch }}-debug/fallout-ce-linux-${{ matrix.arch }}.tar.gz -C out/build/linux-${{ matrix.arch }}-debug fallout-ce
 
-      - name: Package (${{ matrix.arch }})
-        if: matrix.arch == 'armhf' || matrix.arch == 'arm64'
-        run: |
-          tar -czvf build/fallout-ce-linux-${{ matrix.arch }}.tar.gz -C build fallout-ce
-
       - name: Upload (${{ matrix.arch }})
-        if: matrix.arch == 'x86' || matrix.arch == 'x64'
         uses: actions/upload-artifact@v7
         with:
           name: fallout-ce-linux-${{ matrix.arch }}
           path: out/build/linux-${{ matrix.arch }}-debug/fallout-ce-linux-${{ matrix.arch }}.tar.gz
-          retention-days: 7
-
-      - name: Upload (${{ matrix.arch }})
-        if: matrix.arch == 'armhf' || matrix.arch == 'arm64'
-        uses: actions/upload-artifact@v7
-        with:
-          name: fallout-ce-linux-${{ matrix.arch }}
-          path: build/fallout-ce-linux-${{ matrix.arch }}.tar.gz
           retention-days: 7
 
   macos:
