@@ -156,12 +156,12 @@ int game_init(const char* windowTitle, bool isMapper, int font, int flags, int a
         if (config_load(&resolutionConfig, "f1_res.ini", false)) {
             int screenWidth;
             if (config_get_value(&resolutionConfig, "MAIN", "SCR_WIDTH", &screenWidth)) {
-                video_options.width = std::max(screenWidth, 640);
+                video_options.width = std::max(screenWidth, screenGetWidth());
             }
 
             int screenHeight;
             if (config_get_value(&resolutionConfig, "MAIN", "SCR_HEIGHT", &screenHeight)) {
-                video_options.height = std::max(screenHeight, 480);
+                video_options.height = std::max(screenHeight, screenGetHeight());
             }
 
             bool windowed;
