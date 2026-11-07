@@ -217,28 +217,6 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo"
             }
-        },
-        {
-            "name": "Mingw-arm64-debug",
-            "displayName": "MinGW arm64 Debug",
-            "description": "Cross-compile a Debug Windows arm64 build with MinGW-w64 and Ninja.",
-            "inherits": [
-                "Mingw-arm64-base"
-            ],
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
-            }
-        },
-        {
-            "name": "Mingw-arm64-release",
-            "displayName": "MinGW arm64 Release",
-            "description": "Cross-compile a RelWithDebInfo Windows arm64 build with MinGW-w64 and Ninja.",
-            "inherits": [
-                "Mingw-arm64-debug"
-            ],
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
-            }
         }
     ],
     "buildPresets": [
