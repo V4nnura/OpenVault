@@ -217,7 +217,7 @@
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo"
             }
-        }
+        },
         {
             "name": "Mingw-arm64-debug",
             "displayName": "MinGW arm64 Debug",
