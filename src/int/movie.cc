@@ -296,7 +296,7 @@ static bool movieRead(void* handle, void* buf, int count)
 // 0x478464
 static void movieDirect(unsigned char* pixels, int src_width, int src_height, int, int, int, int, int, int)
 {
-    if (gMovieWindow == -1) {
+    if (GNWWin == -1) {
         return;
     }
 
@@ -657,10 +657,10 @@ static void doSubtitle()
     }
 
     int lineHeight = text_height();
-    int subtitleY = (win_height(gMovieWindow) - movieHeight - movieY - lineHeight) / 2 + movieHeight + movieY;
+    int subtitleY = (win_height(GNWWin) - movieHeight - movieY - lineHeight) / 2 + movieHeight + movieY;
 
     int subtitleHeight = subtitleH;
-    int movieWindowHeight = win_height(gMovieWindow);
+    int movieWindowHeight = win_height(GNWWin);
     if (subtitleHeight + subtitleY > movieWindowHeight) {
         subtitleHeight = movieWindowHeight - subtitleY;
     }
