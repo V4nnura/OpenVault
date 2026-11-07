@@ -112,27 +112,9 @@
             }
         },
         {
-            "name": "linux-armhf-debug",
-            "inherits": [
-                "linux-armhf-base"
-            ],
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug"
-            }
-        },
-        {
-            "name": "linux-armhf-release",
-            "inherits": [
-                "linux-armhf-base"
-            ],
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "RelWithDebInfo"
-            }
-        },
-        {
             "name": "linux-arm64-debug",
             "inherits": [
-                "linux-arm64-base"
+                "linux-base"
             ],
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "Debug"
@@ -141,7 +123,7 @@
         {
             "name": "linux-arm64-release",
             "inherits": [
-                "linux-arm64-base"
+                "linux-base"
             ],
             "cacheVariables": {
                 "CMAKE_BUILD_TYPE": "RelWithDebInfo"
@@ -301,14 +283,6 @@
         {
             "name": "linux-x64-release",
             "configurePreset": "linux-x64-release"
-        },
-        {
-            "name": "linux-armhf-debug",
-            "configurePreset": "linux-armhf-debug"
-        },
-        {
-            "name": "linux-armhf-release",
-            "configurePreset": "linux-armhf-release"
         },
         {
             "name": "linux-arm64-debug",
