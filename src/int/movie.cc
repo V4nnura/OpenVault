@@ -1,8 +1,10 @@
 #include "int/movie.h"
 
-#include <SDL.h>
 #include <string.h>
+
 #include <vector>
+
+#include <SDL.h>
 
 #include "game/gconfig.h"
 #include "game/moviefx.h"
