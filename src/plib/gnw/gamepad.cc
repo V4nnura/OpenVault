@@ -1,3 +1,5 @@
+#include "plib/gnw/gamepad.h"
+
 #include <algorithm>
 #include <cmath>
 
@@ -6,7 +8,6 @@
 #include "game/map.h"
 #include "plib/gnw/debug.h"
 #include "plib/gnw/dxinput.h"
-#include "plib/gnw/gamepad.h"
 #include "plib/gnw/input.h"
 #include "plib/gnw/mouse.h"
 #include "plib/gnw/svga.h"
