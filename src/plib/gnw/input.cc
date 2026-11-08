@@ -28,9 +28,9 @@ typedef struct GNW95RepeatStruct {
 } GNW95RepeatStruct;
 
 typedef struct inputdata {
-    // This is either logical key or input event id, which can be either
-    // character code pressed or some other numbers used throughout the
-    // game interface.
+    // This is either logical key or input event id, which
+    // can be either character code pressed or some other
+    // numbers used throughout the game interface.
     int input;
     int mx;
     int my;
@@ -72,8 +72,8 @@ static int GNW95_key_map[SDL_NUM_SCANCODES];
 
 // Ring buffer of input events.
 //
-// Looks like this buffer does not support overwriting of values. Once the
-// buffer is full it will not overwrite values until they are dequeued.
+// Looks like this buffer does not support overwriting of values.
+// Once the buffer is full it will not overwrite values until they are dequeued.
 //
 // 0x6714F0
 static inputdata input_buffer[40];
@@ -339,9 +339,7 @@ void GNW_do_bk_process()
 // 0x4B35BC
 void add_bk_process(BackgroundProcess* f)
 {
-    FuncPtr fp;
-
-    fp = bk_list;
+    FuncPtr fp = bk_list;
     while (fp != NULL) {
         if (fp->f == f) {
             if ((fp->flags & 0x01) != 0) {
@@ -362,9 +360,7 @@ void add_bk_process(BackgroundProcess* f)
 // 0x4B360C
 void remove_bk_process(BackgroundProcess* f)
 {
-    FuncPtr fp;
-
-    fp = bk_list;
+    FuncPtr fp = bk_list;
     while (fp != NULL) {
         if (fp->f == f) {
             fp->flags |= 0x01;
