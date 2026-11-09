@@ -7,7 +7,7 @@ OpenVault is a re-implementation of Fallout 1 & 2 Engine with the goal of making
 | Fallout 1 Version | Status | Notes |
 |---|---|---|
 | Vanilla v1.0 | :red_circle: | Not Working |
-| Steam & GOG v1.1 | :yellow_circle: | It's playable, but there is some annoying bugs... |
+| Steam & GOG v1.1 | :yellow_circle: | It's playable, but there is some critical bugs... |
 | TeamX v1.2 | :orange_circle: | Works, but has code incompatibility that need to be fixed. |
 
 Here is a couple of current goals. Open up an issue if you have suggestion or feature request.
