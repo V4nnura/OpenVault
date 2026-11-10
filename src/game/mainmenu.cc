@@ -28,7 +28,7 @@ typedef enum MainMenuButton {
     MAIN_MENU_BUTTON_INTRO,
     MAIN_MENU_BUTTON_NEW_GAME,
     MAIN_MENU_BUTTON_LOAD_GAME,
-    MAIN_MENU_BUTTON_OPTIONS,
+    // MAIN_MENU_BUTTON_OPTIONS,
     MAIN_MENU_BUTTON_CREDITS,
     MAIN_MENU_BUTTON_EXIT,
     MAIN_MENU_BUTTON_COUNT,
@@ -66,7 +66,7 @@ static int button_values[MAIN_MENU_BUTTON_COUNT] = {
     KEY_LOWERCASE_I,
     KEY_LOWERCASE_N,
     KEY_LOWERCASE_L,
-    KEY_LOWERCASE_O,
+    // KEY_LOWERCASE_O,
     KEY_LOWERCASE_C,
     KEY_LOWERCASE_E,
 };
@@ -76,7 +76,7 @@ static int return_values[MAIN_MENU_BUTTON_COUNT] = {
     MAIN_MENU_INTRO,
     MAIN_MENU_NEW_GAME,
     MAIN_MENU_LOAD_GAME,
-    MAIN_MENU_OPTIONS,
+    // MAIN_MENU_OPTIONS,
     MAIN_MENU_CREDITS,
     MAIN_MENU_EXIT,
 };
@@ -391,7 +391,8 @@ int main_menu_loop()
             }
         }
 
-        if (keyCode == KEY_ESCAPE || game_user_wants_to_quit == 3) {
+        if (keyCode == KEY_ESCAPE
+            || game_user_wants_to_quit == 3) {
             rc = MAIN_MENU_EXIT;
 
             // NOTE: Uninline.
