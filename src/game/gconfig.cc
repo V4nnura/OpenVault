@@ -26,8 +26,8 @@ static char gconfig_file_name[COMPAT_MAX_PATH];
 
 // Inits main game config.
 //
-// `isMapper` is a flag indicating whether we're initing config for a main
-// game, or a mapper. This value is `false` for the game itself.
+// `isMapper` is a flag indicating whether we're initing config for a
+// main game, or a mapper. This value is `false` for the game itself.
 //
 // `argc` and `argv` are command line arguments. The engine assumes there is
 // at least 1 element which is executable path at index 0. There is no
@@ -38,8 +38,8 @@ static char gconfig_file_name[COMPAT_MAX_PATH];
 // which should be in the same folder. This function provide defaults if
 // `fallout.cfg` is not present, or cannot be read for any reason.
 //
-// Finally, this function merges key-value pairs from `argv` if any, see
-// `config_cmd_line_parse` for expected format.
+// Finally, this function merges key-value pairs from `argv`
+// if any, see `config_cmd_line_parse` for expected format.
 //
 // 0x43D690
 bool gconfig_init(bool isMapper, int argc, char** argv)
@@ -134,7 +134,7 @@ bool gconfig_init(bool isMapper, int argc, char** argv)
             config_set_string(&game_config, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_MUSIC_PATH1_KEY, "data\\sound\\music\\");
             config_set_string(&game_config, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_MUSIC_PATH2_KEY, "data\\sound\\music\\");
         }
-        db_free_file_list(&acms, 0);
+        db_free_file_list(&acms, NULL);
     }
     */
 
