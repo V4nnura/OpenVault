@@ -12,8 +12,6 @@ namespace fallout {
 #define VERSION_MINOR 1
 #define VERSION_RELEASE 'R'
 
-#define VERSION_BUILD_TIME "Nov 11 1997 14:59:39"
-
 char* getverstr(char* dest, size_t size);
 
 } // namespace fallout
