@@ -120,6 +120,7 @@ bool gconfig_init(bool isMapper, int argc, char** argv)
         config_set_value(&game_config, GAME_CONFIG_MAPPER_KEY, GAME_CONFIG_DEFAULT_F8_AS_GAME_KEY, 1);
     }
 
+    /*
     // CE: Detect alternative default music directory.
     char altMusicPath[COMPAT_MAX_PATH];
     strcpy(altMusicPath, "data\\sound\\music\\*.acm");
@@ -135,6 +136,7 @@ bool gconfig_init(bool isMapper, int argc, char** argv)
         }
         db_free_file_list(&acms, 0);
     }
+    */
 
     // Make `fallout.cfg` file path.
     sep = strrchr(argv[0], '\\');
