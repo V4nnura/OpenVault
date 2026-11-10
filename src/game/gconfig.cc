@@ -130,8 +130,8 @@ bool gconfig_init(bool isMapper, int argc, char** argv)
     int acmsLength = db_get_file_list(altMusicPath, &acms, 0, 0);
     if (acmsLength != -1) {
         if (acmsLength > 0) {
-            config_set_string(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_MUSIC_PATH1_KEY, "data\\sound\\music\\");
-            config_set_string(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_MUSIC_PATH2_KEY, "data\\sound\\music\\");
+            config_set_string(&game_config, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_MUSIC_PATH1_KEY, "data\\sound\\music\\");
+            config_set_string(&game_config, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_MUSIC_PATH2_KEY, "data\\sound\\music\\");
         }
         db_free_file_list(&acms, 0);
     }
