@@ -48,6 +48,7 @@
 #include "game/worldmap.h"
 #include "int/movie.h"
 #include "int/window.h"
+#include "platform/git_version.h"
 #include "platform_compat.h"
 #include "plib/color/color.h"
 #include "plib/gnw/debug.h"
@@ -71,9 +72,9 @@ static void game_help();
 static int game_init_databases();
 static void game_splash_screen();
 
-// TODO: Remove.
 // 0x4F190C
-char version_build_time[] = VERSION_BUILD_TIME;
+char version_build_date[] = BUILD_DATE;
+char version_build_hash[] = BUILD_HASH;
 
 // 0x504F90
 static FontMgr alias_mgr = {
@@ -879,7 +880,8 @@ int game_handle_input(int eventCode, bool isInCombatMode)
             char version[VERSION_MAX];
             getverstr(version, sizeof(version));
             display_print(version);
-            display_print(version_build_time);
+            display_print(version_build_date);
+            display_print(version_build_hash);
         }
         break;
     case KEY_ARROW_LEFT:
