@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "platform_compat.h"
+#include "plib/db/db.h"
 
 namespace fallout {
 
@@ -117,6 +118,22 @@ bool gconfig_init(bool isMapper, int argc, char** argv)
         config_set_value(&game_config, GAME_CONFIG_MAPPER_KEY, GAME_CONFIG_SAVE_TEXT_MAPS_KEY, 0);
         config_set_value(&game_config, GAME_CONFIG_MAPPER_KEY, GAME_CONFIG_RUN_MAPPER_AS_GAME_KEY, 0);
         config_set_value(&game_config, GAME_CONFIG_MAPPER_KEY, GAME_CONFIG_DEFAULT_F8_AS_GAME_KEY, 1);
+    }
+
+    // CE: Detect alternative default music directory.
+    char altMusicPath[COMPAT_MAX_PATH];
+    strcpy(altMusicPath, "data\\sound\\music\\*.acm");
+    compat_windows_path_to_native(altMusicPath);
+    compat_resolve_path(altMusicPath);
+
+    char** acms;
+    int acmsLength = db_get_file_list(altMusicPath, &acms, 0, 0);
+    if (acmsLength != -1) {
+        if (acmsLength > 0) {
+            config_set_string(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_MUSIC_PATH1_KEY, "data\\sound\\music\\");
+            config_set_string(&gGameConfig, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_MUSIC_PATH2_KEY, "data\\sound\\music\\");
+        }
+        db_free_file_list(&acms, 0);
     }
 
     // Make `fallout.cfg` file path.
