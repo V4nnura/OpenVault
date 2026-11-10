@@ -10,6 +10,7 @@
 #include "game/options.h"
 #include "game/palette.h"
 #include "game/version.h"
+#include "platform/git_version.h"
 #include "plib/color/color.h"
 #include "plib/gnw/button.h"
 #include "plib/gnw/gnw.h"
@@ -152,7 +153,19 @@ int main_menu_create()
     char version[VERSION_MAX];
     getverstr(version, sizeof(version));
     len = text_width(version);
-    win_print(main_window, version, 0, 615 - len, 460, colorTable[21204] | 0x4000000 | 0x2000000);
+    win_print(main_window, version, 0, 615 - len, 440, colorTable[21204] | 0x4000000 | 0x2000000);
+
+    // Hash Commit.
+    char commitHash[VERSION_MAX] = "BUILD HASH: ";
+    strcat(commitHash, BUILD_HASH);
+    len = text_width(commitHash);
+    win_print(main_window, commitHash, 0, 615 - len, 450, colorTable[21204] | 0x4000000 | 0x2000000);
+
+    // Date Build.
+    char buildDate[VERSION_MAX] = "DATE: ";
+    strcat(buildDate, BUILD_DATE);
+    len = text_width(buildDate);
+    win_print(main_window, buildDate, 0, 615 - len, 460, colorTable[21204] | 0x4000000 | 0x2000000);
 
     // menuup.frm
     fid = art_id(OBJ_TYPE_INTERFACE, 299, 0, 0, 0);
