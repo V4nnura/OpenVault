@@ -4,7 +4,6 @@
 #include <string.h>
 
 #include "platform_compat.h"
-#include "plib/db/db.h"
 
 namespace fallout {
 
@@ -18,8 +17,8 @@ static bool gconfig_initialized = false;
 // 0x58CC20
 Config game_config;
 
-// NOTE: There are additional 4 bytes following this array at 0x58EA7C, which
-// probably means it's size is 264 bytes.
+// NOTE: There are additional 4 bytes following this array at
+// 0x58EA7C, which probably means it's size is 264 bytes.
 //
 // 0x58CC48
 static char gconfig_file_name[COMPAT_MAX_PATH];
@@ -120,22 +119,6 @@ bool gconfig_init(bool isMapper, int argc, char** argv)
         config_set_value(&game_config, GAME_CONFIG_MAPPER_KEY, GAME_CONFIG_DEFAULT_F8_AS_GAME_KEY, 1);
     }
 
-    // CE: Detect alternative default music directory.
-    char altMusicPath[COMPAT_MAX_PATH];
-    strcpy(altMusicPath, "data\\sound\\music\\*.acm");
-    compat_windows_path_to_native(altMusicPath);
-    compat_resolve_path(altMusicPath);
-
-    char** acms;
-    int acmsLength = db_get_file_list(altMusicPath, &acms, NULL, 0);
-    if (acmsLength != -1) {
-        if (acmsLength > 0) {
-            config_set_string(&game_config, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_MUSIC_PATH1_KEY, "data\\sound\\music\\");
-            config_set_string(&game_config, GAME_CONFIG_SOUND_KEY, GAME_CONFIG_MUSIC_PATH2_KEY, "data\\sound\\music\\");
-        }
-        db_free_file_list(&acms, NULL);
-    }
-
     // Make `fallout.cfg` file path.
     sep = strrchr(argv[0], '\\');
     if (sep != NULL) {
@@ -146,12 +129,12 @@ bool gconfig_init(bool isMapper, int argc, char** argv)
         strcpy(gconfig_file_name, GAME_CONFIG_FILE_NAME);
     }
 
-    // Read contents of `fallout.cfg` into config. The values from the file
-    // will override the defaults above.
+    // Read contents of `fallout.cfg` into config.
+    // The values from the file will override the defaults above.
     config_load(&game_config, gconfig_file_name, false);
 
-    // Add key-values from command line, which overrides both defaults and
-    // whatever was loaded from `fallout.cfg`.
+    // Add key-values from command line, which overrides both
+    // defaults and whatever was loaded from `fallout.cfg`.
     config_cmd_line_parse(&game_config, argc, argv);
 
     gconfig_initialized = true;
