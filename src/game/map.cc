@@ -57,7 +57,7 @@ static int map_load_local_vars(DB_FILE* stream);
 static void map_place_dude_and_mouse();
 static void square_init();
 static void square_reset();
-static int square_load(DB_FILE* stream, int a2);
+static int square_load(DB_FILE* stream, int flags);
 static int map_write_MapData(MapHeader* ptr, DB_FILE* stream);
 static int map_read_MapData(MapHeader* ptr, DB_FILE* stream);
 static int map_count_scroll_blockers(int elevation);
@@ -1457,7 +1457,7 @@ int map_save_file(DB_FILE* stream)
 }
 
 // 0x4758A8
-int map_save_in_game(bool a1)
+int map_save_in_game(bool isLeavingMap)
 {
     if (map_data.name[0] == '\0') {
         return 0;
@@ -1465,7 +1465,7 @@ int map_save_in_game(bool a1)
 
     anim_stop();
 
-    if (a1) {
+    if (isLeavingMap) {
         partyMemberPrepLoad();
         partyMemberPrepItemSaveAll();
         queue_leaving_map();
@@ -1485,7 +1485,7 @@ int map_save_in_game(bool a1)
 
     char name[16];
 
-    if (a1 && !YesWriteIndex(map_get_index_number(), map_elevation)) {
+    if (isLeavingMap && !YesWriteIndex(map_get_index_number(), map_elevation)) {
         debug_printf("\nNot saving RANDOM encounter map.");
 
         strcpy(name, map_data.name);
@@ -1506,7 +1506,7 @@ int map_save_in_game(bool a1)
         automap_pip_save();
     }
 
-    if (a1) {
+    if (isLeavingMap) {
         map_data.name[0] = '\0';
         obj_remove_all();
         proto_remove_all();
@@ -1776,12 +1776,12 @@ static void square_reset()
                 *p = (((art_id(OBJ_TYPE_TILE, 1, 0, 0, 0) & 0xFFF) | (((fid >> 16) & 0xF000) >> 12)) << 16) | (fid & 0xFFFF);
 
                 fid = *p;
-                int v3 = (fid & 0xF000) >> 12;
-                int v4 = (art_id(OBJ_TYPE_TILE, 1, 0, 0, 0) & 0xFFF) | v3;
+                int tileFlags = (fid & 0xF000) >> 12;
+                int updatedLowerTile = (art_id(OBJ_TYPE_TILE, 1, 0, 0, 0) & 0xFFF) | tileFlags;
 
                 fid &= ~0xFFFF;
 
-                *p = v4 | ((fid >> 16) << 16);
+                *p = updatedLowerTile | ((fid >> 16) << 16);
 
                 p++;
             }
@@ -1802,16 +1802,16 @@ static int square_load(DB_FILE* stream, int flags)
             }
 
             for (int tile = 0; tile < SQUARE_GRID_SIZE; tile++) {
-                int v6 = arr[tile];
-                v6 &= ~(0xFFFF);
-                v6 >>= 16;
+                int upperTileWord = arr[tile];
+                upperTileWord &= ~(0xFFFF);
+                upperTileWord >>= 16;
 
-                int v7 = (v6 & 0xF000) >> 12;
-                v7 &= ~(0x01);
+                int upperTileFlags = (upperTileWord & 0xF000) >> 12;
+                upperTileFlags &= ~(0x01);
 
-                int v8 = v6 & 0xFFF;
-                int v9 = arr[tile] & 0xFFFF;
-                arr[tile] = ((v8 | (v7 << 12)) << 16) | v9;
+                int upperTileArtId = upperTileWord & 0xFFF;
+                int lowerTileWord = arr[tile] & 0xFFFF;
+                arr[tile] = ((upperTileArtId | (upperTileFlags << 12)) << 16) | lowerTileWord;
             }
         }
     }
