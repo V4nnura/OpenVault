@@ -42,6 +42,9 @@ endif()
 
 target_include_directories(${EXECUTABLE_NAME} PUBLIC src)
 
+# Git Info
+include("cmake/gitver.cmake")
+
 target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/game/actions.cc"
     "src/game/actions.h"
