@@ -570,10 +570,10 @@ int map_get_local_var(int var, ProgramValue& value)
 // Make a room to store more local variables.
 //
 // 0x473EA8
-int map_malloc_local_var(int a1)
+int map_malloc_local_var(const int num_new_vars)
 {
     int oldMapLocalVarsLength = num_map_local_vars;
-    num_map_local_vars += a1;
+    num_map_local_vars += num_new_vars;
 
     int* vars = (int*)mem_realloc(map_local_vars, sizeof(*vars) * num_map_local_vars);
     if (vars == NULL) {
@@ -583,7 +583,7 @@ int map_malloc_local_var(int a1)
     }
 
     map_local_vars = vars;
-    memset((unsigned char*)vars + sizeof(*vars) * oldMapLocalVarsLength, 0, sizeof(*vars) * a1);
+    memset((unsigned char*)vars + sizeof(*vars) * oldMapLocalVarsLength, 0, sizeof(*vars) * num_new_vars);
 
     map_local_pointers.resize(num_map_local_vars);
 
@@ -656,11 +656,11 @@ char* map_get_elev_idx(int map, int elevation)
 bool is_map_idx_same(int map1, int map2)
 {
     if (map1 < 0 || map1 >= MAP_COUNT) {
-        return 0;
+        return false;
     }
 
     if (map2 < 0 || map2 >= MAP_COUNT) {
-        return 0;
+        return false;
     }
 
     for (int index = 0; index < 5; index++) {
