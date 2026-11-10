@@ -229,8 +229,12 @@ int gnw_main(int argc, char** argv)
                 main_selfrun_play();
                 break;
             case MAIN_MENU_OPTIONS:
-                // main_menu_hide(true);
-                // do_prefscreen();
+                main_menu_hide(false);
+                mouse_show();
+                do_options();
+                gmouse_set_cursor(MOUSE_CURSOR_ARROW);
+                mouse_show();
+                main_menu_show(false);
                 break;
             case MAIN_MENU_CREDITS:
                 main_menu_hide(true);
