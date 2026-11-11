@@ -4923,7 +4923,10 @@ static void TagSkillSelect(int skill)
     // NOTE: Uninline.
     old_tags = tagskl_free();
 
-    if (skill == temp_tag_skill[0] || skill == temp_tag_skill[1] || skill == temp_tag_skill[2] || skill == temp_tag_skill[3]) {
+    if (skill == temp_tag_skill[0]
+        || skill == temp_tag_skill[1]
+        || skill == temp_tag_skill[2]
+        || skill == temp_tag_skill[3]) {
         if (skill == temp_tag_skill[0]) {
             temp_tag_skill[0] = temp_tag_skill[1];
             temp_tag_skill[1] = temp_tag_skill[2];
@@ -5162,7 +5165,7 @@ static int XlateKarma(int search)
         }
     }
 
-    return valid_karma;
+    return 0;
 }
 
 // 0x435E64
