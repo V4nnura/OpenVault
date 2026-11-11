@@ -729,7 +729,11 @@ int editor_design(bool isCreationMode)
             }
         } else if (keyCode == KEY_CTRL_Q || keyCode == KEY_CTRL_X || keyCode == KEY_F10) {
             game_quit_with_confirm();
-        } else if (keyCode == 502 || keyCode == KEY_ESCAPE || keyCode == KEY_UPPERCASE_C || keyCode == KEY_LOWERCASE_C || game_user_wants_to_quit != 0) {
+        } else if (keyCode == 502
+            || keyCode == KEY_ESCAPE
+            || keyCode == KEY_UPPERCASE_C
+            || keyCode == KEY_LOWERCASE_C
+            || game_user_wants_to_quit != 0) {
             rc = 1;
         } else if (glblmode && (keyCode == 517 || keyCode == KEY_UPPERCASE_N || keyCode == KEY_LOWERCASE_N)) {
             NameWindow();
@@ -2890,8 +2894,8 @@ static int NameWindow()
         name[0] = '\0';
     }
 
-    // NOTE: I don't understand the nameCopy, not sure what it is used for. It's
-    // definitely there, but I just don' get it.
+    // NOTE: I don't understand the nameCopy, not sure what it is used for.
+    // It's definitely there, but I just don' get it.
     char nameCopy[64];
     strcpy(nameCopy, name);
 
@@ -3424,8 +3428,8 @@ static int OptionWindow()
     char string4[512];
     char string5[512];
 
-    // Only two of the these blocks are used as a dialog body. Depending on the
-    // dialog either 1 or 2 strings used from this array.
+    // Only two of the these blocks are used as a dialog body.
+    // Depending on the dialog either 1 or 2 strings used from this array.
     const char* dialogBody[2] = {
         string5,
         string2,
@@ -4592,10 +4596,9 @@ static int DrawCard(int graphicId, const char* name, const char* attributes, cha
 // 0x434E18
 static int XltPerk(int search)
 {
-    int perk;
     int valid_perk = 0;
 
-    for (perk = 0; perk < PERK_COUNT; perk++) {
+    for (int perk = 0; perk < PERK_COUNT; perk++) {
         if (perk_level(perk)) {
             if (valid_perk == search) {
                 return perk;
@@ -4895,11 +4898,9 @@ static void SliderBtn(int keyCode)
 // 0x435618
 static int tagskl_free()
 {
-    int taggedSkillCount;
-    int index;
+    int taggedSkillCount = 0;
 
-    taggedSkillCount = 0;
-    for (index = 3; index >= 0; index--) {
+    for (int index = 3; index >= 0; index--) {
         if (temp_tag_skill[index] != -1) {
             break;
         }
@@ -5036,11 +5037,9 @@ static void ListTraits()
 // 0x435A58
 static int get_trait_count()
 {
-    int traitCount;
-    int index;
+    int traitCount = 0;
 
-    traitCount = 0;
-    for (index = 1; index >= 0; index--) {
+    for (int index = 1; index >= 0; index--) {
         if (temp_trait[index] != -1) {
             break;
         }
@@ -5152,10 +5151,9 @@ static int ListKarma()
 // 0x435E1C
 static int XlateKarma(int search)
 {
-    int karma;
     int valid_karma = 0;
 
-    for (karma = 0; karma < 9; karma++) {
+    for (int karma = 0; karma < 9; karma++) {
         if (game_global_vars[karma_var_table[karma]] != 0) {
             if (valid_karma == search) {
                 return karma;
@@ -5164,7 +5162,7 @@ static int XlateKarma(int search)
         }
     }
 
-    return 0;
+    return valid_karma;
 }
 
 // 0x435E64
@@ -5240,14 +5238,17 @@ static int UpdateLevel()
         win_draw(edit_win);
 
         int rc = perks_dialog();
-        if (rc == -1) {
+        switch (rc) {
+        case -1:
             debug_printf("\n *** Error running perks dialog! ***\n");
             return -1;
-        } else if (rc == 0) {
+        case 0:
             DrawFolder();
-        } else if (rc == 1) {
+            break;
+        case 1:
             DrawFolder();
             free_perk = 0;
+            break;
         }
     }
 
@@ -6148,9 +6149,7 @@ static int DrawCard2(int frmId, const char* name, const char* rank, char* descri
 // 0x437AA8
 static void push_perks()
 {
-    int perk;
-
-    for (perk = 0; perk < PERK_COUNT; perk++) {
+    for (int perk = 0; perk < PERK_COUNT; perk++) {
         perk_back[perk] = perk_level(perk);
     }
 }
@@ -6176,11 +6175,9 @@ static void pop_perks()
 // 0x437B18
 static int PerkCount()
 {
-    int perk;
-    int perkCount;
+    int perkCount = 0;
 
-    perkCount = 0;
-    for (perk = 0; perk < PERK_COUNT; perk++) {
+    for (int perk = 0; perk < PERK_COUNT; perk++) {
         if (perk_level(perk) > 0) {
             perkCount++;
             if (perkCount >= 7) {
