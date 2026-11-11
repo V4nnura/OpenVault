@@ -235,13 +235,10 @@ jobs:
         include:
           - arch: x86
             runner: windows-2025
-            generator-platform: Win32
           - arch: x64
             runner: windows-2025
-            generator-platform: x64
           - arch: arm64
             runner: windows-11-arm
-            generator-platform: arm64
 
     steps:
       - name: Clone
@@ -336,7 +333,7 @@ jobs:
 
       - name: Upload new release
         if: ${{ always() && github.ref == 'refs/heads/main' && github.event_name == 'push' }}
-        uses: softprops/action-gh-release@v3.0.3
+        uses: softprops/action-gh-release@v3.0.4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           files: artifacts/*
