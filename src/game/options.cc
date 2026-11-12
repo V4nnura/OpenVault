@@ -389,7 +389,6 @@ int do_options()
         sharedFpsLimiter.mark();
 
         int keyCode = get_input();
-        bool showPreferences = false;
 
         if (keyCode == KEY_ESCAPE || keyCode == 504 || game_user_wants_to_quit != 0) {
             rc = 0;
