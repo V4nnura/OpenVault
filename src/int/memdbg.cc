@@ -133,12 +133,13 @@ void myfree(void* ptr, const char* file, int line)
 // 0x476448
 void* mycalloc(int count, int size, const char* file, int line)
 {
-    void* ptr = mallocPtr(count * size);
+    size_t totalSize = static_cast<size_t>(count) * size;
+    void* ptr = mallocPtr(totalSize);
     if (ptr == NULL) {
-        error("calloc", size, file, line);
+        error("calloc", totalSize, file, line);
     }
 
-    memset(ptr, 0, count * size);
+    memset(ptr, 0, totalSize);
 
     return ptr;
 }
