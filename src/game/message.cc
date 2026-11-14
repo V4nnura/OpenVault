@@ -126,11 +126,9 @@ void exit_message()
 bool message_init(MessageList* messageList)
 {
     if (messageList != NULL) {
-        return false;
+        messageList->entries_num = 0;
+        messageList->entries = NULL;
     }
-
-    messageList->entries_num = 0;
-    messageList->entries = NULL;
 
     return true;
 }
@@ -270,11 +268,12 @@ bool message_search(MessageList* msg, MessageListItem* entry)
 // 0x476A20
 bool message_make_path(char* dest, size_t size, const char* path)
 {
+    char* language;
+
     if (dest == NULL || path == NULL) {
         return false;
     }
 
-    char* language;
     if (!config_get_string(&game_config, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_LANGUAGE_KEY, &language)) {
         return false;
     }
@@ -287,15 +286,17 @@ bool message_make_path(char* dest, size_t size, const char* path)
 // 0x476A78
 bool message_find(MessageList* msg, int num, int* out_index)
 {
+    int r, l, mid;
+    int cmp;
+
     if (msg->entries_num == 0) {
         *out_index = 0;
         return false;
     }
 
-    int r = msg->entries_num - 1;
-    int l = 0;
+    r = msg->entries_num - 1;
+    l = 0;
 
-    int mid, cmp;
     do {
         mid = (l + r) / 2;
         cmp = num - msg->entries[mid].num;
