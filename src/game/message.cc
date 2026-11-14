@@ -126,9 +126,12 @@ void exit_message()
 bool message_init(MessageList* messageList)
 {
     if (messageList != NULL) {
-        messageList->entries_num = 0;
-        messageList->entries = NULL;
+        return false;
     }
+
+    messageList->entries_num = 0;
+    messageList->entries = NULL;
+
     return true;
 }
 
@@ -176,11 +179,7 @@ bool message_load(MessageList* messageList, const char* path)
 
     bool success = false;
 
-    if (messageList == NULL) {
-        return false;
-    }
-
-    if (path == NULL) {
+    if (messageList == NULL || path == NULL) {
         return false;
     }
 
@@ -247,11 +246,7 @@ bool message_search(MessageList* msg, MessageListItem* entry)
     int index;
     MessageListItem* ptr;
 
-    if (msg == NULL) {
-        return false;
-    }
-
-    if (entry == NULL) {
+    if (msg == NULL || entry == NULL) {
         return false;
     }
 
@@ -275,16 +270,11 @@ bool message_search(MessageList* msg, MessageListItem* entry)
 // 0x476A20
 bool message_make_path(char* dest, size_t size, const char* path)
 {
+    if (dest == NULL || path == NULL) {
+        return false;
+    }
+
     char* language;
-
-    if (dest == NULL) {
-        return false;
-    }
-
-    if (path == NULL) {
-        return false;
-    }
-
     if (!config_get_string(&game_config, GAME_CONFIG_SYSTEM_KEY, GAME_CONFIG_LANGUAGE_KEY, &language)) {
         return false;
     }
@@ -297,17 +287,15 @@ bool message_make_path(char* dest, size_t size, const char* path)
 // 0x476A78
 bool message_find(MessageList* msg, int num, int* out_index)
 {
-    int r, l, mid;
-    int cmp;
-
     if (msg->entries_num == 0) {
         *out_index = 0;
         return false;
     }
 
-    r = msg->entries_num - 1;
-    l = 0;
+    int r = msg->entries_num - 1;
+    int l = 0;
 
+    int mid, cmp;
     do {
         mid = (l + r) / 2;
         cmp = num - msg->entries[mid].num;
@@ -465,6 +453,7 @@ int message_load_field(DB_FILE* file, char* str)
         if (ch == '\r') {
             continue;
         }
+
         if (ch != '\n') {
             *(str + len) = ch;
             len++;
@@ -529,9 +518,9 @@ bool message_filter(MessageList* messageList)
         compat_strupr(bad_copy);
 
         for (int badwordIndex = 0; badwordIndex < bad_total; badwordIndex++) {
-            // I don't quite understand the loop below. It has no stop
-            // condition besides no matching substring. It also overwrites
-            // already masked words on every iteration.
+            // NOTE: I don't quite understand the loop below. Since it
+            // has no stop condition besides no matching substring and
+            // also overwrites already masked words on every iteration.
             for (char* p = bad_copy;; p++) {
                 const char* substr = strstr(p, bad_word[badwordIndex]);
                 if (substr == NULL) {
