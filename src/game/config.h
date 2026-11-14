@@ -22,7 +22,7 @@ void config_exit(Config* config);
 bool config_cmd_line_parse(Config* config, int argc, char** argv);
 bool config_get_string(Config* config, const char* sectionKey, const char* key, char** valuePtr);
 bool config_set_string(Config* config, const char* sectionKey, const char* key, const char* value);
-bool config_get_value(Config* config, const char* sectionKey, const char* key, int* valuePtr);
+bool config_get_value(Config* config, const char* sectionKey, const char* key, int* valuePtr, unsigned char base = 0);
 bool config_get_values(Config* config, const char* section, const char* key, int* arr, int count);
 bool config_set_value(Config* config, const char* sectionKey, const char* key, int value);
 bool config_load(Config* config, const char* filePath, bool isDb);
