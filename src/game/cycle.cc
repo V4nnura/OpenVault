@@ -108,24 +108,24 @@ void cycle_init()
         return;
     }
 
-    int index;
-    for (index = 0; index < 12; index++) {
+    int index = 0;
+    for (; index < 12; index++) {
         slime[index] >>= 2;
     }
 
-    for (index = 0; index < 18; index++) {
+    for (; index < 18; index++) {
         shoreline[index] >>= 2;
     }
 
-    for (index = 0; index < 15; index++) {
+    for (; index < 15; index++) {
         fire_slow[index] >>= 2;
     }
 
-    for (index = 0; index < 15; index++) {
+    for (; index < 15; index++) {
         fire_fast[index] >>= 2;
     }
 
-    for (index = 0; index < 15; index++) {
+    for (; index < 15; index++) {
         monitors[index] >>= 2;
     }
 
