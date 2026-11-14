@@ -135,6 +135,7 @@ typedef struct PreferenceDescription {
 static int OptnStart();
 static int OptnEnd();
 static void ShadeScreen(bool a1);
+static int do_prefscreen();
 static int PrefStart();
 static void DoThing(int eventCode);
 static void UpdateThing(int index);
@@ -820,7 +821,7 @@ static void ShadeScreen(bool is_world_map)
 }
 
 // 0x481E84
-int do_prefscreen()
+static int do_prefscreen()
 {
     if (PrefStart() == -1) {
         debug_printf("\nPREFERENCE MENU: Error loading preference dialog data!\n");
