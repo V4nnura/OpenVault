@@ -16,7 +16,7 @@ extern unsigned char cmap[768];
 
 extern unsigned char mappedColor[256];
 extern Color colorMixAddTable[256][256];
-extern unsigned char intensityColorTable[256][256];
+extern Color intensityColorTable[256][256];
 extern Color colorMixMulTable[256][256];
 extern unsigned char colorTable[32768];
 
