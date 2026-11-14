@@ -179,7 +179,7 @@ bool config_set_string(Config* config, const char* sectionKey, const char* key, 
 }
 
 // 0x4267DC
-bool config_get_value(Config* config, const char* sectionKey, const char* key, int* valuePtr)
+bool config_get_value(Config* config, const char* sectionKey, const char* key, int* valuePtr, unsigned char base)
 {
     if (valuePtr == NULL) {
         return false;
@@ -190,7 +190,20 @@ bool config_get_value(Config* config, const char* sectionKey, const char* key, i
         return false;
     }
 
-    *valuePtr = atoi(stringValue);
+    char* end;
+    long l = strtol(stringValue, &end, base);
+    
+    // This commit is based on the solution this link give on: https://stackoverflow.com/a/6154614
+    // It says right things about converting strings to numbers, however we need to maintain
+    // compatibility with atoi implementation and original game data. One example of the problem
+    // is worldmap.txt where frequency values expressed as percentages (Frequent=38%). If we
+    // handle the result like the link above suggests (and what previous implementation provided),
+    // we'll simply end up returning `false`, since there will be unconverted characters left.
+    // On the other hand, this function is also used to parse Sfall config values, which uses
+    // hexadecimal notation to represent colors. We're not going to need any of these in the long
+    // run so for now simply ignore any error that could arise during conversion.
+
+    *valuePtr = l;
 
     return true;
 }
