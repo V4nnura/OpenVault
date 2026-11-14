@@ -100,7 +100,6 @@ static MessageList skill_message_file;
 int skill_init()
 {
     char path[COMPAT_MAX_PATH];
-    int index;
     MessageListItem mesg;
 
     if (!message_init(&skill_message_file)) {
@@ -113,7 +112,8 @@ int skill_init()
         return -1;
     }
 
-    for (index = 0; index < SKILL_COUNT; index++) {
+    int index = 0;
+    for (; index < SKILL_COUNT; index++) {
         mesg.num = 100 + index;
         if (message_search(&skill_message_file, &mesg)) {
             skill_data[index].name = mesg.text;
@@ -130,7 +130,7 @@ int skill_init()
         }
     }
 
-    for (index = 0; index < NUM_TAGGED_SKILLS; index++) {
+    for (; index < NUM_TAGGED_SKILLS; index++) {
         tag_skill[index] = -1;
     }
 
