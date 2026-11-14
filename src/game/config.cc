@@ -192,7 +192,7 @@ bool config_get_value(Config* config, const char* sectionKey, const char* key, i
 
     char* end;
     long l = strtol(stringValue, &end, base);
-    
+
     // This commit is based on the solution this link give on: https://stackoverflow.com/a/6154614
     // It says right things about converting strings to numbers, however we need to maintain
     // compatibility with atoi implementation and original game data. One example of the problem
