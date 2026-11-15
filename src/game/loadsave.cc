@@ -863,25 +863,11 @@ int LoadGame(int mode)
     }
 
     if (mode == LOAD_SAVE_MODE_QUICK && quick_done) {
-        int quickSaveWindowX = (screenGetWidth() - LS_WINDOW_WIDTH) / 2;
-        int quickSaveWindowY = (screenGetHeight() - LS_WINDOW_HEIGHT) / 2;
-        int window = win_add(quickSaveWindowX,
-            quickSaveWindowY,
-            LS_WINDOW_WIDTH,
-            LS_WINDOW_HEIGHT,
-            256,
-            WINDOW_MODAL | WINDOW_DONT_MOVE_TOP);
-        if (window != -1) {
-            unsigned char* windowBuffer = win_get_buf(window);
-            buf_fill(windowBuffer, LS_WINDOW_WIDTH, LS_WINDOW_HEIGHT, LS_WINDOW_WIDTH, colorTable[0]);
-            win_draw(window);
-            renderPresent();
-        }
+        // NOTE: Originally it creates an window to black out the entire screen
+        // before quick-loading. Since the screen fades out almost immediately
+        // during the load sequence.
 
         if (LoadSlot(slot_cursor) != -1) {
-            if (window != -1) {
-                win_delete(window);
-            }
             gmouse_set_cursor(MOUSE_CURSOR_ARROW);
             return 1;
         }
@@ -894,10 +880,6 @@ int LoadGame(int mode)
         snprintf(path, sizeof(path), "%s\\%s", msg_path, "LSGAME.MSG");
         if (!message_load(&lsgame_msgfl, path)) {
             return -1;
-        }
-
-        if (window != -1) {
-            win_delete(window);
         }
 
         gmouse_set_cursor(MOUSE_CURSOR_ARROW);
@@ -1575,11 +1557,13 @@ static int SaveSlot()
     snprintf(gmpath, sizeof(gmpath), "%s\\%s%.2d\\", "SAVEGAME", "SLOT", slot_cursor + 1);
     MapDirErase(gmpath, "BAK");
 
-    lsgmesg.num = 140;
-    if (message_search(&lsgame_msgfl, &lsgmesg)) {
-        display_print(lsgmesg.text);
-    } else {
-        debug_printf("\nError: Couldn't find LoadSave Message!");
+    if (!quick_done) {
+        lsgmesg.num = 140;
+        if (message_search(&lsgame_msgfl, &lsgmesg)) {
+            display_print(lsgmesg.text);
+        } else {
+            debug_printf("\nError: Couldn't find LoadSave Message!");
+        }
     }
 
     gsound_background_unpause();
@@ -1656,11 +1640,13 @@ static int LoadSlot(int slot)
     proto_dude_update_gender();
 
     // Game Loaded.
-    lsgmesg.num = 141;
-    if (message_search(&lsgame_msgfl, &lsgmesg) == 1) {
-        display_print(lsgmesg.text);
-    } else {
-        debug_printf("\nError: Couldn't find LoadSave Message!");
+    if (!quick_done) {
+        lsgmesg.num = 141;
+        if (message_search(&lsgame_msgfl, &lsgmesg)) {
+            display_print(lsgmesg.text);
+        } else {
+            debug_printf("\nError: Couldn't find LoadSave Message!");
+        }
     }
 
     loadingGame = false;
