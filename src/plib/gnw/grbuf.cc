@@ -235,6 +235,10 @@ void mask_buf_to_buf(unsigned char* src, int width, int height, int srcPitch, un
 // 0x4BE10C
 void buf_fill(unsigned char* buf, int width, int height, int pitch, int value)
 {
+    if (buf == NULL || width <= 0 || height <= 0) {
+        return;
+    }
+
     for (int y = 0; y < height; y++) {
         memset(buf, value, width);
         buf += pitch;
