@@ -1985,7 +1985,7 @@ int obj_erase_object(Object* object, Rect* rect)
         // refresh entirely for detached objects and failed destruction.
         *rect = { 0, 0, 0, 0 };
     }
-    
+
     if (object == NULL) {
         return -1;
     }
@@ -2307,27 +2307,26 @@ bool obj_occupied(int tile, int elevation)
 }
 
 // 0x47D2F0
-Object* obj_blocking_at(Object* a1, int tile, int elev)
+Object* obj_blocking_at(Object* excludeObj, int tile, int elev)
 {
-    ObjectListNode* objectListNode;
-    Object* v7;
-    int type;
-
     if (!hexGridTileIsValid(tile)) {
         return NULL;
     }
 
-    objectListNode = objectTable[tile];
+    ObjectListNode* objectListNode = objectTable[tile];
+    Object* object;
+    int type;
+
     while (objectListNode != NULL) {
-        v7 = objectListNode->obj;
-        if (v7->elevation == elev) {
-            if ((v7->flags & OBJECT_HIDDEN) == 0 && (v7->flags & OBJECT_NO_BLOCK) == 0 && v7 != a1) {
-                type = FID_TYPE(v7->fid);
+        object = objectListNode->obj;
+        if (object->elevation == elev) {
+            if ((object->flags & OBJECT_HIDDEN) == 0 && (object->flags & OBJECT_NO_BLOCK) == 0 && object != excludeObj) {
+                type = FID_TYPE(object->fid);
                 switch (type) {
                 case OBJ_TYPE_CRITTER:
                 case OBJ_TYPE_SCENERY:
                 case OBJ_TYPE_WALL:
-                    return v7;
+                    return object;
                 }
             }
         }
@@ -2339,16 +2338,16 @@ Object* obj_blocking_at(Object* a1, int tile, int elev)
         if (hexGridTileIsValid(neighboor)) {
             objectListNode = objectTable[neighboor];
             while (objectListNode != NULL) {
-                v7 = objectListNode->obj;
-                if ((v7->flags & OBJECT_MULTIHEX) != 0) {
-                    if (v7->elevation == elev) {
-                        if ((v7->flags & OBJECT_HIDDEN) == 0 && (v7->flags & OBJECT_NO_BLOCK) == 0 && v7 != a1) {
-                            type = FID_TYPE(v7->fid);
+                object = objectListNode->obj;
+                if ((object->flags & OBJECT_MULTIHEX) != 0) {
+                    if (object->elevation == elev) {
+                        if ((object->flags & OBJECT_HIDDEN) == 0 && (object->flags & OBJECT_NO_BLOCK) == 0 && object != excludeObj) {
+                            type = FID_TYPE(object->fid);
                             switch (type) {
                             case OBJ_TYPE_CRITTER:
                             case OBJ_TYPE_SCENERY:
                             case OBJ_TYPE_WALL:
-                                return v7;
+                                return object;
                             }
                         }
                     }
