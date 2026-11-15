@@ -1977,6 +1977,15 @@ int obj_toggle_flat(Object* object, Rect* rect)
 // 0x47CCE4
 int obj_erase_object(Object* object, Rect* rect)
 {
+    if (rect != NULL) {
+        // Detached objects have no world bounds to return. Give callers a
+        // harmless one-pixel refresh instead of leaving the bounds unwritten.
+
+        // TODO: Report whether bounds were produced so callers can skip the
+        // refresh entirely for detached objects and failed destruction.
+        *rect = { 0, 0, 0, 0 };
+    }
+    
     if (object == NULL) {
         return -1;
     }
