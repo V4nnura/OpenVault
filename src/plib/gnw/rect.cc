@@ -216,10 +216,19 @@ void rect_min_bound(const Rect* r1, const Rect* r2, Rect* min_bound)
 // 0x4B2D18
 int rect_inside_bound(const Rect* r1, const Rect* bound, Rect* r2)
 {
+    const bool invalid = r1->ulx > r1->lrx 
+        || r1->uly > r1->lry
+        || bound->ulx > bound->lrx 
+        || bound->uly > bound->lry;
+
     r2->ulx = r1->ulx;
     r2->uly = r1->uly;
     r2->lrx = r1->lrx;
     r2->lry = r1->lry;
+
+    if (invalid) {
+        return -1;
+    }
 
     if (r1->ulx <= bound->lrx && bound->ulx <= r1->lrx && bound->lry >= r1->uly && bound->uly <= r1->lry) {
         if (bound->ulx > r1->ulx) {
