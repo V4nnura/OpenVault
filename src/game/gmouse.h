@@ -76,7 +76,7 @@ int gmouse_init();
 int gmouse_reset();
 void gmouse_exit();
 void gmouse_enable();
-void gmouse_disable(int a1);
+void gmouse_disable(int allowScrolling);
 int gmouse_is_enabled();
 void gmouse_enable_scrolling();
 void gmouse_disable_scrolling();
