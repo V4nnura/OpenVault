@@ -2309,24 +2309,25 @@ bool obj_occupied(int tile, int elevation)
 // 0x47D2F0
 Object* obj_blocking_at(Object* excludeObj, int tile, int elev)
 {
+    ObjectListNode* objectListNode;
+    Object* obj;
+    int type;
+
     if (!hexGridTileIsValid(tile)) {
         return NULL;
     }
 
-    ObjectListNode* objectListNode = objectTable[tile];
-    Object* object;
-    int type;
-
+    objectListNode = objectTable[tile];
     while (objectListNode != NULL) {
-        object = objectListNode->obj;
-        if (object->elevation == elev) {
-            if ((object->flags & OBJECT_HIDDEN) == 0 && (object->flags & OBJECT_NO_BLOCK) == 0 && object != excludeObj) {
+        obj = objectListNode->obj;
+        if (obj->elevation == elev) {
+            if ((obj->flags & OBJECT_HIDDEN) == 0 && (obj->flags & OBJECT_NO_BLOCK) == 0 && obj != excludeObj) {
                 type = FID_TYPE(object->fid);
                 switch (type) {
                 case OBJ_TYPE_CRITTER:
                 case OBJ_TYPE_SCENERY:
                 case OBJ_TYPE_WALL:
-                    return object;
+                    return obj;
                 }
             }
         }
@@ -2338,16 +2339,16 @@ Object* obj_blocking_at(Object* excludeObj, int tile, int elev)
         if (hexGridTileIsValid(neighboor)) {
             objectListNode = objectTable[neighboor];
             while (objectListNode != NULL) {
-                object = objectListNode->obj;
-                if ((object->flags & OBJECT_MULTIHEX) != 0) {
-                    if (object->elevation == elev) {
-                        if ((object->flags & OBJECT_HIDDEN) == 0 && (object->flags & OBJECT_NO_BLOCK) == 0 && object != excludeObj) {
-                            type = FID_TYPE(object->fid);
+                obj = objectListNode->obj;
+                if ((obj->flags & OBJECT_MULTIHEX) != 0) {
+                    if (obj->elevation == elev) {
+                        if ((obj->flags & OBJECT_HIDDEN) == 0 && (obj->flags & OBJECT_NO_BLOCK) == 0 && obj != excludeObj) {
+                            type = FID_TYPE(obj->fid);
                             switch (type) {
                             case OBJ_TYPE_CRITTER:
                             case OBJ_TYPE_SCENERY:
                             case OBJ_TYPE_WALL:
-                                return object;
+                                return obj;
                             }
                         }
                     }
