@@ -2322,7 +2322,7 @@ Object* obj_blocking_at(Object* excludeObj, int tile, int elev)
         obj = objectListNode->obj;
         if (obj->elevation == elev) {
             if ((obj->flags & OBJECT_HIDDEN) == 0 && (obj->flags & OBJECT_NO_BLOCK) == 0 && obj != excludeObj) {
-                type = FID_TYPE(object->fid);
+                type = FID_TYPE(obj->fid);
                 switch (type) {
                 case OBJ_TYPE_CRITTER:
                 case OBJ_TYPE_SCENERY:
