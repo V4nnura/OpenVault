@@ -33,8 +33,8 @@ void register_screendump(int new_screendump_key, ScreenDumpFunc* new_screendump_
 unsigned int get_time();
 void pause_for_tocks(unsigned int ms);
 void block_for_tocks(unsigned int ms);
-unsigned int elapsed_time(unsigned int a1);
-unsigned int elapsed_tocks(unsigned int a1, unsigned int a2);
+unsigned int elapsed_time(unsigned int start);
+unsigned int elapsed_tocks(unsigned int end, unsigned int start);
 unsigned int get_bk_time();
 void set_repeat_rate(unsigned int rate);
 unsigned int get_repeat_rate();
