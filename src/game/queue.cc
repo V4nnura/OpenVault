@@ -438,13 +438,10 @@ static int queue_explode_exit(Object* obj, void* data)
 // 0x490B48
 static int queue_do_explosion(Object* explosive, bool premature)
 {
-    Object* owner;
     int tile;
     int elevation;
-    int min_damage;
-    int max_damage;
 
-    owner = obj_top_environment(explosive);
+    Object* owner = obj_top_environment(explosive);
     if (owner) {
         tile = owner->tile;
         elevation = owner->elevation;
@@ -452,6 +449,9 @@ static int queue_do_explosion(Object* explosive, bool premature)
         tile = explosive->tile;
         elevation = explosive->elevation;
     }
+
+    int min_damage;
+    int max_damage;
 
     if (explosive->pid == PROTO_ID_DYNAMITE_I || explosive->pid == PROTO_ID_DYNAMITE_II) {
         // Dynamite
@@ -489,9 +489,7 @@ static int queue_premature(Object* obj, void* data)
 // 0x490C08
 void queue_leaving_map()
 {
-    int index;
-
-    for (index = 0; index < EVENT_TYPE_COUNT; index++) {
+    for (int index = 0; index < EVENT_TYPE_COUNT; index++) {
         if (q_func[index].clearOnMapExit) {
             queue_clear_type(index, q_func[index].mapExitHandlerProc);
         }
