@@ -34,7 +34,7 @@ static int proto_read_protoSubNode(Proto* buf, DB_FILE* stream);
 static int proto_write_item_data(ItemProtoData* item_data, int type, DB_FILE* stream);
 static int proto_write_scenery_data(SceneryProtoData* scenery_data, int type, DB_FILE* stream);
 static int proto_write_protoSubNode(Proto* buf, DB_FILE* stream);
-static int proto_new_id(int a1);
+static int proto_new_id(int type);
 
 // 0x50734C
 char cd_path_base[COMPAT_MAX_PATH];
