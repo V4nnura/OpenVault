@@ -1777,9 +1777,9 @@ int proto_undo_new_id(int type)
 }
 
 // 0x490568
-int proto_max_id(int a1)
+int proto_max_id(int type)
 {
-    return protolists[a1].max_entries_num;
+    return protolists[type].max_entries_num;
 }
 
 // 0x490614
