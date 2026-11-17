@@ -1071,7 +1071,7 @@ int register_object_must_erase(Object* object)
 }
 
 // 0x4148BC
-int register_object_call(void* a1, void* a2, AnimationCallback* proc, int delay)
+int register_object_call(void* param1, void* param2, AnimationCallback* proc, int delay)
 {
     if (check_registry(NULL) == -1 || proc == NULL) {
         anim_cleanup();
@@ -1083,8 +1083,8 @@ int register_object_call(void* a1, void* a2, AnimationCallback* proc, int delay)
     animationDescription->kind = ANIM_KIND_CALLBACK;
     animationDescription->extendedFlags = 0;
     animationDescription->artCacheKey = NULL;
-    animationDescription->param2 = a2;
-    animationDescription->param1 = a1;
+    animationDescription->param2 = param2;
+    animationDescription->param1 = param1;
     animationDescription->callback = proc;
     animationDescription->delay = delay;
 
@@ -1096,7 +1096,7 @@ int register_object_call(void* a1, void* a2, AnimationCallback* proc, int delay)
 // Same as `register_object_call` but accepting 3 parameters.
 //
 // 0x414950
-int register_object_call3(void* a1, void* a2, void* a3, AnimationCallback3* proc, int delay)
+int register_object_call3(void* param1, void* param2, void* param3, AnimationCallback3* proc, int delay)
 {
     if (check_registry(NULL) == -1 || proc == NULL) {
         anim_cleanup();
@@ -1108,10 +1108,10 @@ int register_object_call3(void* a1, void* a2, void* a3, AnimationCallback3* proc
     animationDescription->kind = ANIM_KIND_CALLBACK3;
     animationDescription->extendedFlags = 0;
     animationDescription->artCacheKey = NULL;
-    animationDescription->param2 = a2;
-    animationDescription->param1 = a1;
+    animationDescription->param2 = param2;
+    animationDescription->param1 = param1;
     animationDescription->callback3 = proc;
-    animationDescription->param3 = a3;
+    animationDescription->param3 = param3;
     animationDescription->delay = delay;
 
     curr_anim_counter++;
@@ -1120,7 +1120,7 @@ int register_object_call3(void* a1, void* a2, void* a3, AnimationCallback3* proc
 }
 
 // 0x4149E4
-int register_object_must_call(void* a1, void* a2, AnimationCallback* proc, int delay)
+int register_object_must_call(void* param1, void* param2, AnimationCallback* proc, int delay)
 {
     if (check_registry(NULL) == -1 || proc == NULL) {
         anim_cleanup();
@@ -1132,8 +1132,8 @@ int register_object_must_call(void* a1, void* a2, AnimationCallback* proc, int d
     animationDescription->kind = ANIM_KIND_CALLBACK;
     animationDescription->extendedFlags = ANIMATION_SEQUENCE_FORCED;
     animationDescription->artCacheKey = NULL;
-    animationDescription->param2 = a2;
-    animationDescription->param1 = a1;
+    animationDescription->param2 = param2;
+    animationDescription->param1 = param1;
     animationDescription->callback = proc;
     animationDescription->delay = delay;
 
