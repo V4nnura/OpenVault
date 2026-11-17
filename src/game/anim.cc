@@ -251,12 +251,12 @@ typedef struct AnimationSad {
     };
 } AnimationSad;
 
-static int anim_free_slot(int a1);
+static int anim_free_slot(int requestOptions);
 static int anim_preload(Object* object, int fid, CacheEntry** cacheEntryPtr);
 static void anim_cleanup();
-static int anim_set_check(int a1);
-static int anim_set_continue(int a1, int a2);
-static int anim_set_end(int a1);
+static int anim_set_check(int animationSequenceIndex);
+static int anim_set_continue(int animationSequenceIndex, int a2);
+static int anim_set_end(int animationSequenceIndex);
 static bool anim_can_use_door(Object* critter, Object* door);
 static int anim_move_to_object(Object* from, Object* to, int a3, int anim, int animationSequenceIndex);
 static int make_stair_path(Object* object, int from, int fromElevation, int to, int toElevation, StraightPathNode* a6, Object** obstaclePtr);
@@ -2955,7 +2955,7 @@ static void object_anim_compact()
 }
 
 // 0x417964
-int check_move(int* a1)
+int check_move(int* action_points_ptr)
 {
     int x, y;
     mouse_get_position(&x, &y);
@@ -2966,15 +2966,14 @@ int check_move(int* a1)
     }
 
     if (isInCombat()) {
-        if (*a1 != -1) {
+        if (*action_points_ptr != -1) {
             if (keys[SDL_SCANCODE_RCTRL] || keys[SDL_SCANCODE_LCTRL]) {
                 int hitMode;
                 bool aiming;
                 intface_get_attack(&hitMode, &aiming);
 
-                int v6 = item_mp_cost(obj_dude, hitMode, aiming);
-                *a1 = *a1 - v6;
-                if (*a1 <= 0) {
+                *action_points_ptr -= item_mp_cost(obj_dude, hitMode, aiming);
+                if (*action_points_ptr <= 0) {
                     return -1;
                 }
             }
