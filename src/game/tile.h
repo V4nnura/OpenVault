@@ -17,7 +17,7 @@ extern int off_tile[2][6];
 
 extern int tile_center_tile;
 
-int tile_init(TileData** a1, int squareGridWidth, int squareGridHeight, int hexGridWidth, int hexGridHeight, unsigned char* buf, int windowWidth, int windowHeight, int windowPitch, TileWindowRefreshProc* windowRefreshProc);
+int tile_init(TileData** squareGrid, int squareGridWidth, int squareGridHeight, int hexGridWidth, int hexGridHeight, unsigned char* buf, int windowWidth, int windowHeight, int windowPitch, TileWindowRefreshProc* windowRefreshProc);
 void tile_set_border(int windowWidth, int windowHeight, int hexGridWidth, int hexGridHeight);
 void tile_reset();
 void tile_log_stage_top_pixels_public(const char* stage);
@@ -27,7 +27,7 @@ void tile_enable_refresh();
 void tile_refresh_rect(Rect* rect, int elevation);
 void tile_refresh_display();
 int tile_set_center(int tile, int flags);
-void tile_toggle_roof(int a1);
+void tile_toggle_roof(bool refresh);
 int tile_roof_visible();
 int tile_coord(int tile, int* x, int* y, int elevation);
 int tile_num(int x, int y, int elevation, bool ignoreBounds = false);
