@@ -271,7 +271,7 @@ static int square_width;
 int tile_center_tile;
 
 // 0x49D880
-int tile_init(TileData** a1, int squareGridWidth, int squareGridHeight, int hexGridWidth, int hexGridHeight, unsigned char* buffer, int windowWidth, int windowHeight, int windowPitch, TileWindowRefreshProc* windowRefreshProc)
+int tile_init(TileData** squareGrid, int squareGridWidth, int squareGridHeight, int hexGridWidth, int hexGridHeight, unsigned char* buffer, int windowWidth, int windowHeight, int windowPitch, TileWindowRefreshProc* windowRefreshProc)
 {
     int v11;
     int v12;
@@ -285,7 +285,7 @@ int tile_init(TileData** a1, int squareGridWidth, int squareGridHeight, int hexG
     int v25;
 
     square_width = squareGridWidth;
-    squares = a1;
+    squares = squareGrid;
     grid_length = hexGridHeight;
     square_length = squareGridHeight;
     grid_width = hexGridWidth;
@@ -538,12 +538,10 @@ int tile_set_center(int tile, int flags)
 
     if ((flags & TILE_SET_CENTER_FLAG_IGNORE_SCROLL_RESTRICTIONS) == 0) {
         if (scroll_limiting_on) {
-            int tileScreenX;
-            int tileScreenY;
+            int tileScreenX, tileScreenY;
             tile_coord(tile, &tileScreenX, &tileScreenY, map_elevation);
 
-            int dudeScreenX;
-            int dudeScreenY;
+            int dudeScreenX, dudeScreenY;
             tile_coord(obj_dude->tile, &dudeScreenX, &dudeScreenY, map_elevation);
 
             int dx = abs(dudeScreenX - tileScreenX);
@@ -677,11 +675,11 @@ static void refresh_game(Rect* rect, int elevation)
 }
 
 // 0x49E218
-void tile_toggle_roof(int a1)
+void tile_toggle_roof(bool refresh)
 {
     show_roof = 1 - show_roof;
 
-    if (a1) {
+    if (refresh) {
         // NOTE: Uninline.
         tile_refresh_display();
     }
@@ -833,10 +831,10 @@ bool tile_to_right_of(int tile1, int tile2)
     int dx = x2 - x1;
     int dy = y2 - y1;
 
-    // NOTE: the value below looks like 4/3, which is 0x3FF55555555555, but it's
-    // binary value is slightly different: 0x3FF55555555556. This difference plays
-    // important role as seen right in the beginning of the game, comparing tiles
-    // 17488 (0x4450) and 15288 (0x3BB8).
+    // NOTE: the value below looks like 4/3, which is 0x3FF55555555555,
+    // but it's binary value is slightly different: 0x3FF55555555556.
+    // This difference plays important role as seen right in the beginning
+    // of the game, comparing tiles 17488 (0x4450) and 15288 (0x3BB8).
     return (double)dx <= (double)dy * 1.3333333333333335;
 }
 
@@ -1092,8 +1090,7 @@ int square_coord_roof(int squareTile, int* screenX, int* screenY, int elevation)
 // 0x49E9F8
 int square_num(int screenX, int screenY, int elevation)
 {
-    int coordY;
-    int coordX;
+    int coordX, coordY;
 
     square_xy(screenX, screenY, elevation, &coordX, &coordY);
 
@@ -1107,8 +1104,7 @@ int square_num(int screenX, int screenY, int elevation)
 // 0x49EA40
 int square_num_roof(int screenX, int screenY, int elevation)
 {
-    int x;
-    int y;
+    int x, y;
 
     square_xy_roof(screenX, screenY, elevation, &x, &y);
 
@@ -1162,10 +1158,8 @@ void square_render_roof(Rect* rect, int elevation)
     }
 
     int temp;
-    int minY;
-    int minX;
-    int maxX;
-    int maxY;
+    int minX, minY;
+    int maxX, maxY;
 
     // CE: Constrain rect to tile bounds so that we don't draw outside.
     Rect constrainedRect = *rect;
@@ -1306,8 +1300,7 @@ static void roof_draw(int fid, int x, int y, Rect* rect, int light)
             int eggWidth = art_frame_width(eggFrm, 0, 0);
             int eggHeight = art_frame_length(eggFrm, 0, 0);
 
-            int eggScreenX;
-            int eggScreenY;
+            int eggScreenX, eggScreenY;
             tile_coord(obj_egg->tile, &eggScreenX, &eggScreenY, obj_egg->elevation);
 
             eggScreenX += 16;
@@ -1391,11 +1384,9 @@ static void roof_draw(int fid, int x, int y, Rect* rect, int light)
 // 0x49F3EC
 void square_render_floor(Rect* rect, int elevation)
 {
-    int minY;
-    int maxX;
-    int maxY;
-    int minX;
     int temp;
+    int minX, minY;
+    int maxX, maxY;
 
     // CE: Constrain rect to tile bounds so that we don't draw outside.
     Rect constrainedRect = *rect;
@@ -1462,8 +1453,7 @@ bool square_roof_intersect(int x, int y, int elevation)
 
     bool result = false;
 
-    int tileX;
-    int tileY;
+    int tileX, tileY;
     square_xy_roof(x, y, elevation, &tileX, &tileY);
 
     TileData* ptr = squares[elevation];
@@ -1556,8 +1546,7 @@ void draw_grid(int tile, int elevation, Rect* rect)
         return;
     }
 
-    int x;
-    int y;
+    int x, y;
     tile_coord(tile, &x, &y, elevation);
 
     Rect r;
@@ -1887,14 +1876,12 @@ int tile_make_line(int from, int to, int* tiles, int tilesCapacity)
 
     int count = 0;
 
-    int fromX;
-    int fromY;
+    int fromX, fromY;
     tile_coord(from, &fromX, &fromY, map_elevation);
     fromX += 16;
     fromY += 8;
 
-    int toX;
-    int toY;
+    int toX, toY;
     tile_coord(to, &toX, &toY, map_elevation);
     toX += 16;
     toY += 8;
@@ -2044,8 +2031,7 @@ void tile_update_bounds_base()
     // Determine bounding rectangle of scroll blocking objects.
     for (int tile = 0; tile < grid_size; tile++) {
         if (obj_scroll_blocking_at(tile, map_elevation) == 0) {
-            int x;
-            int y;
+            int x, y;
             tile_coord(tile, &x, &y, map_elevation);
             x += 16;
             y += 8;
@@ -2116,8 +2102,7 @@ void tile_update_bounds_rect()
     // one scroll blocker or be "surrounded" by three of them. This requires
     // bounds to be multiple of scroll steps.
 
-    int tile_center_x;
-    int tile_center_y;
+    int tile_center_x, tile_center_y;
     tile_coord(tile_center_tile, &tile_center_x, &tile_center_y, map_elevation);
     tile_center_x += 16;
     tile_center_y += 8;
@@ -2127,15 +2112,15 @@ void tile_update_bounds_rect()
     tile_bounds_rect.lrx -= (tile_bounds_rect.lrx - tile_center_x) % 32;
     tile_bounds_rect.lry -= (tile_bounds_rect.lry - tile_center_y) % 24;
 
-    // Scroll blocker itself cannot become center tile, so inset bounds for one
-    // full tile size.
+    // Scroll blocker itself cannot become center tile,
+    // so inset bounds for one full tile size.
     tile_bounds_rect.ulx += 32;
     tile_bounds_rect.uly += 16;
     tile_bounds_rect.lrx -= 32;
     tile_bounds_rect.lry -= 16;
 
-    // Scroll blockers where placed for 640x480 resolution, which means visible
-    // rect is half of than amount in each direction.
+    // Scroll blockers where placed for 640x480 resolution, which means
+    // visible rect is half of than amount in each direction.
     tile_bounds_rect.ulx -= 640 / 2;
     tile_bounds_rect.uly -= (480 - 100) / 2;
     tile_bounds_rect.lrx += 640 / 2;
