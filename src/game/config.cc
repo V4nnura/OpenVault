@@ -239,12 +239,14 @@ bool config_get_values(Config* config, const char* sectionKey, const char* key, 
         string = pch + 1;
     }
 
-    if (count <= 1) {
+    // SFALL: Fix getting last item in a list if the list has less than the
+    // requested number of values (for `chem_primary_desire`).
+    if (count > 0) {
         *arr = atoi(string);
-        return true;
+        count--;
     }
 
-    return false;
+    return count == 0;
 }
 
 // 0x4268E0
@@ -269,24 +271,28 @@ bool config_load(Config* config, const char* filePath, bool isDb)
 
     if (isDb) {
         DB_FILE* stream = db_fopen(filePath, "rb");
-        if (stream != NULL) {
-            while (db_fgets(string, sizeof(string), stream) != NULL) {
-                config_parse_line(config, string);
-            }
-            db_fclose(stream);
+
+        // CE: Return `false` if file does not exists in database.
+        if (stream == NULL) {
+            return false;
         }
+
+        while (db_fgets(string, sizeof(string), stream) != NULL) {
+            config_parse_line(config, string);
+        }
+        db_fclose(stream);
     } else {
         FILE* stream = compat_fopen(filePath, "rt");
-        if (stream != NULL) {
-            while (fgets(string, sizeof(string), stream) != NULL) {
-                config_parse_line(config, string);
-            }
 
-            fclose(stream);
+        // CE: Return `false` if file does not exists on the file system.
+        if (stream == NULL) {
+            return false;
         }
 
-        // FIXME: This function returns `true` even if the file was not actually
-        // read. I'm pretty sure it's bug.
+        while (fgets(string, sizeof(string), stream) != NULL) {
+            config_parse_line(config, string);
+        }
+        fclose(stream);
     }
 
     return true;
@@ -373,10 +379,25 @@ static bool config_parse_line(Config* config, char* string)
         *pch = '\0';
     }
 
-    // Find opening bracket.
-    pch = strchr(string, '[');
-    if (pch != NULL) {
-        char* sectionKey = pch + 1;
+    // CE: Original implementation treats any line with brackets as section key.
+    // The problem can be seen when loading Olympus settings (ddraw.ini), which
+    // contains the following line:
+    //
+    //  ```ini
+    //  VersionString=Olympus 2207 [Complete].
+    //  ```
+    //
+    // It thinks that [Complete] is a start of new section, and puts remaining
+    // keys there.
+
+    // Skip leading whitespace.
+    while (isspace(*string)) {
+        string++;
+    }
+
+    // Check if it's a section key.
+    if (*string, '[') {
+        char* sectionKey = string + 1;
 
         // Find closing bracket.
         pch = strchr(sectionKey, ']');
