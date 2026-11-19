@@ -1142,9 +1142,9 @@ int register_object_must_call(void* param1, void* param2, AnimationCallback* pro
     return 0;
 }
 
-// The [flag] parameter should be one of OBJECT_* flags. The way it's handled
-// down the road implies it should not be a group of flags (joined with bitwise
-// OR), but a one particular flag.
+// The [flag] parameter should be one of OBJECT_* flags. The way
+// it's handled down the road implies it should not be a group of
+// flags (joined with bitwise OR), but a one particular flag.
 //
 // 0x414A78
 int register_object_fset(Object* object, int flag, int delay)
@@ -1167,9 +1167,9 @@ int register_object_fset(Object* object, int flag, int delay)
     return 0;
 }
 
-// The [flag] parameter should be one of OBJECT_* flags. The way it's handled
-// down the road implies it should not be a group of flags (joined with bitwise
-// OR), but a one particular flag.
+// The [flag] parameter should be one of OBJECT_* flags. The way
+// it's handled down the road implies it should not be a group of
+// flags (joined with bitwise OR), but a one particular flag.
 //
 // 0x414AF8
 int register_object_funset(Object* object, int flag, int delay)
@@ -1910,8 +1910,8 @@ int make_path_func(Object* object, int from, int to, unsigned char* rotations, i
         }
 
         if (rotations != NULL) {
-            // Looks like array resevering, probably because A* finishes it's path from end to start,
-            // this probably reverses it start-to-end.
+            // Looks like array resevering, probably because A* finishes it's
+            // path from end to start, this probably reverses it start-to-end.
             unsigned char* beginning = rotations;
             unsigned char* ending = rotations + index - 1;
             int middle = index / 2;
@@ -2171,9 +2171,9 @@ static int anim_move_to_object(Object* from, Object* to, int a3, int anim, int a
     }
 
     AnimationSad* sad_entry = &(sad[moveSadIndex]);
-    // NOTE: Original code is somewhat different. Due to some kind of
-    // optimization this value is either 1 or 2, which is later used in
-    // subsequent calculations and rotations array lookup.
+    // NOTE: Original code is somewhat different. Due to some kind
+    // of optimization this value is either 1 or 2, which is later
+    // used in subsequent calculations and rotations array lookup.
     bool isMultihex = (from->flags & OBJECT_MULTIHEX);
     sad_entry->length -= (isMultihex ? 2 : 1);
     if (sad_entry->length <= 0) {
@@ -2831,8 +2831,7 @@ void object_animate()
                         obj_inc_frame(object, &tempRect);
                         rect_min_bound(&dirtyRect, &tempRect, &dirtyRect);
 
-                        int frameX;
-                        int frameY;
+                        int frameX, frameY;
                         art_frame_hot(art, object->frame, object->rotation, &frameX, &frameY);
 
                         obj_offset(object, frameX, frameY, &tempRect);
@@ -2923,14 +2922,14 @@ void object_animate()
 // 0x417880
 static void object_anim_compact()
 {
-    for (int index = 0; index < ANIMATION_SEQUENCE_LIST_CAPACITY; index++) {
+    int index = 0;
+    for (; index < ANIMATION_SEQUENCE_LIST_CAPACITY; index++) {
         AnimationSequence* animationSequence = &(anim_set[index]);
         if ((animationSequence->flags & ANIM_SEQ_0x20) != 0) {
             animationSequence->flags = 0;
         }
     }
 
-    int index = 0;
     for (; index < curr_sad; index++) {
         if (sad[index].step == -1000) {
             int v2 = index + 1;
@@ -3144,8 +3143,7 @@ void dude_stand(Object* obj, int rotation, int fid)
             if (takeOutFrm != NULL) {
                 int frameCount = art_frame_max_frame(takeOutFrm);
                 for (int frame = 0; frame < frameCount; frame++) {
-                    int offsetX;
-                    int offsetY;
+                    int offsetX, offsetY;
                     art_frame_hot(takeOutFrm, frame, obj->rotation, &offsetX, &offsetY);
                     x += offsetX;
                     y += offsetY;
@@ -3156,8 +3154,7 @@ void dude_stand(Object* obj, int rotation, int fid)
                 int standFid = art_id(FID_TYPE(obj->fid), obj->fid & 0xFFF, ANIM_STAND, 0, obj->rotation + 1);
                 Art* standFrm = art_ptr_lock(standFid, &standFrmHandle);
                 if (standFrm != NULL) {
-                    int offsetX;
-                    int offsetY;
+                    int offsetX, offsetY;
                     if (art_frame_offset(standFrm, obj->rotation, &offsetX, &offsetY) == 0) {
                         x += offsetX;
                         y += offsetY;
