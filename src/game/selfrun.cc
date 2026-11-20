@@ -29,11 +29,7 @@ static int selfrun_state = SELFRUN_STATE_TURNED_OFF;
 // 0x496D60
 int selfrun_get_list(char*** fileListPtr, int* fileListLengthPtr)
 {
-    if (fileListPtr == NULL) {
-        return -1;
-    }
-
-    if (fileListLengthPtr == NULL) {
+    if (fileListPtr == NULL || fileListLengthPtr == NULL) {
         return -1;
     }
 
@@ -57,11 +53,7 @@ int selfrun_free_list(char*** fileListPtr)
 // 0x496DA8
 int selfrun_prep_playback(const char* fileName, SelfrunData* selfrunData)
 {
-    if (fileName == NULL) {
-        return -1;
-    }
-
-    if (selfrunData == NULL) {
+    if (fileName == NULL || selfrunData == NULL) {
         return -1;
     }
 
@@ -129,11 +121,7 @@ void selfrun_playback_loop(SelfrunData* selfrunData)
 // 0x496EA8
 int selfrun_prep_recording(const char* recordingName, const char* mapFileName, SelfrunData* selfrunData)
 {
-    if (recordingName == NULL) {
-        return -1;
-    }
-
-    if (mapFileName == NULL) {
+    if (recordingName == NULL || mapFileName == NULL) {
         return -1;
     }
 
@@ -204,11 +192,7 @@ static void selfrun_playback_callback(int reason)
 // 0x49700C
 static int selfrun_load_data(const char* path, SelfrunData* selfrunData)
 {
-    if (path == NULL) {
-        return -1;
-    }
-
-    if (selfrunData == NULL) {
+    if (path == NULL || selfrunData == NULL) {
         return -1;
     }
 
@@ -232,11 +216,7 @@ static int selfrun_load_data(const char* path, SelfrunData* selfrunData)
 // 0x497074
 static int selfrun_save_data(const char* path, SelfrunData* selfrunData)
 {
-    if (path == NULL) {
-        return -1;
-    }
-
-    if (selfrunData == NULL) {
+    if (path == NULL || selfrunData == NULL) {
         return -1;
     }
 
