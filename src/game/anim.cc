@@ -2372,15 +2372,15 @@ static int make_stair_path(Object* object, int from, int fromElevation, int to, 
 }
 
 // 0x416754
-static int anim_move_to_tile(Object* obj, int tile, int elev, int a4, int anim, int animationSequenceIndex)
+static int anim_move_to_tile(Object* obj, int tile, int elev, int actionPoints, int anim, int animationSequenceIndex)
 {
-    int v1 = anim_move(obj, tile, elev, -1, anim, 0, animationSequenceIndex);
-    if (v1 == -1) {
+    int index = anim_move(obj, tile, elev, -1, anim, 0, animationSequenceIndex);
+    if (index == -1) {
         return -1;
     }
 
     if (obj_blocking_at(obj, tile, elev)) {
-        AnimationSad* sad_entry = &(sad[v1]);
+        AnimationSad* sad_entry = &(sad[index]);
         sad_entry->length--;
         if (sad_entry->length <= 0) {
             sad_entry->step = -1000;
@@ -2388,8 +2388,8 @@ static int anim_move_to_tile(Object* obj, int tile, int elev, int a4, int anim, 
         }
 
         sad_entry->targetTile = tile_num_in_direction(tile, sad_entry->rotations[sad_entry->length], 1);
-        if (a4 != -1 && a4 < sad_entry->length) {
-            sad_entry->length = a4;
+        if (actionPoints != -1 && actionPoints < sad_entry->length) {
+            sad_entry->length = actionPoints;
         }
     }
 
