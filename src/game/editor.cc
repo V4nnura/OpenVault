@@ -6160,15 +6160,15 @@ static void push_perks()
 // 0x437AC8
 static void pop_perks()
 {
-    int perk;
+    int perk = 0;
 
-    for (perk = 0; perk < PERK_COUNT; perk++) {
+    for (; perk < PERK_COUNT; perk++) {
         while (perk_level(perk) > perk_back[perk]) {
             perk_sub(perk);
         }
     }
 
-    for (perk = 0; perk < PERK_COUNT; perk++) {
+    for (; perk < PERK_COUNT; perk++) {
         while (perk_level(perk) < perk_back[perk]) {
             perk_add(perk);
         }
