@@ -2922,14 +2922,14 @@ void object_animate()
 // 0x417880
 static void object_anim_compact()
 {
-    int index = 0;
-    for (; index < ANIMATION_SEQUENCE_LIST_CAPACITY; index++) {
+    for (int index = 0; index < ANIMATION_SEQUENCE_LIST_CAPACITY; index++) {
         AnimationSequence* animationSequence = &(anim_set[index]);
         if ((animationSequence->flags & ANIM_SEQ_0x20) != 0) {
             animationSequence->flags = 0;
         }
     }
 
+    int index = 0;
     for (; index < curr_sad; index++) {
         if (sad[index].step == -1000) {
             int v2 = index + 1;
