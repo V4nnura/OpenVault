@@ -50,6 +50,7 @@ target_sources(${EXECUTABLE_NAME} PUBLIC
     "src/game/actions.h"
     "src/game/amutex.cc"
     "src/game/amutex.h"
+    "src/game/anim_defs.h"
     "src/game/anim.cc"
     "src/game/anim.h"
     "src/game/art.cc"
