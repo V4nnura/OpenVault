@@ -6,6 +6,7 @@
 
 #include "game/actions.h"
 #include "game/anim.h"
+#include "game/anim_defs.h"
 #include "game/combat.h"
 #include "game/config.h"
 #include "game/critter.h"
