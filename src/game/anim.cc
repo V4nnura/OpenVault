@@ -2593,10 +2593,10 @@ static void object_move(int index)
         x = object->x - x;
         y = object->y - y;
 
-        int v10 = tile_num_in_direction(object->tile, rotation, 1);
-        Object* v12 = obj_blocking_at(object, v10, object->elevation);
-        if (v12 != NULL) {
-            if (!anim_can_use_door(object, v12)) {
+        int next_tile = tile_num_in_direction(object->tile, rotation, 1);
+        Object* obstacle = obj_blocking_at(object, next_tile, object->elevation);
+        if (obstacle != NULL) {
+            if (!anim_can_use_door(object, obstacle)) {
                 sad_entry->length = make_path(object, object->tile, sad_entry->targetTile, sad_entry->rotations, 1);
                 if (sad_entry->length != 0) {
                     obj_move_to_tile(object, object->tile, object->elevation, &temp);
@@ -2612,14 +2612,14 @@ static void object_move(int index)
                 } else {
                     sad_entry->step = -1000;
                 }
-                v10 = -1;
+                next_tile = -1;
             } else {
-                obj_use_door(object, v12, 0);
+                obj_use_door(object, obstacle, 0);
             }
         }
 
-        if (v10 != -1) {
-            obj_move_to_tile(object, v10, object->elevation, &temp);
+        if (next_tile != -1) {
+            obj_move_to_tile(object, next_tile, object->elevation, &temp);
             rect_min_bound(&dirty, &temp, &dirty);
 
             bool cant_move = false;
@@ -2671,7 +2671,7 @@ static void object_straight_move(int index)
     Object* object = sad_entry->obj;
 
     Rect dirtyRect;
-    Rect temp;
+    Rect tempRect;
 
     if (sad_entry->step == -2000) {
         obj_change_fid(object, sad_entry->fid, &dirtyRect);
@@ -2688,19 +2688,19 @@ static void object_straight_move(int index)
 
         if ((sad_entry->flags & ANIM_SAD_NO_ANIM) == 0) {
             if ((sad_entry->flags & ANIM_SAD_WAIT_FOR_COMPLETION) == 0 || object->frame < lastFrame) {
-                obj_inc_frame(object, &temp);
-                rect_min_bound(&dirtyRect, &temp, &dirtyRect);
+                obj_inc_frame(object, &tempRect);
+                rect_min_bound(&dirtyRect, &tempRect, &dirtyRect);
             }
         }
 
         if (sad_entry->step < sad_entry->length) {
-            StraightPathNode* v12 = &(sad_entry->spn_list[sad_entry->step]);
+            StraightPathNode* spn = &(sad_entry->spn_list[sad_entry->step]);
 
-            obj_move_to_tile(object, v12->tile, v12->elevation, &temp);
-            rect_min_bound(&dirtyRect, &temp, &dirtyRect);
+            obj_move_to_tile(object, spn->tile, spn->elevation, &tempRect);
+            rect_min_bound(&dirtyRect, &tempRect, &dirtyRect);
 
-            obj_offset(object, v12->x, v12->y, &temp);
-            rect_min_bound(&dirtyRect, &temp, &dirtyRect);
+            obj_offset(object, spn->x, spn->y, &tempRect);
+            rect_min_bound(&dirtyRect, &tempRect, &dirtyRect);
 
             sad_entry->step++;
         }
@@ -2761,7 +2761,7 @@ void object_animate()
         return;
     }
 
-    anim_in_bk = 1;
+    anim_in_bk = true;
 
     for (int index = 0; index < curr_sad; index++) {
         AnimationSad* sad_entry = &(sad[index]);
