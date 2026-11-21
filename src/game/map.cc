@@ -6,6 +6,7 @@
 #include <vector>
 
 #include "game/anim.h"
+#include "game/anim_defs.h"
 #include "game/automap.h"
 #include "game/combat.h"
 #include "game/critter.h"
