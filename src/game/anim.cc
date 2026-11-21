@@ -3246,14 +3246,14 @@ int anim_hide(Object* object, int animationSequenceIndex)
 // 0x417F98
 int anim_change_fid(Object* obj, int animationSequenceIndex, int fid)
 {
-    Rect rect;
-    Rect v7;
-
     if (FID_ANIM_TYPE(fid)) {
-        obj_change_fid(obj, fid, &rect);
-        obj_set_frame(obj, 0, &v7);
-        rect_min_bound(&rect, &v7, &rect);
-        tile_refresh_rect(&rect, obj->elevation);
+        Rect dirty;
+        Rect temp;
+
+        obj_change_fid(obj, fid, &dirty);
+        obj_set_frame(obj, 0, &temp);
+        rect_min_bound(&dirty, &temp, &dirty);
+        tile_refresh_rect(&dirty, obj->elevation);
     } else {
         dude_stand(obj, obj->rotation, fid);
     }
