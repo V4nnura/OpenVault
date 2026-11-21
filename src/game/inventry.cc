@@ -10,6 +10,7 @@
 
 #include "game/actions.h"
 #include "game/anim.h"
+#include "game/anim_defs.h"
 #include "game/art.h"
 #include "game/bmpdlog.h"
 #include "game/combat.h"
