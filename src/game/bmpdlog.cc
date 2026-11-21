@@ -123,7 +123,7 @@ int flgids2[FILE_DIALOG_FRM_COUNT] = {
 };
 
 // 0x41BE70
-int dialog_out(const char* title, const char** body, int bodyLength, int x, int y, int titleColor, const char* a8, int bodyColor, int flags)
+int dialog_out(const char* title, const char** body, int bodyLength, int x, int y, int titleColor, const char* secondaryButtonText, int bodyColor, int flags)
 {
     MessageList messageList;
     MessageListItem messageListItem;
@@ -132,8 +132,8 @@ int dialog_out(const char* title, const char** body, int bodyLength, int x, int 
     bool initializedButtons = false;
 
     bool hasTwoButtons = false;
-    if (a8 != NULL) {
-        // TODO: a8 seems to be a way to customize "NO", but is unused.
+    if (secondaryButtonText != NULL) {
+        // TODO: secondaryButtonText seems to be a way to customize "NO", but is unused.
         hasTwoButtons = true;
     }
 
@@ -288,7 +288,7 @@ int dialog_out(const char* title, const char** body, int bodyLength, int x, int 
     if (hasTwoButtons && dialogType == DIALOG_TYPE_LARGE) {
         if (initializedButtons) {
             if ((flags & DIALOG_BOX_YES_NO) != 0) {
-                a8 = getmsg(&messageList, &messageListItem, 102); // 102 - NO
+                secondaryButtonText = getmsg(&messageList, &messageListItem, 102); // 102 - NO
             }
 
             text_font(103);
@@ -301,7 +301,7 @@ int dialog_out(const char* title, const char** body, int bodyLength, int x, int 
                 backgroundWidth);
 
             text_to_buf(windowBuf + backgroundWidth * (doneY[dialogType] + 3) + doneX[dialogType] + doneBoxWidth + 59,
-                a8, backgroundWidth, backgroundWidth, colorTable[18979]);
+                secondaryButtonText, backgroundWidth, backgroundWidth, colorTable[18979]);
 
             int btn = win_register_button(win,
                 doneBoxWidth + doneX[dialogType] + 37,
@@ -376,7 +376,7 @@ int dialog_out(const char* title, const char** body, int bodyLength, int x, int 
             text_font(103);
 
             text_to_buf(windowBuf + backgroundWidth * (doneY[dialogType] + 3) + doneX[dialogType] + 35,
-                a8, backgroundWidth, backgroundWidth, colorTable[18979]);
+                secondaryButtonText, backgroundWidth, backgroundWidth, colorTable[18979]);
 
             int btn = win_register_button(win,
                 doneX[dialogType] + 13,
