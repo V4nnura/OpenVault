@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "game/art.h"
+#include "game/anim_defs.h"
 #include "game/combat.h"
 #include "game/combat_defs.h"
 #include "game/combatai.h"
@@ -40,98 +41,6 @@ namespace fallout {
 #define ANIMATION_SAD_LIST_CAPACITY 16
 
 #define ANIMATION_SEQUENCE_FORCED 0x01
-
-typedef enum AnimationKind {
-    ANIM_KIND_MOVE_TO_OBJECT = 0,
-    ANIM_KIND_MOVE_TO_TILE = 1,
-    ANIM_KIND_MOVE_TO_TILE_STRAIGHT = 2,
-    ANIM_KIND_MOVE_TO_TILE_STRAIGHT_AND_WAIT_FOR_COMPLETE = 3,
-    ANIM_KIND_ANIMATE = 4,
-    ANIM_KIND_ANIMATE_REVERSED = 5,
-    ANIM_KIND_ANIMATE_AND_HIDE = 6,
-    ANIM_KIND_ROTATE_TO_TILE = 7,
-    ANIM_KIND_ROTATE_CLOCKWISE = 8,
-    ANIM_KIND_ROTATE_COUNTER_CLOCKWISE = 9,
-    ANIM_KIND_HIDE = 10,
-    ANIM_KIND_CALLBACK = 11,
-    ANIM_KIND_CALLBACK3 = 12,
-    ANIM_KIND_SET_FLAG = 14,
-    ANIM_KIND_UNSET_FLAG = 15,
-    ANIM_KIND_TOGGLE_FLAT = 16,
-    ANIM_KIND_SET_FID = 17,
-    ANIM_KIND_TAKE_OUT_WEAPON = 18,
-    ANIM_KIND_SET_LIGHT_DISTANCE = 19,
-    ANIM_KIND_MOVE_ON_STAIRS = 20,
-    ANIM_KIND_CHECK_FALLING = 23,
-    ANIM_KIND_TOGGLE_OUTLINE = 24,
-    ANIM_KIND_ANIMATE_FOREVER = 25,
-    ANIM_KIND_PING = 26,
-    ANIM_KIND_CONTINUE = 28,
-} AnimationKind;
-
-typedef enum AnimationSequenceFlags {
-    // Specifies that the animation sequence has high priority, it cannot be
-    // cleared.
-    ANIM_SEQ_PRIORITIZED = 0x01,
-
-    // Specifies that the animation sequence started combat animation mode and
-    // therefore should balance it with appropriate finish call.
-    ANIM_SEQ_COMBAT_ANIM_STARTED = 0x02,
-
-    // Specifies that the animation sequence is reserved (TODO: explain what it
-    // actually means).
-    ANIM_SEQ_RESERVED = 0x04,
-
-    // Specifies that the animation sequence is in the process of adding actions
-    // to it (that is in the middle of begin/end calls).
-    ANIM_SEQ_ACCUMULATING = 0x08,
-
-    // TODO: Add description.
-    ANIM_SEQ_0x10 = 0x10,
-
-    // TODO: Add description.
-    ANIM_SEQ_0x20 = 0x20,
-
-    // Specifies that the animation sequence is negligible and will be end
-    // immediately when a new animation sequence is requested for the same
-    // object.
-    ANIM_SEQ_INSIGNIFICANT = 0x40,
-
-    // Specifies that the animation sequence should not return to ANIM_STAND
-    // when it's completed.
-    ANIM_SEQ_NO_STAND = 0x80,
-} AnimationSequenceFlags;
-
-typedef enum AnimationSadFlags {
-    // Specifies that the animation should play from end to start.
-    ANIM_SAD_REVERSE = 0x01,
-
-    // Specifies that the animation should use straight movement mode (as
-    // opposed to normal movement mode).
-    ANIM_SAD_STRAIGHT = 0x02,
-
-    // Specifies that no frame change should occur during animation.
-    ANIM_SAD_NO_ANIM = 0x04,
-
-    // Specifies that the animation should be played fully from start to finish.
-    //
-    // NOTE: This flag is only used together with straight movement mode to
-    // implement knockdown. Without this flag when the knockdown distance is
-    // short, say 1 or 2 tiles, knockdown animation might not be completed by
-    // the time critter reached it's destination. With this flag set animation
-    // will be played to it's final frame.
-    ANIM_SAD_WAIT_FOR_COMPLETION = 0x10,
-
-    // Unknown, set once, never read.
-    ANIM_SAD_0x20 = 0x20,
-
-    // Specifies that the owner of the animation should be hidden when animation
-    // is completed.
-    ANIM_SAD_HIDE_ON_END = 0x40,
-
-    // Specifies that the animation should never end.
-    ANIM_SAD_FOREVER = 0x80,
-} AnimationSadFlags;
 
 typedef struct AnimationDescription {
     int kind;
