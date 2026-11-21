@@ -5,6 +5,7 @@
 #include <string.h>
 
 #include "game/anim.h"
+#include "game/anim_defs.h"
 #include "game/game.h"
 #include "game/gconfig.h"
 #include "game/object.h"
