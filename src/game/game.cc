@@ -5,6 +5,7 @@
 
 #include "game/actions.h"
 #include "game/anim.h"
+#include "game/anim_defs.h"
 #include "game/automap.h"
 #include "game/bmpdlog.h"
 #include "game/combat.h"
