@@ -6,6 +6,7 @@
 #include <algorithm>
 
 #include "game/anim.h"
+#include "game/anim_defs.h"
 #include "game/art.h"
 #include "game/combat.h"
 #include "game/config.h"
