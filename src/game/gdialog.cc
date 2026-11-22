@@ -612,7 +612,7 @@ bool dialog_active()
 void gdialog_enter(Object* target, int mode)
 {
     if (target == NULL) {
-        debugPrint("\nError: gdialog_enter: target was NULL!");
+        debug_printf("\nError: gdialog_enter: target was NULL!");
         return;
     }
 
