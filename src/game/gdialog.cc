@@ -129,6 +129,7 @@ typedef struct GameDialogBlock {
     GameDialogOptionEntry options[DIALOG_OPTION_ENTRIES_CAPACITY];
 } GameDialogBlock;
 
+static void gDialogRestoreCenterTile();
 static int gdialog_hide();
 static int gdialog_unhide();
 static int gdialog_unhide_reply();
@@ -141,7 +142,7 @@ static int gdAddReviewOptionChosen(int messageListId, int messageId);
 static int gdAddReviewOptionChosenStr(const char* string);
 static int gDialogProcess();
 static void gDialogProcessCleanup();
-static int gDialogProcessChoice(int a1);
+static int gDialogProcessChoice(int optionIndex);
 static int gDialogProcessInit();
 static void reply_arrow_up(int btn, int keyCode);
 static void reply_arrow_down(int btn, int keyCode);
@@ -274,7 +275,7 @@ static Rect backgrndRects[8] = {
 };
 
 // 0x5050B4
-static int talk_need_to_center = 1;
+static bool talk_need_to_center = true;
 
 // 0x5050B8
 static bool can_start_new_fidget = false;
@@ -590,6 +591,17 @@ int gdialog_exit()
     return 0;
 }
 
+static void gDialogRestoreCenterTile()
+{
+    if (gdPlayerTile != obj_dude->tile) {
+        gdCenterTile = obj_dude->tile;
+    }
+
+    if (gdDialogWentOff) {
+        tile_scroll_to(gdCenterTile, 2);
+    }
+}
+
 // 0x43DE18
 bool dialog_active()
 {
@@ -597,8 +609,13 @@ bool dialog_active()
 }
 
 // 0x43DE28
-void gdialog_enter(Object* target, int a2)
+void gdialog_enter(Object* target, int mode)
 {
+    if (target == NULL) {
+        debugPrint("\nError: gdialog_enter: target was NULL!");
+        return;
+    }
+
     gmouse_tooltip_hide();
 
     gdDialogWentOff = false;
@@ -618,8 +635,10 @@ void gdialog_enter(Object* target, int a2)
             // You can't see there.
             messageListItem.num = 660;
             if (message_search(&proto_main_msg_file, &messageListItem)) {
-                if (a2) {
+                if (mode) {
+                    // Never true.
                     display_print(messageListItem.text);
+                    debug_printf("Can't see there.");
                 } else {
                     debug_printf("%s", messageListItem.text);
                 }
@@ -633,8 +652,10 @@ void gdialog_enter(Object* target, int a2)
             // Too far away.
             messageListItem.num = 661;
             if (message_search(&proto_main_msg_file, &messageListItem)) {
-                if (a2) {
+                if (mode) {
+                    // Never true.
                     display_print(messageListItem.text);
+                    debug_printf("Too far...");
                 } else {
                     debug_printf("%s", messageListItem.text);
                 }
@@ -654,12 +675,18 @@ void gdialog_enter(Object* target, int a2)
     dialog_target = target;
     dialogue_just_started = 1;
 
-    if (target->sid != -1) {
+    // CE: Obtain and keep SID in a separate variable. This is needed because in
+    // rare circumstates the speaker can destroy itself. So after executing it's
+    // script |speaker| can point to freed memory. Dereferencing such pointer
+    // can lead to crash depending on the environment (confirmed on Android and
+    // MSVC debug builds).
+    int sid = target->sid;
+    if (sid != -1) {
         exec_script_proc(target->sid, SCRIPT_PROC_TALK);
     }
 
     Script* script;
-    if (scr_ptr(target->sid, &script) == -1) {
+    if (scr_ptr(sid, &script) == -1) {
         gmouse_3d_on();
         map_enable_bk_processes();
         scr_exec_map_update_scripts();
@@ -702,14 +729,7 @@ void gdialog_enter(Object* target, int a2)
     gdialog_state = 0;
     dialogue_state = 0;
 
-    int tile = obj_dude->tile;
-    if (gdPlayerTile != tile) {
-        gdCenterTile = tile;
-    }
-
-    if (gdDialogWentOff) {
-        tile_scroll_to(gdCenterTile, 2);
-    }
+    gDialogRestoreCenterTile();
 
     map_enable_bk_processes();
     scr_exec_map_update_scripts();
@@ -728,13 +748,7 @@ void dialogue_system_enter()
     gdialog_enter(dialog_target, 0);
     soundUpdate();
 
-    if (gdPlayerTile != obj_dude->tile) {
-        gdCenterTile = obj_dude->tile;
-    }
-
-    if (gdDialogWentOff) {
-        tile_scroll_to(gdCenterTile, 2);
-    }
+    gDialogRestoreCenterTile();
 
     game_state_request(GAME_STATE_2);
 
@@ -820,7 +834,7 @@ int scr_dialogue_init(int headFid, int reaction)
         tile_scroll_to(dialog_target->tile, 2);
     }
 
-    talk_need_to_center = 1;
+    talk_need_to_center = true;
 
     talk_to_create_head_window();
     add_bk_process(head_bk);
@@ -856,10 +870,7 @@ int scr_dialogue_exit()
     remove_bk_process(head_bk);
 
     if (PID_TYPE(dialog_target->pid) != OBJ_TYPE_ITEM) {
-        if (gdPlayerTile != obj_dude->tile) {
-            gdCenterTile = obj_dude->tile;
-        }
-        tile_scroll_to(gdCenterTile, 2);
+        gDialogRestoreCenterTile();
     }
 
     talk_to_destroy_head_window();
@@ -916,10 +927,10 @@ int scr_dialogue_exit()
 }
 
 // 0x43E4A4
-void gdialog_set_background(int a1)
+void gdialog_set_background(int background)
 {
-    if (a1 != -1) {
-        backgroundIndex = a1;
+    if (background != -1) {
+        backgroundIndex = background;
     }
 }
 
@@ -980,13 +991,13 @@ void gdialog_display_msg(const char* msg)
 
     demo_copy_title(gReplyWin);
 
-    int a4 = 0;
+    int textOffset = 0;
 
     // NOTE: Uninline.
     text_to_rect_wrapped(win_get_buf(gReplyWin),
         &replyRect,
         msg,
-        &a4,
+        &textOffset,
         text_height(),
         379,
         colorTable[992] | 0x2000000);
@@ -1280,9 +1291,9 @@ static int gDialogProcess()
 
     gDialogProcessUpdate();
 
-    int v18 = 0;
+    bool autoAdvance = false;
     if (dialogBlock.offset != 0) {
-        v18 = 1;
+        autoAdvance = true;
         gdReplyTooBig = 1;
     }
 
@@ -1316,11 +1327,11 @@ static int gDialogProcess()
                 barter_inventory(dialogueWindow, dialog_target, peon_table_obj, barterer_table_obj, gdBarterMod);
                 dialogue_barter_cleanup_tables();
 
-                int v5 = dialogue_state;
+                int dialogueState = dialogue_state;
                 talk_to_destroy_barter_win();
-                dialogue_state = v5;
+                dialogue_state = dialogueState;
 
-                if (v5 == 4) {
+                if (dialogueState == 4) {
                     dialogue_switch_mode = 1;
                     dialogue_state = 1;
                 }
@@ -1337,16 +1348,16 @@ static int gDialogProcess()
         }
 
         if (gdReplyTooBig) {
-            unsigned int v6 = get_bk_time();
-            if (v18) {
-                if (elapsed_tocks(v6, tick) >= 10000 || keyCode == KEY_SPACE) {
+            unsigned int now = get_bk_time();
+            if (autoAdvance) {
+                if (elapsed_tocks(now, tick) >= 10000 || keyCode == KEY_SPACE) {
                     pageCount++;
                     pageIndex++;
                     pageOffsets[pageCount] = dialogBlock.offset;
                     gDialogProcessReply();
-                    tick = v6;
+                    tick = now;
                     if (!dialogBlock.offset) {
-                        v18 = 0;
+                        autoAdvance = false;
                     }
                 }
             }
@@ -1355,22 +1366,22 @@ static int gDialogProcess()
                 if (pageIndex > 0) {
                     pageIndex--;
                     dialogBlock.offset = pageOffsets[pageIndex];
-                    v18 = 0;
+                    autoAdvance = false;
                     gDialogProcessReply();
                 }
             } else if (keyCode == KEY_ARROW_DOWN) {
                 if (pageIndex < pageCount) {
                     pageIndex++;
                     dialogBlock.offset = pageOffsets[pageIndex];
-                    v18 = 0;
+                    autoAdvance = false;
                     gDialogProcessReply();
                 } else {
                     if (dialogBlock.offset != 0) {
-                        tick = v6;
+                        tick = now;
                         pageIndex++;
                         pageCount++;
                         pageOffsets[pageCount] = dialogBlock.offset;
-                        v18 = 0;
+                        autoAdvance = false;
                         gDialogProcessReply();
                     }
                 }
@@ -1397,10 +1408,10 @@ static int gDialogProcess()
                     tick = get_time();
 
                     if (dialogBlock.offset) {
-                        v18 = 1;
+                        autoAdvance = true;
                         gdReplyTooBig = 1;
                     } else {
-                        v18 = 0;
+                        autoAdvance = false;
                     }
                 }
             }
@@ -1435,9 +1446,9 @@ static void gDialogProcessCleanup()
 }
 
 // 0x43EF30
-static int gDialogProcessChoice(int a1)
+static int gDialogProcessChoice(int optionIndex)
 {
-    // FIXME: There is a buffer underread bug when `a1` is -1 (pressing 0 on the
+    // FIXME: There is a buffer underread bug when `optionIndex` is -1 (pressing 0 on the
     // keyboard, see `gDialogProcess`). When it happens the game looks into unused
     // continuation of `dialogBlock.replyText` (within 0x58F868-0x58FF70 range) which
     // is initialized to 0 according to C spec. I was not able to replicate the
@@ -1452,7 +1463,7 @@ static int gDialogProcessChoice(int a1)
     mouse_hide();
     gDialogProcessCleanup();
 
-    GameDialogOptionEntry* dialogOptionEntry = a1 != -1 ? &(dialogBlock.options[a1]) : &dummy;
+    GameDialogOptionEntry* dialogOptionEntry = optionIndex != -1 ? &(dialogBlock.options[optionIndex]) : &dummy;
     if (dialogOptionEntry->messageListId == -4) {
         gdAddReviewOptionChosenStr(dialogOptionEntry->text);
     } else {
@@ -1463,21 +1474,21 @@ static int gDialogProcessChoice(int a1)
 
     gdialog_free_speech();
 
-    int v1 = GAME_DIALOG_REACTION_NEUTRAL;
+    int reaction = GAME_DIALOG_REACTION_NEUTRAL;
     switch (dialogOptionEntry->reaction) {
     case GAME_DIALOG_REACTION_GOOD:
-        v1 = -1;
+        reaction = -1;
         break;
     case GAME_DIALOG_REACTION_NEUTRAL:
-        v1 = 0;
+        reaction = 0;
         break;
     case GAME_DIALOG_REACTION_BAD:
-        v1 = 1;
+        reaction = 1;
         break;
     default:
-        // See 0x446907 in ecx but this branch should be unreachable. Due to the
-        // bug described above, this code is reachable.
-        v1 = GAME_DIALOG_REACTION_NEUTRAL;
+        // See 0x446907 in ecx but this branch should be unreachable.
+        // Due to the bug described above, this code is reachable.
+        reaction = GAME_DIALOG_REACTION_NEUTRAL;
         debug_printf("\nError: dialog: Empathy Perk: invalid reaction!");
         break;
     }
@@ -1487,8 +1498,8 @@ static int gDialogProcessChoice(int a1)
     win_draw(gReplyWin);
     win_draw(gOptionWin);
 
-    gDialogProcessHighlight(a1);
-    talk_to_critter_reacts(v1);
+    gDialogProcessHighlight(optionIndex);
+    talk_to_critter_reacts(reaction);
 
     gdNumOptions = 0;
 
@@ -1770,7 +1781,7 @@ static void gDialogProcessUpdate()
 
     MessageListItem messageListItem;
 
-    int v21 = 0;
+    bool skippedOnce = false;
 
     for (int index = 0; index < gdNumOptions; index++) {
         GameDialogOptionEntry* dialogOptionEntry = &(dialogBlock.options[index]);
@@ -1866,6 +1877,13 @@ static void gDialogProcessUpdate()
                 win_register_button_sound_func(dialogOptionEntry->btn, gsound_red_butt_press, gsound_red_butt_release);
             } else {
                 debug_printf("\nError: Can't create button!");
+            }
+        } else {
+            // TODO: seems odd that we would suppress the error the first time.
+            if (!skippedOnce) {
+                skippedOnce = true;
+            } else {
+                debug_printf("Error: couldn't make button because it went below the window.\n");
             }
         }
     }
@@ -2102,19 +2120,19 @@ static void head_bk()
 // the game.
 //
 // 0x43FE3C
-void talk_to_critter_reacts(int a1)
+void talk_to_critter_reacts(int reaction)
 {
-    int v1 = a1 + 1;
+    int reactionIndex = reaction + 1;
 
     debug_printf("Dialogue Reaction: ");
-    if (v1 < 3) {
-        debug_printf("%s\n", react_strs[v1]);
+    if (reactionIndex < 3) {
+        debug_printf("%s\n", react_strs[reactionIndex]);
     }
 
-    int v3 = a1 + 50;
+    int reactionCode = reaction + 50;
     dialogue_seconds_since_last_input = 0;
 
-    switch (v3) {
+    switch (reactionCode) {
     case GAME_DIALOG_REACTION_GOOD:
         switch (fidgetAnim) {
         case FIDGET_GOOD:
@@ -3461,7 +3479,7 @@ static void talk_to_play_transition(int anim)
 }
 
 // 0x441BBC
-static void talk_to_translucent_trans_buf_to_buf(unsigned char* src, int srcWidth, int srcHeight, int srcPitch, unsigned char* dest, int destX, int destY, int destPitch, unsigned char* a9, unsigned char* a10)
+static void talk_to_translucent_trans_buf_to_buf(unsigned char* src, int srcWidth, int srcHeight, int srcPitch, unsigned char* dest, int destX, int destY, int destPitch, unsigned char* blendTable, unsigned char* grayTable)
 {
     int srcStep = srcPitch - srcWidth;
     int destStep = destPitch - srcWidth;
@@ -3470,13 +3488,13 @@ static void talk_to_translucent_trans_buf_to_buf(unsigned char* src, int srcWidt
 
     for (int y = 0; y < srcHeight; y++) {
         for (int x = 0; x < srcWidth; x++) {
-            unsigned char v1 = *src++;
-            if (v1 != 0) {
-                v1 = (256 - v1) >> 4;
+            unsigned char alpha = *src++;
+            if (alpha != 0) {
+                alpha = (256 - alpha) >> 4;
             }
 
-            unsigned char v15 = *dest;
-            *dest++ = a9[256 * v1 + v15];
+            unsigned char destColor = *dest;
+            *dest++ = blendTable[256 * alpha + destColor];
         }
         src += srcStep;
         dest += destStep;
@@ -3519,22 +3537,20 @@ static void talk_to_display_frame(Art* headFrm, int frame)
         int height = art_frame_length(headFrm, frame, 0);
         unsigned char* data = art_frame_data(headFrm, frame, 0);
 
-        int a3;
-        int v8;
-        art_frame_offset(headFrm, 0, &a3, &v8);
+        int rotationOffsetX, rotationOffsetY;
+        art_frame_offset(headFrm, 0, &rotationOffsetX, &rotationOffsetY);
 
-        int a4;
-        int a5;
-        art_frame_hot(headFrm, frame, 0, &a4, &a5);
+        int frameOffsetX, frameOffsetY;
+        art_frame_hot(headFrm, frame, 0, &frameOffsetX, &frameOffsetY);
 
-        totalHotx += a4;
-        a3 += totalHotx;
+        totalHotx += frameOffsetX;
+        rotationOffsetX += totalHotx;
 
         if (data != NULL) {
             int destWidth = GAME_DIALOG_WINDOW_WIDTH;
-            int destOffset = destWidth * (200 - height) + a3 + (388 - width) / 2;
-            if (destOffset + width * v8 > 0) {
-                destOffset += width * v8;
+            int destOffset = destWidth * (200 - height) + rotationOffsetX + (388 - width) / 2;
+            if (destOffset + width * rotationOffsetY > 0) {
+                destOffset += width * rotationOffsetY;
             }
 
             trans_buf_to_buf(
@@ -3548,8 +3564,8 @@ static void talk_to_display_frame(Art* headFrm, int frame)
             debug_printf("\tError getting head data in display...\n");
         }
     } else {
-        if (talk_need_to_center == 1) {
-            talk_need_to_center = 0;
+        if (talk_need_to_center) {
+            talk_need_to_center = false;
             tile_refresh_display();
         }
 
@@ -3563,11 +3579,11 @@ static void talk_to_display_frame(Art* headFrm, int frame)
             GAME_DIALOG_WINDOW_WIDTH);
     }
 
-    Rect v27;
-    v27.ulx = 126;
-    v27.uly = 14;
-    v27.lrx = 514;
-    v27.lry = 214;
+    Rect headRect;
+    headRect.ulx = 126;
+    headRect.uly = 14;
+    headRect.lrx = 514;
+    headRect.lry = 214;
 
     unsigned char* dest = win_get_buf(dialogueBackWindow);
 
@@ -3589,7 +3605,7 @@ static void talk_to_display_frame(Art* headFrm, int frame)
             GAME_DIALOG_WINDOW_WIDTH);
     }
 
-    win_draw_rect(dialogueBackWindow, &v27);
+    win_draw_rect(dialogueBackWindow, &headRect);
 }
 
 // 0x441FD4
