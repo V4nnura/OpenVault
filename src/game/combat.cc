@@ -67,7 +67,7 @@ static int compute_attack(Attack* attack);
 static int attack_crit_success(Attack* attack);
 static int attack_crit_failure(Attack* attack);
 static void do_random_cripple(int* flagsPtr);
-static int determine_to_hit_func(Object* attacker, Object* defender, int hitLocation, int hitMode, int check_range);
+static int determine_to_hit_func(Object* attacker, Object* defender, int hitLocation, int hitMode, bool check_range);
 static void compute_damage(Attack* attack, int ammoQuantity, int bonusDamageMultiplier);
 static void check_for_death(Object* object, int damage, int* flags);
 static void set_new_results(Object* critter, int flags);
@@ -2560,11 +2560,13 @@ int combat_attack(Object* attacker, Object* defender, int hitMode, int hitLocati
     return 0;
 }
 
+// Returns tile one step closer from [attacker] to [target]
+//
 // 0x420EB0
-int combat_bullet_start(const Object* a1, const Object* a2)
+int combat_bullet_start(const Object* attacker, const Object* target)
 {
-    int rotation = tile_dir(a1->tile, a2->tile);
-    return tile_num_in_direction(a1->tile, rotation, 1);
+    int rotation = tile_dir(attacker->tile, target->tile);
+    return tile_num_in_direction(attacker->tile, rotation, 1);
 }
 
 // 0x420ED4
@@ -2587,7 +2589,7 @@ static bool check_ranged_miss(Attack* attack)
                     }
 
                     if (critter != attack->defender) {
-                        int v6 = determine_to_hit_func(attack->attacker, critter, attack->defenderHitLocation, attack->hitMode, 1) / 3;
+                        int v6 = determine_to_hit_func(attack->attacker, critter, attack->defenderHitLocation, attack->hitMode, true) / 3;
                         if (critter_is_dead(critter)) {
                             v6 = 5;
                         }
@@ -2645,7 +2647,7 @@ static int shoot_along_path(Attack* attack, int endTile, int rounds, int anim)
                 break;
             }
 
-            int accuracy = determine_to_hit_func(attack->attacker, critter, HIT_LOCATION_TORSO, attack->hitMode, 1);
+            int accuracy = determine_to_hit_func(attack->attacker, critter, HIT_LOCATION_TORSO, attack->hitMode, true);
             if (anim == ANIM_FIRE_CONTINUOUS) {
                 remainingRounds = 1;
             }
@@ -3216,19 +3218,19 @@ static void do_random_cripple(int* flagsPtr)
 }
 
 // 0x421E2C
-int determine_to_hit(Object* a1, Object* a2, int hitLocation, int hitMode)
+int determine_to_hit(Object* attacker, Object* defender, int hitLocation, int hitMode)
 {
-    return determine_to_hit_func(a1, a2, hitLocation, hitMode, 1);
+    return determine_to_hit_func(attacker, defender, hitLocation, hitMode, true);
 }
 
 // 0x421E34
-int determine_to_hit_no_range(Object* a1, Object* a2, int hitLocation, int hitMode)
+int determine_to_hit_no_range(Object* attacker, Object* defender, int hitLocation, int hitMode)
 {
-    return determine_to_hit_func(a1, a2, hitLocation, hitMode, 0);
+    return determine_to_hit_func(attacker, defender, hitLocation, hitMode, false);
 }
 
 // 0x421E3C
-static int determine_to_hit_func(Object* attacker, Object* defender, int hitLocation, int hitMode, int check_range)
+static int determine_to_hit_func(Object* attacker, Object* defender, int hitLocation, int hitMode, bool check_range)
 {
     Object* weapon = item_hit_with(attacker, hitMode);
     bool is_ranged_weapon = false;
@@ -3237,18 +3239,16 @@ static int determine_to_hit_func(Object* attacker, Object* defender, int hitLoca
     if (weapon == NULL) {
         accuracy = skill_level(attacker, SKILL_UNARMED);
     } else {
-        int attack_type;
-        int modifier;
-
         accuracy = item_w_skill_level(attacker, hitMode);
 
-        attack_type = item_w_subtype(weapon, hitMode);
+        int modifier;
+
+        int attack_type = item_w_subtype(weapon, hitMode);
         if (attack_type == ATTACK_TYPE_RANGED || attack_type == ATTACK_TYPE_THROW) {
             is_ranged_weapon = true;
 
             if (check_range) {
                 int range;
-                int perception;
                 int perception_modifier = 2;
 
                 switch (item_w_perk(weapon)) {
@@ -3257,7 +3257,8 @@ static int determine_to_hit_func(Object* attacker, Object* defender, int hitLoca
                     break;
                 }
 
-                perception = stat_level(attacker, STAT_PERCEPTION);
+                int perception = stat_level(attacker, STAT_PERCEPTION);
+
                 range = obj_dist(attacker, defender) - perception_modifier * perception;
                 if (range < -2 * perception) {
                     range = -2 * perception;
@@ -4669,23 +4670,23 @@ void combat_highlight_change()
 }
 
 // 0x4242B4
-bool combat_is_shot_blocked(Object* a1, int from, int to, Object* a4, int* a5)
+bool combat_is_shot_blocked(Object* sourceObj, int from, int to, Object* targetObj, int* numCrittersOnLof)
 {
-    if (a5 != NULL) {
-        *a5 = 0;
+    if (numCrittersOnLof != NULL) {
+        *numCrittersOnLof = 0;
     }
 
-    Object* obstacle = a1;
+    Object* obstacle = sourceObj;
     while (obstacle != NULL && from != to) {
-        make_straight_path(a1, from, to, NULL, &obstacle, 32);
+        make_straight_path(sourceObj, from, to, NULL, &obstacle, 32);
         if (obstacle != NULL) {
             if (FID_TYPE(obstacle->fid) != OBJ_TYPE_CRITTER) {
                 return true;
             }
 
-            if (a5 != NULL) {
-                if (obstacle != a4) {
-                    *a5 += 1;
+            if (numCrittersOnLof != NULL) {
+                if (obstacle != targetObj) {
+                    *numCrittersOnLof += 1;
                 }
             }
 
