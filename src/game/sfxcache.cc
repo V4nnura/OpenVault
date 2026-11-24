@@ -40,7 +40,7 @@ static int sfxc_handle_list_create();
 static void sfxc_handle_list_destroy();
 static int sfxc_handle_create(int* handlePtr, int id, void* data, CacheEntry* cacheHandle);
 static void sfxc_handle_destroy(int handle);
-static bool sfxc_handle_is_legal(int a1);
+static bool sfxc_handle_is_legal(int handle);
 static bool sfxc_mode_is_legal(int mode);
 static int sfxc_decode(int handle, void* buf, unsigned int size);
 static unsigned int sfxc_ad_reader(void* stream, void* buf, unsigned int size);
