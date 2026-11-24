@@ -988,78 +988,73 @@ int a_use_obj(Object* user, Object* target, Object* item)
         scenery_type = scenery_proto->scenery.type;
     }
 
-    if (scenery_type != SCENERY_TYPE_LADDER_UP && item != NULL) {
-        if (user == obj_dude) {
-            int anim = FID_ANIM_TYPE(obj_dude->fid);
-            if (anim == ANIM_WALK || anim == ANIM_RUNNING) {
-                register_clear(obj_dude);
-            }
-        }
-
-        int anim_request_options;
-        int action_points;
-        if (isInCombat()) {
-            anim_request_options = ANIMATION_REQUEST_RESERVED;
-            action_points = user->data.critter.combat.ap;
-        } else {
-            anim_request_options = ANIMATION_REQUEST_UNRESERVED;
-            action_points = -1;
-        }
-
-        if (user == obj_dude) {
-            anim_request_options = ANIMATION_REQUEST_RESERVED;
-        }
-
-        register_begin(anim_request_options);
-
-        if (action_points != -1 || obj_dist(user, target) < 5) {
-            register_object_move_to_object(user, target, action_points, 0);
-        } else {
-            register_object_run_to_object(user, target, -1, 0);
-        }
-
-        register_object_must_call(user, target, (AnimationCallback*)is_next_to, -1);
-
-        if (item == NULL) {
-            register_object_call(user, target, (AnimationCallback*)check_scenery_ap_cost, -1);
-        }
-
-        int weapon_anim_code = FID_WEAPON_CODE(user->fid);
-        if (weapon_anim_code != 0) {
-            const char* sfx = gsnd_build_character_sfx_name(user, ANIM_PUT_AWAY, CHARACTER_SOUND_EFFECT_UNUSED);
-            register_object_play_sfx(user, sfx, -1);
-            register_object_animate(user, ANIM_PUT_AWAY, 0);
-        }
-
-        int anim;
-        int object_type = FID_TYPE(target->fid);
-        if (object_type == OBJ_TYPE_CRITTER && critter_is_prone(target)) {
-            anim = ANIM_MAGIC_HANDS_GROUND;
-        } else if (FID_TYPE(target->fid) == OBJ_TYPE_SCENERY && (scenery_proto->scenery.extendedFlags & PROTO_EXT_FLAG_MAGIC_HANDS_GROUND) != 0) {
-            anim = ANIM_MAGIC_HANDS_GROUND;
-        } else {
-            anim = ANIM_MAGIC_HANDS_MIDDLE;
-        }
-
-        if (scenery_type != SCENERY_TYPE_STAIRS && item == NULL) {
-            register_object_animate(user, anim, -1);
-        }
-
-        if (item != NULL) {
-            // TODO: Get rid of cast.
-            register_object_call3(user, target, item, (AnimationCallback3*)obj_use_item_on, -1);
-        } else {
-            register_object_call(user, target, (AnimationCallback*)obj_use, -1);
-        }
-
-        if (weapon_anim_code != 0) {
-            register_object_take_out(user, weapon_anim_code, -1);
-        }
-
-        return register_end();
+    if (scenery_type == SCENERY_TYPE_LADDER_UP && item == NULL) {
+        return action_climb_ladder(user, target);
     }
 
-    return action_climb_ladder(user, target);
+    if (user == obj_dude) {
+        int anim = FID_ANIM_TYPE(obj_dude->fid);
+        if (anim == ANIM_WALK || anim == ANIM_RUNNING) {
+            register_clear(obj_dude);
+        }
+    }
+
+    int anim_request_options;
+    int action_points;
+    if (isInCombat()) {
+        anim_request_options = ANIMATION_REQUEST_RESERVED;
+        action_points = user->data.critter.combat.ap;
+    } else {
+        anim_request_options = ANIMATION_REQUEST_UNRESERVED;
+        action_points = -1;
+    }
+
+    if (user == obj_dude) {
+        anim_request_options = ANIMATION_REQUEST_RESERVED;
+    }
+
+    register_begin(anim_request_options);
+
+    if (action_points != -1 || obj_dist(user, target) < 5) {
+        register_object_move_to_object(user, target, action_points, 0);
+    } else {
+        register_object_run_to_object(user, target, -1, 0);
+    }
+
+    register_object_must_call(user, target, (AnimationCallback*)is_next_to, -1);
+    register_object_call(user, target, (AnimationCallback*)check_scenery_ap_cost, -1);
+
+    int weapon_anim_code = FID_WEAPON_CODE(user->fid);
+    if (weapon_anim_code != 0) {
+        const char* sfx = gsnd_build_character_sfx_name(user, ANIM_PUT_AWAY, CHARACTER_SOUND_EFFECT_UNUSED);
+        register_object_play_sfx(user, sfx, -1);
+        register_object_animate(user, ANIM_PUT_AWAY, 0);
+    }
+
+    int anim;
+    int object_type = FID_TYPE(target->fid);
+    if (object_type == OBJ_TYPE_CRITTER && critter_is_prone(target)) {
+        anim = ANIM_MAGIC_HANDS_GROUND;
+    } else if (FID_TYPE(target->fid) == OBJ_TYPE_SCENERY && (scenery_proto->scenery.extendedFlags & PROTO_EXT_FLAG_MAGIC_HANDS_GROUND) != 0) {
+        anim = ANIM_MAGIC_HANDS_GROUND;
+    } else {
+        anim = ANIM_MAGIC_HANDS_MIDDLE;
+    }
+
+    register_object_animate(user, anim, -1);
+
+    if (item != NULL) {
+        // TODO: Get rid of cast.
+        register_object_call3(user, target, item, (AnimationCallback3*)obj_use_item_on, -1);
+    } else {
+        register_object_call(user, target, (AnimationCallback*)obj_use, -1);
+    }
+
+    if (weapon_anim_code != 0) {
+        register_object_take_out(user, weapon_anim_code, -1);
+    }
+
+    return register_end();
 }
 
 // 0x411F2C
