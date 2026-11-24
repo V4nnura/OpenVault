@@ -139,6 +139,8 @@ int action_knockback(Object* obj, int* anim, int maxDistance, int rotation, int 
     return tile;
 }
 
+// Plays bleeding animation (after critter has fallen with ANIM_FALL_BACK or ANIM_FALL_FRONT).
+//
 // 0x410548
 int action_blood(Object* obj, int anim, int delay)
 {
@@ -449,6 +451,8 @@ int show_damage_target(Attack* attack)
     return 0;
 }
 
+// Animates damage to extras in a given attack (secondary targets).
+//
 // 0x410F18
 int show_damage_extras(Attack* attack)
 {
@@ -469,8 +473,10 @@ int show_damage_extras(Attack* attack)
     return 0;
 }
 
+// Animates damage to defender (or attacker, in some cases) as a result of a given attack.
+//
 // 0x410FD8
-void show_damage(Attack* attack, int a2, int delay)
+void show_damage(Attack* attack, int attackerAnim, int delay)
 {
     for (int index = 0; index < attack->extrasLength; index++) {
         Object* object = attack->extras[index];
@@ -482,9 +488,9 @@ void show_damage(Attack* attack, int a2, int delay)
 
     if ((attack->attackerFlags & DAM_HIT) == 0) {
         if ((attack->attackerFlags & DAM_CRITICAL) != 0) {
-            show_damage_to_object(attack->attacker, attack->attackerDamage, attack->attackerFlags, attack->weapon, 1, 0, 0, a2, attack->attacker, -1);
+            show_damage_to_object(attack->attacker, attack->attackerDamage, attack->attackerFlags, attack->weapon, 1, 0, 0, attackerAnim, attack->attacker, -1);
         } else if ((attack->attackerFlags & DAM_BACKWASH) != 0) {
-            show_damage_to_object(attack->attacker, attack->attackerDamage, attack->attackerFlags, attack->weapon, 1, 0, 0, a2, attack->attacker, -1);
+            show_damage_to_object(attack->attacker, attack->attackerDamage, attack->attackerFlags, attack->weapon, 1, 0, 0, attackerAnim, attack->attacker, -1);
         }
     } else {
         if (attack->defender != NULL) {
@@ -500,7 +506,7 @@ void show_damage(Attack* attack, int a2, int delay)
                         hit_from_front,
                         attack->defenderKnockback,
                         tile_dir(attack->attacker->tile, attack->defender->tile),
-                        a2,
+                        attackerAnim,
                         attack->attacker, delay);
                 } else {
                     show_damage_to_object(attack->defender,
@@ -518,7 +524,7 @@ void show_damage(Attack* attack, int a2, int delay)
         }
 
         if ((attack->attackerFlags & DAM_DUD) != 0) {
-            show_damage_to_object(attack->attacker, attack->attackerDamage, attack->attackerFlags, attack->weapon, 1, 0, 0, a2, attack->attacker, -1);
+            show_damage_to_object(attack->attacker, attack->attackerDamage, attack->attackerFlags, attack->weapon, 1, 0, 0, attackerAnim, attack->attacker, -1);
         }
     }
 }
@@ -969,86 +975,91 @@ static int action_climb_ladder(Object* critter, Object* ladder)
 }
 
 // 0x411DA8
-int a_use_obj(Object* a1, Object* a2, Object* a3)
+int a_use_obj(Object* user, Object* target, Object* item)
 {
     Proto* scenery_proto;
+    int type = FID_TYPE(target->fid);
     int scenery_type = -1;
-    int anim_request_options;
-    int action_points;
-    int anim;
-    int weapon_anim_code;
-
-    if (FID_TYPE(a2->fid) == OBJ_TYPE_SCENERY) {
-        if (proto_ptr(a2->pid, &scenery_proto) == -1) {
+    if (type == OBJ_TYPE_SCENERY) {
+        if (proto_ptr(target->pid, &scenery_proto) == -1) {
             return -1;
         }
 
         scenery_type = scenery_proto->scenery.type;
     }
 
-    if (scenery_type == SCENERY_TYPE_LADDER_UP && a3 == NULL) {
-        return action_climb_ladder(a1, a2);
-    }
-
-    if (a1 == obj_dude) {
-        int anim = FID_ANIM_TYPE(obj_dude->fid);
-        if (anim == ANIM_WALK || anim == ANIM_RUNNING) {
-            register_clear(obj_dude);
+    if (scenery_type != SCENERY_TYPE_LADDER_UP && item != NULL) {
+        if (user == obj_dude) {
+            int anim = FID_ANIM_TYPE(obj_dude->fid);
+            if (anim == ANIM_WALK || anim == ANIM_RUNNING) {
+                register_clear(obj_dude);
+            }
         }
+
+        int anim_request_options;
+        int action_points;
+        if (isInCombat()) {
+            anim_request_options = ANIMATION_REQUEST_RESERVED;
+            action_points = user->data.critter.combat.ap;
+        } else {
+            anim_request_options = ANIMATION_REQUEST_UNRESERVED;
+            action_points = -1;
+        }
+
+        if (user == obj_dude) {
+            anim_request_options = ANIMATION_REQUEST_RESERVED;
+        }
+
+        register_begin(anim_request_options);
+
+        if (action_points != -1 || obj_dist(user, target) < 5) {
+            register_object_move_to_object(user, target, action_points, 0);
+        } else {
+            register_object_run_to_object(user, target, -1, 0);
+        }
+
+        register_object_must_call(user, target, (AnimationCallback*)is_next_to, -1);
+
+        if (item == NULL) {
+            register_object_call(user, target, (AnimationCallback*)check_scenery_ap_cost, -1);
+        }
+
+        int weapon_anim_code = FID_WEAPON_CODE(user->fid);
+        if (weapon_anim_code != 0) {
+            const char* sfx = gsnd_build_character_sfx_name(user, ANIM_PUT_AWAY, CHARACTER_SOUND_EFFECT_UNUSED);
+            register_object_play_sfx(user, sfx, -1);
+            register_object_animate(user, ANIM_PUT_AWAY, 0);
+        }
+
+        int anim;
+        int object_type = FID_TYPE(target->fid);
+        if (object_type == OBJ_TYPE_CRITTER && critter_is_prone(target)) {
+            anim = ANIM_MAGIC_HANDS_GROUND;
+        } else if (FID_TYPE(target->fid) == OBJ_TYPE_SCENERY && (scenery_proto->scenery.extendedFlags & PROTO_EXT_FLAG_MAGIC_HANDS_GROUND) != 0) {
+            anim = ANIM_MAGIC_HANDS_GROUND;
+        } else {
+            anim = ANIM_MAGIC_HANDS_MIDDLE;
+        }
+
+        if (scenery_type != SCENERY_TYPE_STAIRS && item == NULL) {
+            register_object_animate(user, anim, -1);
+        }
+
+        if (item != NULL) {
+            // TODO: Get rid of cast.
+            register_object_call3(user, target, item, (AnimationCallback3*)obj_use_item_on, -1);
+        } else {
+            register_object_call(user, target, (AnimationCallback*)obj_use, -1);
+        }
+
+        if (weapon_anim_code != 0) {
+            register_object_take_out(user, weapon_anim_code, -1);
+        }
+
+        return register_end();
     }
 
-    if (isInCombat()) {
-        anim_request_options = ANIMATION_REQUEST_RESERVED;
-        action_points = a1->data.critter.combat.ap;
-    } else {
-        anim_request_options = ANIMATION_REQUEST_UNRESERVED;
-        action_points = -1;
-    }
-
-    if (a1 == obj_dude) {
-        anim_request_options = ANIMATION_REQUEST_RESERVED;
-    }
-
-    register_begin(anim_request_options);
-
-    if (action_points != -1 || obj_dist(a1, a2) < 5) {
-        register_object_move_to_object(a1, a2, action_points, 0);
-    } else {
-        register_object_run_to_object(a1, a2, -1, 0);
-    }
-
-    register_object_must_call(a1, a2, (AnimationCallback*)is_next_to, -1);
-    register_object_call(a1, a2, (AnimationCallback*)check_scenery_ap_cost, -1);
-
-    weapon_anim_code = FID_WEAPON_CODE(a1->fid);
-    if (weapon_anim_code != 0) {
-        const char* sfx = gsnd_build_character_sfx_name(a1, ANIM_PUT_AWAY, CHARACTER_SOUND_EFFECT_UNUSED);
-        register_object_play_sfx(a1, sfx, -1);
-        register_object_animate(a1, ANIM_PUT_AWAY, 0);
-    }
-
-    if (FID_TYPE(a2->fid) == OBJ_TYPE_CRITTER && critter_is_prone(a2)) {
-        anim = ANIM_MAGIC_HANDS_GROUND;
-    } else if (FID_TYPE(a2->fid) == OBJ_TYPE_SCENERY && (scenery_proto->scenery.extendedFlags & PROTO_EXT_FLAG_MAGIC_HANDS_GROUND) != 0) {
-        anim = ANIM_MAGIC_HANDS_GROUND;
-    } else {
-        anim = ANIM_MAGIC_HANDS_MIDDLE;
-    }
-
-    register_object_animate(a1, anim, -1);
-
-    if (a3 != NULL) {
-        // TODO: Get rid of cast.
-        register_object_call3(a1, a2, a3, (AnimationCallback3*)obj_use_item_on, -1);
-    } else {
-        register_object_call(a1, a2, (AnimationCallback*)obj_use, -1);
-    }
-
-    if (weapon_anim_code != 0) {
-        register_object_take_out(a1, weapon_anim_code, -1);
-    }
-
-    return register_end();
+    return action_climb_ladder(user, target);
 }
 
 // 0x411F2C
@@ -1225,17 +1236,17 @@ int action_use_skill_in_combat_error(Object* critter)
 }
 
 // 0x4123C8
-int action_use_skill_on(Object* a1, Object* a2, int skill)
+int action_use_skill_on(Object* user, Object* target, int skill)
 {
     switch (skill) {
     case SKILL_FIRST_AID:
     case SKILL_DOCTOR:
         if (isInCombat()) {
             // NOTE: Uninline.
-            return action_use_skill_in_combat_error(a1);
+            return action_use_skill_in_combat_error(user);
         }
 
-        if (PID_TYPE(a2->pid) != OBJ_TYPE_CRITTER) {
+        if (PID_TYPE(target->pid) != OBJ_TYPE_CRITTER) {
             return -1;
         }
         break;
@@ -1245,10 +1256,10 @@ int action_use_skill_on(Object* a1, Object* a2, int skill)
     case SKILL_LOCKPICK:
         if (isInCombat()) {
             // NOTE: Uninline.
-            return action_use_skill_in_combat_error(a1);
+            return action_use_skill_in_combat_error(user);
         }
 
-        if (PID_TYPE(a2->pid) != OBJ_TYPE_ITEM && PID_TYPE(a2->pid) != OBJ_TYPE_SCENERY) {
+        if (PID_TYPE(target->pid) != OBJ_TYPE_ITEM && PID_TYPE(target->pid) != OBJ_TYPE_SCENERY) {
             return -1;
         }
 
@@ -1256,14 +1267,14 @@ int action_use_skill_on(Object* a1, Object* a2, int skill)
     case SKILL_STEAL:
         if (isInCombat()) {
             // NOTE: Uninline.
-            return action_use_skill_in_combat_error(a1);
+            return action_use_skill_in_combat_error(user);
         }
 
-        if (PID_TYPE(a2->pid) != OBJ_TYPE_ITEM && PID_TYPE(a2->pid) != OBJ_TYPE_CRITTER && a2->pid != 0x2000384) {
+        if (PID_TYPE(target->pid) != OBJ_TYPE_ITEM && PID_TYPE(target->pid) != OBJ_TYPE_CRITTER && target->pid != 0x2000384) {
             return -1;
         }
 
-        if (a2 == a1) {
+        if (target == user) {
             return -1;
         }
 
@@ -1271,10 +1282,10 @@ int action_use_skill_on(Object* a1, Object* a2, int skill)
     case SKILL_TRAPS:
         if (isInCombat()) {
             // NOTE: Uninline.
-            return action_use_skill_in_combat_error(a1);
+            return action_use_skill_in_combat_error(user);
         }
 
-        if (PID_TYPE(a2->pid) == OBJ_TYPE_CRITTER) {
+        if (PID_TYPE(target->pid) == OBJ_TYPE_CRITTER) {
             return -1;
         }
 
@@ -1283,18 +1294,18 @@ int action_use_skill_on(Object* a1, Object* a2, int skill)
     case SKILL_REPAIR:
         if (isInCombat()) {
             // NOTE: Uninline.
-            return action_use_skill_in_combat_error(a1);
+            return action_use_skill_in_combat_error(user);
         }
 
-        if (PID_TYPE(a2->pid) != OBJ_TYPE_CRITTER) {
+        if (PID_TYPE(target->pid) != OBJ_TYPE_CRITTER) {
             break;
         }
 
-        if (critter_kill_count_type(a2) == KILL_TYPE_ROBOT) {
+        if (critter_kill_count_type(target) == KILL_TYPE_ROBOT) {
             break;
         }
 
-        if (critter_kill_count_type(a2) == KILL_TYPE_BRAHMIN
+        if (critter_kill_count_type(target) == KILL_TYPE_BRAHMIN
             && skill == SKILL_SCIENCE) {
             break;
         }
@@ -1305,38 +1316,38 @@ int action_use_skill_on(Object* a1, Object* a2, int skill)
         break;
     }
 
-    if (a1 == obj_dude) {
-        int anim = FID_ANIM_TYPE(a1->fid);
+    if (user == obj_dude) {
+        int anim = FID_ANIM_TYPE(user->fid);
         if (anim == ANIM_WALK || anim == ANIM_RUNNING) {
-            register_clear(a1);
+            register_clear(user);
         }
     }
 
     if (isInCombat()) {
         register_begin(ANIMATION_REQUEST_RESERVED);
-        register_object_move_to_object(a1, a2, a1->data.critter.combat.ap, 0);
+        register_object_move_to_object(user, target, user->data.critter.combat.ap, 0);
     } else {
-        if (a1 == obj_dude) {
+        if (user == obj_dude) {
             register_begin(ANIMATION_REQUEST_RESERVED);
         } else {
             register_begin(ANIMATION_REQUEST_UNRESERVED);
         }
 
-        if (a2 != obj_dude) {
-            if (obj_dist(a1, a2) >= 5) {
-                register_object_run_to_object(a1, a2, -1, 0);
+        if (target != obj_dude) {
+            if (obj_dist(user, target) >= 5) {
+                register_object_run_to_object(user, target, -1, 0);
             } else {
-                register_object_move_to_object(a1, a2, -1, 0);
+                register_object_move_to_object(user, target, -1, 0);
             }
         }
     }
 
-    register_object_must_call(a1, a2, (AnimationCallback*)is_next_to, -1);
+    register_object_must_call(user, target, (AnimationCallback*)is_next_to, -1);
 
-    int anim = (FID_TYPE(a2->fid) == OBJ_TYPE_CRITTER && critter_is_prone(a2))
+    int anim = (FID_TYPE(target->fid) == OBJ_TYPE_CRITTER && critter_is_prone(target))
         ? ANIM_MAGIC_HANDS_GROUND
         : ANIM_MAGIC_HANDS_MIDDLE;
-    int fid = art_id(OBJ_TYPE_CRITTER, a1->fid & 0xFFF, anim, 0, a1->rotation + 1);
+    int fid = art_id(OBJ_TYPE_CRITTER, user->fid & 0xFFF, anim, 0, user->rotation + 1);
 
     CacheEntry* artHandle;
     Art* art = art_ptr_lock(fid, &artHandle);
@@ -1345,9 +1356,9 @@ int action_use_skill_on(Object* a1, Object* a2, int skill)
         art_ptr_unlock(artHandle);
     }
 
-    register_object_animate(a1, anim, -1);
+    register_object_animate(user, anim, -1);
     // TODO: Get rid of casts.
-    register_object_call3(a1, a2, (void*)(uintptr_t)skill, (AnimationCallback3*)obj_use_skill_on, -1);
+    register_object_call3(user, target, (void*)(uintptr_t)skill, (AnimationCallback3*)obj_use_skill_on, -1);
     return register_end();
 }
 
@@ -1466,9 +1477,9 @@ int pick_hex()
 }
 
 // 0x412950
-bool is_hit_from_front(Object* a1, Object* a2)
+bool is_hit_from_front(Object* attacker, Object* defender)
 {
-    int diff = a1->rotation - a2->rotation;
+    int diff = attacker->rotation - defender->rotation;
     if (diff < 0) {
         diff = -diff;
     }
@@ -1477,9 +1488,9 @@ bool is_hit_from_front(Object* a1, Object* a2)
 }
 
 // 0x412974
-bool can_see(Object* a1, Object* a2)
+bool can_see(Object* source, Object* target)
 {
-    int diff = a1->rotation - tile_dir(a1->tile, a2->tile);
+    int diff = source->rotation - tile_dir(source->tile, target->tile);
     if (diff < 0) {
         diff = -diff;
     }
@@ -1487,6 +1498,8 @@ bool can_see(Object* a1, Object* a2)
     return diff == 0 || diff == 1 || diff == 5;
 }
 
+// Tries to change between ANIM_FALL_FRONT and ANIM_FALL_BACK based on available free space in front or behind and presence of art frames.
+//
 // 0x4129A4
 int pick_fall(Object* obj, int anim)
 {
@@ -1775,13 +1788,13 @@ static int compute_explosion_damage(int min, int max, Object* def, int* knockbac
 }
 
 // 0x4130A8
-int action_talk_to(Object* a1, Object* a2)
+int action_talk_to(Object* obj, Object* critter)
 {
-    if (a1 != obj_dude) {
+    if (obj != obj_dude) {
         return -1;
     }
 
-    if (FID_TYPE(a2->fid) != OBJ_TYPE_CRITTER) {
+    if (FID_TYPE(critter->fid) != OBJ_TYPE_CRITTER) {
         return -1;
     }
 
@@ -1792,17 +1805,17 @@ int action_talk_to(Object* a1, Object* a2)
 
     if (isInCombat()) {
         register_begin(ANIMATION_REQUEST_RESERVED);
-        register_object_move_to_object(a1, a2, a1->data.critter.combat.ap, 0);
+        register_object_move_to_object(obj, critter, obj->data.critter.combat.ap, 0);
     } else {
-        register_begin(a1 == obj_dude ? ANIMATION_REQUEST_RESERVED : ANIMATION_REQUEST_UNRESERVED);
+        register_begin(obj == obj_dude ? ANIMATION_REQUEST_RESERVED : ANIMATION_REQUEST_UNRESERVED);
 
-        if (obj_dist(a1, a2) >= 9 || combat_is_shot_blocked(a1, a1->tile, a2->tile, a2, NULL)) {
-            register_object_run_to_object(a1, a2, -1, 0);
+        if (obj_dist(obj, critter) >= 9 || combat_is_shot_blocked(obj, obj->tile, critter->tile, critter, NULL)) {
+            register_object_run_to_object(obj, critter, -1, 0);
         }
     }
 
-    register_object_must_call(a1, a2, (AnimationCallback*)can_talk_to, -1);
-    register_object_call(a1, a2, (AnimationCallback*)talk_to, -1);
+    register_object_must_call(obj, critter, (AnimationCallback*)can_talk_to, -1);
+    register_object_call(obj, critter, (AnimationCallback*)talk_to, -1);
     return register_end();
 }
 
