@@ -132,9 +132,9 @@ jobs:
       matrix:
         include:
           - arch: x86
-            runner: ubuntu-24.04
+            runner: ubuntu-26.04
           - arch: x64
-            runner: ubuntu-24.04
+            runner: ubuntu-26.04
           - arch: armhf
             runner: ubuntu-24.04-arm
           - arch: arm64
