@@ -1677,7 +1677,7 @@ static int SaveHeader(int slot)
     LoadSaveSlotData* ptr = &(LSData[slot]);
     strncpy(ptr->signature, LOAD_SAVE_SIGNATURE, 24);
 
-    if (db_fwrite(ptr->signature, 1, 24, flptr) == -1) {
+    if (db_fwrite(ptr->signature, 1, 24, flptr) != 24) {
         return -1;
     }
 
@@ -1899,7 +1899,7 @@ static int GetSlotList()
 }
 
 // 0x4706CC
-static void ShowSlotList(int a1)
+static void ShowSlotList(int windowType)
 {
     buf_fill(lsgbuf + LS_WINDOW_WIDTH * 87 + 55, 230, 353, LS_WINDOW_WIDTH, lsgbuf[LS_WINDOW_WIDTH * 86 + 55] & 0xFF);
 
@@ -1907,7 +1907,7 @@ static void ShowSlotList(int a1)
     for (int index = 0; index < 10; index += 1) {
 
         int color = index == slot_cursor ? colorTable[32747] : colorTable[992];
-        const char* text = getmsg(&lsgame_msgfl, &lsgmesg, a1 != 0 ? 110 : 109);
+        const char* text = getmsg(&lsgame_msgfl, &lsgmesg, windowType != 0 ? 110 : 109);
         snprintf(str, sizeof(str), "[   %s %.2d:   ]", text, index + 1);
         text_to_buf(lsgbuf + LS_WINDOW_WIDTH * y + 55, str, LS_WINDOW_WIDTH, LS_WINDOW_WIDTH, color);
 
@@ -2340,7 +2340,7 @@ static int GameMap2Slot(DB_FILE* stream)
 
     for (int index = 0; index < fileNameListLength; index += 1) {
         char* string = fileNameList[index];
-        if (db_fwrite(string, strlen(string) + 1, 1, stream) == -1) {
+        if (db_fwrite(string, strlen(string) + 1, 1, stream) != 1) {
             db_free_file_list(&fileNameList, NULL);
             return -1;
         }
