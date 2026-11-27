@@ -995,7 +995,7 @@ int map_load_file(DB_FILE* stream)
         if (tile_set_center(map_data.enteringTile, TILE_SET_CENTER_FLAG_IGNORE_SCROLL_RESTRICTIONS) != 0) break;
 
         light_set_ambient(LIGHT_INTENSITY_MAX, false);
-        obj_move_to_tile(obj_dude, tile_center_tile, map_elevation, NULL);
+        obj_move_to_tile(obj_dude, map_data.enteringTile, map_elevation, NULL);
         obj_set_rotation(obj_dude, map_data.enteringRotation, NULL);
         map_match_map_number();
 
