@@ -112,15 +112,15 @@ typedef enum OpRegAnimFunc {
 // 0x4F4144
 char _aCritter[] = "<Critter>";
 
-// NOTE: This value is a little bit odd. It's used to handle 2 operations:
-// [op_start_gdialog] and [op_dialogue_reaction]. It's not used outside those
-// functions.
+// NOTE: This value is a little bit odd. It's used to handle 2
+// operations: [op_start_gdialog] and [op_dialogue_reaction].
+// It's not used outside those functions.
 //
-// When used inside [op_start_gdialog] this value stores [Fidget] constant
-// (1 - Good, 4 - Neutral, 7 - Bad).
+// When used inside [op_start_gdialog] this value stores
+// [Fidget] constant (1 - Good, 4 - Neutral, 7 - Bad).
 //
-// When used inside [op_dialogue_reaction] this value contains specified
-// reaction (-1 - Good, 0 - Neutral, 1 - Bad).
+// When used inside [op_dialogue_reaction] this value contains
+// specified reaction (-1 - Good, 0 - Neutral, 1 - Bad).
 //
 // 0x5970D0
 static int dialogue_mood;
@@ -331,9 +331,9 @@ static void op_using_skill(Program* program)
     int skill = programStackPopInteger(program);
     Object* object = static_cast<Object*>(programStackPopPointer(program));
 
-    // NOTE: In the original source code this value is left uninitialized, that
-    // explains why garbage is returned when using something else than dude and
-    // SKILL_SNEAK as arguments.
+    // NOTE: In the original source code this value is left uninitialized,
+    // that explains why garbage is returned when using something else
+    // than dude and SKILL_SNEAK as arguments.
     int result = 0;
 
     if (skill == SKILL_SNEAK && object == obj_dude) {
@@ -996,8 +996,8 @@ static void op_get_critter_stat(Program* program)
     programStackPushInteger(program, value);
 }
 
-// NOTE: Despite it's name it does not actually "set" stat, but "adjust". So
-// it's last argument is amount of adjustment, not it's final value.
+// NOTE: Despite it's name it does not actually "set" stat, but "adjust".
+// So it's last argument is amount of adjustment, not it's final value.
 //
 // 0x44CE3C
 static void op_set_critter_stat(Program* program)
@@ -1483,8 +1483,8 @@ static void op_attack(Program* program)
         return;
     }
 
-    // Critter scripts run for every elevation; without this, rats on other
-    // floors can attack the player on the current floor.
+    // Critter scripts run for every elevation; without this, rats
+    // on other floors can attack the player on the current floor.
     if (self->elevation != target->elevation || self->elevation != map_elevation) {
         dbg_print_com_data(self, target);
         debug_printf("\n   But attacker/target are on different elevation (ignored)");
@@ -1690,10 +1690,10 @@ static void op_turn_on_objs_in_area(Program* program)
     objs_area_turn_on_off(data[3], data[2], data[1], data[0], 1);
 }
 
-// NOTE: Function name is a bit misleading. Last parameter is a boolean value
-// where 1 or true makes object invisible, and value 0 (false) makes it visible
-// again. So a better name for this function is opSetObjectInvisible.
-//
+// NOTE: Function name is a bit misleading. Last parameter is
+// a boolean value where 1 or true makes object invisible, and
+// value 0 (false) makes it visible again. So a better name for
+// this function is opSetObjectInvisible.
 //
 // 0x44E064
 static void op_set_obj_visibility(Program* program)
@@ -1922,7 +1922,8 @@ static void op_kill_critter(Program* program)
     }
 }
 
-// [forceBack] is to force fall back animation, otherwise it's fall front if it's present
+// [forceBack] is to force fall back animation,
+// otherwise it's fall front if it's present.
 //
 // 0x0x44E690
 int correctDeath(Object* critter, int anim, bool forceBack)
@@ -1988,51 +1989,74 @@ static void op_kill_critter_type(Program* program)
 
     Object* previousObj = NULL;
     int count = 0;
-    int v3 = 0;
+    int ftIndex = 0;
 
     Object* obj = obj_find_first();
     while (obj != NULL) {
         if (FID_ANIM_TYPE(obj->fid) >= ANIM_FALL_BACK_SF) {
-            obj = obj_find_next();
-            continue;
-        }
-
-        if ((obj->flags & OBJECT_HIDDEN) == 0 && obj->pid == pid && !critter_is_dead(obj)) {
-            if (obj == previousObj || count > 200) {
-                dbg_error(program, "kill_critter_type", SCRIPT_ERROR_FOLLOWS);
-                debug_printf(" Infinite loop destroying critters!");
-                program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
-                return;
-            }
-
-            register_clear(obj);
-
-            if (deathFrame != 0) {
-                combat_delete_critter(obj);
-                if (deathFrame == 1) {
-                    int anim = correctDeath(obj, ftList[v3], 1);
-                    critter_kill(obj, anim, 1);
-                    v3 += 1;
-                    if (v3 >= 11) {
-                        v3 = 0;
-                    }
-                } else {
-                    critter_kill(obj, ANIM_FALL_BACK_SF, 1);
+            if ((obj->flags & OBJECT_HIDDEN) == 0 && obj->pid == pid && !critter_is_dead(obj)) {
+                if (obj == previousObj || count > 200) {
+                    dbg_error(program, "kill_critter_type", SCRIPT_ERROR_FOLLOWS);
+                    debug_printf(" Infinite loop destroying critters!");
+                    program->flags &= ~PROGRAM_FLAG_CHILD_CALL;
+                    return;
                 }
-            } else {
+
                 register_clear(obj);
 
-                Rect rect;
-                obj_erase_object(obj, &rect);
-                tile_refresh_rect(&rect, map_elevation);
+                if (deathFrame != 0) {
+                    combat_delete_critter(obj);
+                    if (deathFrame == 1) {
+                        // Pick next animation from the |ftList|.
+                        int anim = correctDeath(obj, ftList[ftIndex], 1);
+
+                        // SFALL: Fix for incorrect death animation.
+                        // CE: The fix is slightly different. Sfall passes
+                        // |false| to |correctDeath| to disambiguate usage
+                        // between this function and |opAnim|. On |false| it
+                        // simply returns |ANIM_FALL_BACK_SF|. Instead of doing
+                        // the same, check for standard death animations
+                        // returned from |correctDeath| and convert them to
+                        // appropariate single frame cousins.
+                        switch (anim) {
+                        case ANIM_FALL_BACK:
+                            anim = ANIM_FALL_BACK_SF;
+                            break;
+                        case ANIM_FALL_FRONT:
+                            anim = ANIM_FALL_FRONT_SF;
+                            break;
+                        }
+
+                        critter_kill(obj, anim, true);
+
+                        ftIndex += 1;
+                        if (ftIndex >= 11) {
+                            ftIndex = 0;
+                        }
+                    } else if (deathFrame >= FIRST_SF_DEATH_ANIM && deathFrame <= LAST_SF_DEATH_ANIM) {
+                        // CE: In some cases user-space scripts randomize death
+                        // frame between front/back animations but technically
+                        // speaking a scripter can provide any single frame
+                        // death animation which original code simply ignores.
+                        critter_kill(obj, deathFrame, true);
+                    } else {
+                        critter_kill(obj, ANIM_FALL_BACK_SF, true);
+                    }
+                } else {
+                    register_clear(obj);
+
+                    Rect rect;
+                    obj_erase_object(obj, &rect);
+                    tile_refresh_rect(&rect, map_elevation);
+                }
+
+                previousObj = obj;
+                count += 1;
+
+                obj_find_first();
+
+                map_data.lastVisitTime = game_time();
             }
-
-            previousObj = obj;
-            count += 1;
-
-            obj_find_first();
-
-            map_data.lastVisitTime = game_time();
         }
 
         obj = obj_find_next();
@@ -2122,10 +2146,10 @@ static void op_game_ticks(Program* program)
     programStackPushInteger(program, ticks * 10);
 }
 
-// NOTE: The name of this function is misleading. It has (almost) nothing to do
-// with player's "Traits" as a feature. Instead it's used to query many
-// information of the critters using passed parameters. It's like "metarule" but
-// for critters.
+// NOTE: The name of this function is misleading. It has (almost) nothing
+// to do with player's "Traits" as a feature. Instead it's used to
+// query many information of the critters using passed parameters.
+// It's like "metarule" but for critters.
 //
 // 0x44EB78
 static void op_has_trait(Program* program)
@@ -2194,8 +2218,8 @@ static void op_obj_can_hear_obj(Program* program)
 
     bool canHear = false;
 
-    // FIXME: This is clearly an error. If any of the object is NULL
-    // dereferencing will crash the game.
+    // FIXME: This is clearly an error. If any of the
+    // object is NULL dereferencing will crash the game.
     if (object2 == NULL || object1 == NULL) {
         if (object2->elevation == object1->elevation) {
             if (object2->tile != -1 && object1->tile != -1) {
@@ -2960,9 +2984,9 @@ static void op_play_gmovie(Program* program)
 
     int movie = programStackPopInteger(program);
 
-    // CE: Disable map updates. Needed to stop animation of objects (dude in
-    // particular) when playing movies (the problem can be seen as visual
-    // artifacts when playing endgame oilrig explosion).
+    // CE: Disable map updates. Needed to stop animation of objects (dude
+    // in particular) when playing movies (the problem can be seen as
+    // visual artifacts when playing endgame oilrig explosion).
     bool isoWasDisabled = map_disable_bk_processes();
 
     gDialogDisableBK();
@@ -3382,11 +3406,8 @@ static void op_running_burning_guy(Program* program)
 // 0x450F38
 static void op_inven_unwield(Program* program)
 {
-    Object* obj;
-    int hand;
-
-    obj = scr_find_obj_from_program(program);
-    hand = HAND_RIGHT;
+    Object* obj = scr_find_obj_from_program(program);
+    int hand = HAND_RIGHT;
 
     if (obj == obj_dude && intface_is_item_right_hand() == HAND_LEFT) {
         hand = HAND_LEFT;
