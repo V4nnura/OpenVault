@@ -2030,7 +2030,7 @@ static void op_kill_critter_type(Program* program)
                         critter_kill(obj, anim, true);
 
                         ftIndex += 1;
-                        if (ftIndex >= 11) {
+                        if (ftIndex >= (sizeof(ftList) / sizeof(ftList[0]))) {
                             ftIndex = 0;
                         }
                     } else if (deathFrame >= FIRST_SF_DEATH_ANIM && deathFrame <= LAST_SF_DEATH_ANIM) {
